@@ -25,6 +25,24 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // ============================
+// PUBLIC CATALOG
+// ============================
+Route::prefix('produk')->name('user.produk.')->group(function () {
+    Route::get('/', [ProdukController::class, 'index'])->name('index');
+    Route::get('/{slug}', [ProdukController::class, 'show'])->name('show');
+});
+
+Route::prefix('limbah')->name('user.limbah.')->group(function () {
+    Route::get('/', [LimbahController::class, 'index'])->name('index');
+    Route::get('/{slug}', [LimbahController::class, 'show'])->name('show');
+});
+
+Route::prefix('edukasi')->name('user.edukasi.')->group(function () {
+    Route::get('/', [EdukasiController::class, 'index'])->name('index');
+    Route::get('/{slug}', [EdukasiController::class, 'show'])->name('show');
+});
+
+// ============================
 // USER (Pelanggan) — butuh login
 // ============================
 Route::middleware('auth')->group(function () {
@@ -33,23 +51,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    // Produk & Limbah (bisa juga diakses tanpa login, tapi biar konsisten di sini)
-    Route::prefix('produk')->name('user.produk.')->group(function () {
-        Route::get('/', [ProdukController::class, 'index'])->name('index');
-        Route::get('/{slug}', [ProdukController::class, 'show'])->name('show');
-    });
-
-    Route::prefix('limbah')->name('user.limbah.')->group(function () {
-        Route::get('/', [LimbahController::class, 'index'])->name('index');
-        Route::get('/{slug}', [LimbahController::class, 'show'])->name('show');
-    });
-
-    // Edukasi
-    Route::prefix('edukasi')->name('user.edukasi.')->group(function () {
-        Route::get('/', [EdukasiController::class, 'index'])->name('index');
-        Route::get('/{slug}', [EdukasiController::class, 'show'])->name('show');
-    });
 
     // Cart
     Route::prefix('cart')->name('user.cart.')->group(function () {

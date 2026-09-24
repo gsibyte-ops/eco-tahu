@@ -13,90 +13,60 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="bg-gray-50 font-sans antialiased text-gray-800">
+<body class="bg-[#f3f3f3] font-sans antialiased text-gray-800">
 
 {{-- NAVBAR --}}
-<nav class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-100">
+<nav class="sticky top-0 z-40 border-b border-emerald-800 bg-[#1b3a2d] text-white shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
 
-            {{-- Logo --}}
-            <a href="{{ route('home') }}" class="flex items-center gap-2">
-                <div class="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold">E</div>
-                <span class="text-lg font-bold text-gray-800">EcoTahu</span>
-            </a>
+            <div class="flex items-center gap-3">
+                <a href="{{ route('home') }}" class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-sm">E</div>
+                    <span class="text-lg font-bold text-white">EcoTahu</span>
+                </a>
+            </div>
 
-            {{-- Menu Desktop --}}
-            <div class="hidden md:flex items-center gap-8">
-                <a href="{{ route('home') }}"
-                   class="text-sm font-medium transition {{ request()->routeIs('home') ? 'text-emerald-600' : 'text-gray-600 hover:text-emerald-600' }}">
+            <div class="hidden md:flex items-center gap-6 text-sm text-emerald-50/90">
+                <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'text-white font-semibold' : 'hover:text-white' }}">
                     Beranda
                 </a>
-                <a href="{{ route('user.produk.index') }}"
-                   class="text-sm font-medium transition {{ request()->routeIs('user.produk.*') ? 'text-emerald-600' : 'text-gray-600 hover:text-emerald-600' }}">
+                <a href="{{ route('user.produk.index') }}" class="{{ request()->routeIs('user.produk.*') ? 'text-white font-semibold' : 'hover:text-white' }}">
                     Produk
                 </a>
-                <a href="{{ route('user.limbah.index') }}"
-                   class="text-sm font-medium transition {{ request()->routeIs('user.limbah.*') ? 'text-amber-600' : 'text-gray-600 hover:text-amber-600' }}">
+                <a href="{{ route('user.limbah.index') }}" class="{{ request()->routeIs('user.limbah.*') ? 'text-white font-semibold' : 'hover:text-white' }}">
                     Limbah
                 </a>
-                <a href="{{ route('user.edukasi.index') }}"
-                   class="text-sm font-medium transition {{ request()->routeIs('user.edukasi.*') ? 'text-emerald-600' : 'text-gray-600 hover:text-emerald-600' }}">
+                <a href="{{ route('user.edukasi.index') }}" class="{{ request()->routeIs('user.edukasi.*') ? 'text-white font-semibold' : 'hover:text-white' }}">
                     Edukasi
                 </a>
             </div>
 
-            {{-- Actions --}}
             <div class="flex items-center gap-3">
-
-                {{-- Cart --}}
                 @php
                     $cartCount = count(session('cart', []));
                 @endphp
-                <a href="{{ route('user.cart.index') }}"
-                   class="relative w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 transition">
-                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                <a href="{{ route('user.cart.index') }}" class="relative flex h-9 w-9 items-center justify-center rounded-lg border border-white/20 bg-white/5 text-white hover:bg-white/10 transition">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                     @if ($cartCount > 0)
-                        <span class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-emerald-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                        <span class="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
                             {{ $cartCount > 9 ? '9+' : $cartCount }}
                         </span>
                     @endif
                 </a>
 
                 @auth
-                    {{-- User Menu --}}
                     <div class="relative" x-data="{ open: false }" @click.away="open = false">
-                        <button @click="open = !open" class="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl hover:bg-gray-100 transition">
-                            <div class="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold text-sm">
+                        <button @click="open = !open" class="flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-2 py-1.5 text-sm text-white hover:bg-white/10">
+                            <div class="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white">
                                 {{ strtoupper(substr(auth()->user()->username, 0, 1)) }}
                             </div>
-                            <span class="hidden sm:block text-sm font-medium text-gray-700">{{ auth()->user()->username }}</span>
-                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            <span class="hidden sm:inline">{{ auth()->user()->username }}</span>
                         </button>
-
-                        <div x-show="open" x-cloak x-transition
-                             class="absolute right-0 mt-2 w-56 bg-white rounded-xl border border-gray-100 shadow-lg overflow-hidden">
-                            @if (auth()->user()->isAdmin())
-                                <a href="{{ route('admin.dashboard') }}"
-                                   class="block px-4 py-2.5 text-sm text-emerald-700 hover:bg-emerald-50 font-semibold border-b border-gray-100">
-                                    🎛️ Dashboard Admin
-                                </a>
-                            @endif
-                            <a href="{{ route('user.pesanan.index') }}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">Pesanan Saya</a>
-                            <a href="{{ route('profile.edit') }}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">Profil</a>
-                            <form method="POST" action="{{ route('logout') }}" class="border-t border-gray-100">
-                                @csrf
-                                <button type="submit" class="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">
-                                    Logout
-                                </button>
-                            </form>
-                        </div>
                     </div>
                 @else
-                    <a href="{{ route('login') }}" class="hidden sm:block text-sm font-medium text-gray-600 hover:text-emerald-600 px-4 py-2">
-                        Masuk
-                    </a>
-                    <a href="{{ route('register') }}" class="text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl transition">
+                    <a href="{{ route('register') }}" class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500 transition">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zm-8 9a4 4 0 014-4h0a4 4 0 014 4v1H8v-1z"/></svg>
                         Daftar
                     </a>
                 @endauth
