@@ -24,12 +24,13 @@ class PesananController extends Controller
             $query->where('payment_method', $request->payment_method);
         }
 
-        // Search by kode pesanan / nama pelanggan
+        // Search by kode pesanan / nama pelanggan / nama produk
         if ($request->filled('q')) {
             $q = $request->q;
             $query->where(function ($w) use ($q) {
                 $w->where('kode_pesanan', 'like', "%{$q}%")
-                  ->orWhereHas('user', fn ($u) => $u->where('username', 'like', "%{$q}%"));
+                ->orWhereHas('user', fn ($u) => $u->where('username', 'like', "%{$q}%"))
+                ->orWhereHas('detail', fn ($d) => $d->where('nama_item', 'like', "%{$q}%"));
             });
         }
 
