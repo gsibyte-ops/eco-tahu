@@ -40,7 +40,12 @@
             <div class="flex-1 min-w-[240px]">
                 <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Cari Pesanan</label>
                 <div class="relative">
-                    <input type="text" name="q" value="{{ request('q') }}" placeholder="Kode pesanan / nama pelanggan..."
+                    <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input type="text" name="q" value="{{ request('q') }}"
+                           placeholder="Kode pesanan / nama pelanggan / nama produk..."
                            class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
                 </div>
             </div>
@@ -137,99 +142,130 @@
 
 {{-- Tabel --}}
 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-    <table class="w-full text-left">
-        <thead>
-            <tr class="text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-50/60 border-b border-gray-100">
-                <th class="px-6 py-3">Kode Pesanan</th>
-                <th class="px-6 py-3">Pelanggan</th>
-                <th class="px-6 py-3">Tanggal</th>
-                <th class="px-6 py-3">Total</th>
-                <th class="px-6 py-3">Metode</th>
-                <th class="px-6 py-3">Status</th>
-                <th class="px-6 py-3 text-right">Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($pesanan as $p)
-                @php
-                    $modalData = [
-                        'id' => $p->id,
-                        'kode' => $p->kode_pesanan,
-                        'order_status' => $p->order_status,
-                        'tanggal' => $p->tanggal_order->format('d M Y, H:i'),
-                        'alamat' => $p->alamat_pengiriman,
-                        'catatan' => $p->catatan,
-                        'subtotal' => (int) $p->subtotal,
-                        'ongkir' => (int) $p->ongkir,
-                        'jarak_km' => (float) $p->jarak_km,
-                        'total_harga' => (int) $p->total_harga,
-                        'payment_method' => $p->payment_method,
-                        'payment_status' => $p->payment_status,
-                        'user' => [
-                            'username' => $p->user->username ?? '-',
-                            'email' => $p->user->email ?? '-',
-                            'no_telepon' => $p->user->no_telepon ?? '-',
-                        ],
-                        'items' => $p->detail->map(fn ($d) => [
-                            'nama' => $d->nama_item,
-                            'harga' => (int) $d->harga_satuan,
-                            'qty' => $d->jumlah,
-                            'subtotal' => (int) $d->subtotal,
-                        ])->values()->toArray(),
-                        'pembayaran' => $p->pembayaran ? [
-                            'status' => $p->pembayaran->status_pembayaran,
-                            'bukti' => $p->pembayaran->bukti_transfer ? asset('storage/' . $p->pembayaran->bukti_transfer) : null,
-                        ] : null,
-                        'refund' => $p->refund ? [
-                            'nominal' => (int) $p->refund->nominal_refund,
-                            'alasan' => $p->refund->alasan_batal,
-                            'status' => $p->refund->status_refund,
-                        ] : null,
-                        'route_update_status' => route('admin.pesanan.updateStatus', $p->id),
-                        'route_verifikasi' => route('admin.pesanan.verifikasi', $p->id),
-                    ];
-
-                    // Inline style status badge (bulletproof)
-                    $statusStyle = [
-                        'pending'    => 'background:#fef3c7; color:#b45309;',
-                        'diproses'   => 'background:#dbeafe; color:#1d4ed8;',
-                        'dikirim'    => 'background:#ede9fe; color:#6d28d9;',
-                        'selesai'    => 'background:#d1fae5; color:#047857;',
-                        'dibatalkan' => 'background:#fee2e2; color:#b91c1c;',
-                    ][$p->order_status] ?? 'background:#f3f4f6; color:#374151;';
-                @endphp
-                <tr class="border-b border-gray-50 hover:bg-gray-50/60 transition">
-                    <td class="px-6 py-4 text-sm font-semibold text-gray-800">#{{ $p->kode_pesanan }}</td>
-                    <td class="px-6 py-4">
-                        <p class="text-sm font-medium text-gray-800">{{ $p->user->username ?? '-' }}</p>
-                        <p class="text-xs text-gray-500">{{ $p->user->email ?? '' }}</p>
-                    </td>
-                    <td class="px-6 py-4 text-sm text-gray-600">{{ $p->tanggal_order->format('d M Y') }}</td>
-                    <td class="px-6 py-4 text-sm font-semibold text-gray-800">Rp {{ number_format($p->total_harga, 0, ',', '.') }}</td>
-                    <td class="px-6 py-4">
-                        @if ($p->payment_method === 'COD')
-                            <span class="px-2.5 py-1 rounded-lg text-xs font-bold" style="background:#dbeafe; color:#1d4ed8;">COD</span>
-                        @else
-                            <span class="px-2.5 py-1 rounded-lg text-xs font-bold" style="background:#ede9fe; color:#6d28d9;">Transfer</span>
-                        @endif
-                    </td>
-                    <td class="px-6 py-4">
-                        <span class="px-2.5 py-1 rounded-lg text-xs font-bold" style="{{ $statusStyle }}">{{ ucfirst($p->order_status) }}</span>
-                    </td>
-                    <td class="px-6 py-4 text-right">
-                        <button type="button"
-                                onclick='openPesananModal(@json($modalData, JSON_HEX_APOS | JSON_HEX_QUOT))'
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-semibold transition">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                            Detail
-                        </button>
-                    </td>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-50/60 border-b border-gray-100">
+                    <th class="px-5 py-3">Kode Pesanan</th>
+                    <th class="px-5 py-3">Pelanggan</th>
+                    <th class="px-5 py-3">Produk</th>
+                    <th class="px-5 py-3">Tanggal</th>
+                    <th class="px-5 py-3">Total</th>
+                    <th class="px-5 py-3">Metode</th>
+                    <th class="px-5 py-3">Status</th>
+                    <th class="px-5 py-3 text-right">Aksi</th>
                 </tr>
-            @empty
-                <tr><td colspan="7" class="px-6 py-10 text-center text-gray-400">Belum ada pesanan</td></tr>
-            @endforelse
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @forelse ($pesanan as $p)
+                    @php
+                        $modalData = [
+                            'id' => $p->id,
+                            'kode' => $p->kode_pesanan,
+                            'order_status' => $p->order_status,
+                            'tanggal' => $p->tanggal_order->format('d M Y, H:i'),
+                            'alamat' => $p->alamat_pengiriman,
+                            'catatan' => $p->catatan,
+                            'subtotal' => (int) $p->subtotal,
+                            'ongkir' => (int) $p->ongkir,
+                            'jarak_km' => (float) $p->jarak_km,
+                            'total_harga' => (int) $p->total_harga,
+                            'payment_method' => $p->payment_method,
+                            'payment_status' => $p->payment_status,
+                            'user' => [
+                                'username' => $p->user->username ?? '-',
+                                'email' => $p->user->email ?? '-',
+                                'no_telepon' => $p->user->no_telepon ?? '-',
+                            ],
+                            'items' => $p->detail->map(fn ($d) => [
+                                'nama' => $d->nama_item,
+                                'harga' => (int) $d->harga_satuan,
+                                'qty' => $d->jumlah,
+                                'subtotal' => (int) $d->subtotal,
+                            ])->values()->toArray(),
+                            'pembayaran' => $p->pembayaran ? [
+                                'status' => $p->pembayaran->status_pembayaran,
+                                'bukti' => $p->pembayaran->bukti_transfer ? asset('storage/' . $p->pembayaran->bukti_transfer) : null,
+                            ] : null,
+                            'refund' => $p->refund ? [
+                                'nominal' => (int) $p->refund->nominal_refund,
+                                'alasan' => $p->refund->alasan_batal,
+                                'status' => $p->refund->status_refund,
+                            ] : null,
+                            'route_update_status' => route('admin.pesanan.updateStatus', $p->id),
+                            'route_verifikasi' => route('admin.pesanan.verifikasi', $p->id),
+                        ];
+
+                        $statusStyle = [
+                            'pending'    => 'background:#fef3c7; color:#b45309;',
+                            'diproses'   => 'background:#dbeafe; color:#1d4ed8;',
+                            'dikirim'    => 'background:#ede9fe; color:#6d28d9;',
+                            'selesai'    => 'background:#d1fae5; color:#047857;',
+                            'dibatalkan' => 'background:#fee2e2; color:#b91c1c;',
+                        ][$p->order_status] ?? 'background:#f3f4f6; color:#374151;';
+                    @endphp
+                    <tr class="border-b border-gray-50 hover:bg-gray-50/60 transition">
+                        <td class="px-5 py-4 text-sm font-semibold text-gray-800 whitespace-nowrap">#{{ $p->kode_pesanan }}</td>
+                        <td class="px-5 py-4">
+                            <p class="text-sm font-medium text-gray-800">{{ $p->user->username ?? '-' }}</p>
+                            <p class="text-xs text-gray-500">{{ $p->user->email ?? '' }}</p>
+                        </td>
+
+                        {{-- KOLOM PRODUK (BARU) --}}
+                        <td class="px-5 py-4">
+                            @if ($p->detail->count() > 0)
+                                <div class="space-y-1 max-w-[280px]">
+                                    @foreach ($p->detail->take(2) as $d)
+                                        <div class="flex items-center gap-1.5 text-sm">
+                                            <span class="text-xs">{{ $d->item_type === 'App\\Models\\ProdukTahu' ? '🥛' : '🌾' }}</span>
+                                            <span class="text-gray-700 truncate">{{ $d->nama_item }}</span>
+                                            <span class="text-gray-400 text-xs flex-shrink-0">×{{ $d->jumlah }}</span>
+                                        </div>
+                                    @endforeach
+                                    @if ($p->detail->count() > 2)
+                                        <p class="text-xs text-gray-400 pl-4">+{{ $p->detail->count() - 2 }} produk lainnya</p>
+                                    @endif
+                                </div>
+                            @else
+                                <span class="text-xs text-gray-400">-</span>
+                            @endif
+                        </td>
+
+                        <td class="px-5 py-4 text-sm text-gray-600 whitespace-nowrap">{{ $p->tanggal_order->format('d M Y') }}</td>
+                        <td class="px-5 py-4 text-sm font-semibold text-gray-800 whitespace-nowrap">Rp {{ number_format($p->total_harga, 0, ',', '.') }}</td>
+                        <td class="px-5 py-4">
+                            @if ($p->payment_method === 'COD')
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-bold" style="background:#dbeafe; color:#1d4ed8;">COD</span>
+                            @else
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-bold" style="background:#ede9fe; color:#6d28d9;">Transfer</span>
+                            @endif
+                        </td>
+                        <td class="px-5 py-4">
+                            <span class="px-2.5 py-1 rounded-lg text-xs font-bold" style="{{ $statusStyle }}">{{ ucfirst($p->order_status) }}</span>
+                        </td>
+                        <td class="px-5 py-4 text-right">
+                            <button type="button"
+                                    onclick='openPesananModal(@json($modalData, JSON_HEX_APOS | JSON_HEX_QUOT))'
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-semibold transition whitespace-nowrap">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                Detail
+                            </button>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="8" class="px-6 py-10 text-center text-gray-400">
+                            @if (request('q'))
+                                Tidak ada pesanan dengan kata kunci "<span class="font-semibold text-gray-600">{{ request('q') }}</span>"
+                            @else
+                                Belum ada pesanan
+                            @endif
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <div class="mt-4">{{ $pesanan->links() }}</div>
@@ -244,7 +280,6 @@
     <div style="width: 100%; max-width: 480px; max-height: 80vh;"
          class="bg-white rounded-2xl overflow-hidden flex flex-col shadow-2xl">
 
-        {{-- Header --}}
         <div class="flex items-center justify-between px-5 py-4 bg-emerald-600 text-white flex-shrink-0">
             <div>
                 <p class="text-xs opacity-80">Pesanan</p>
@@ -259,7 +294,6 @@
             </div>
         </div>
 
-        {{-- Body --}}
         <div class="flex-1 overflow-y-auto p-4 space-y-3 text-sm">
 
             <div class="bg-gray-50 rounded-xl p-3">
@@ -394,7 +428,6 @@
         document.querySelector('[x-data]').__x.$data.metodeOpen = false;
     }
 
-    // Inline style badges untuk modal header
     const STATUS_COLORS = {
         pending: '#f59e0b',
         diproses: '#0ea5e9',
