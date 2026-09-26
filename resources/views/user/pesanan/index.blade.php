@@ -31,34 +31,23 @@
     <div class="flex flex-wrap gap-2 mb-6">
         @php
             $chips = [
-                '' => ['label' => 'Semua', 'count' => $stats['all'], 'color' => 'gray'],
-                'pending' => ['label' => 'Pending', 'count' => $stats['pending'], 'color' => 'amber'],
-                'diproses' => ['label' => 'Diproses', 'count' => $stats['diproses'], 'color' => 'sky'],
-                'dikirim' => ['label' => 'Dikirim', 'count' => $stats['dikirim'], 'color' => 'violet'],
-                'selesai' => ['label' => 'Selesai', 'count' => $stats['selesai'], 'color' => 'emerald'],
-                'dibatalkan' => ['label' => 'Dibatalkan', 'count' => $stats['dibatalkan'], 'color' => 'rose'],
-            ];
-            $colorMap = [
-                'gray' => ['#f3f4f6', '#374151'],
-                'amber' => ['#fef3c7', '#b45309'],
-                'sky' => ['#dbeafe', '#1d4ed8'],
-                'violet' => ['#ede9fe', '#6d28d9'],
-                'emerald' => ['#d1fae5', '#047857'],
-                'rose' => ['#fee2e2', '#b91c1c'],
+                '' => ['label' => 'Semua', 'count' => $stats['all'], 'color' => '#374151'],
+                'pending' => ['label' => 'Pending', 'count' => $stats['pending'], 'color' => '#b45309'],
+                'diproses' => ['label' => 'Diproses', 'count' => $stats['diproses'], 'color' => '#1d4ed8'],
+                'dikirim' => ['label' => 'Dikirim', 'count' => $stats['dikirim'], 'color' => '#6d28d9'],
+                'selesai' => ['label' => 'Selesai', 'count' => $stats['selesai'], 'color' => '#047857'],
+                'dibatalkan' => ['label' => 'Dibatalkan', 'count' => $stats['dibatalkan'], 'color' => '#b91c1c'],
             ];
         @endphp
 
         @foreach ($chips as $key => $c)
-            @php
-                $isActive = request('status', '') == $key;
-                [$bg, $text] = $colorMap[$c['color']];
-            @endphp
+            @php $isActive = request('status', '') == $key; @endphp
             <a href="{{ route('user.pesanan.index', $key ? ['status' => $key] : []) }}"
-               class="flex items-center gap-2 px-4 py-2 rounded-xl border transition text-sm
-                      {{ $isActive ? 'border-gray-300 shadow-sm' : 'border-gray-100 hover:border-gray-200' }} bg-white">
-                <span class="w-2 h-2 rounded-full" style="background: {{ $text }};"></span>
+               class="flex items-center gap-2 px-4 py-2 rounded-xl border transition text-sm bg-white
+                      {{ $isActive ? 'border-gray-300 shadow-sm' : 'border-gray-100 hover:border-gray-200' }}">
+                <span class="w-2 h-2 rounded-full" style="background: {{ $c['color'] }};"></span>
                 <span class="font-medium text-gray-700">{{ $c['label'] }}</span>
-                <span class="font-bold" style="color: {{ $text }};">{{ $c['count'] }}</span>
+                <span class="font-bold" style="color: {{ $c['color'] }};">{{ $c['count'] }}</span>
             </a>
         @endforeach
     </div>
@@ -74,6 +63,23 @@
                         'selesai' => ['#d1fae5', '#047857'],
                         'dibatalkan' => ['#fee2e2', '#b91c1c'],
                     ][$p->order_status] ?? ['#f3f4f6', '#374151'];
+
+                    // Boleh cancel kalau: pending/diproses DAN (bukan Transfer OR sudah paid)
+                    $bolehCancel = in_array($p->order_status, ['pending', 'diproses'])
+                                && !($p->payment_method === 'Transfer' && $p->payment_status === 'pending');
+
+                    // Warning cuma muncul kalau masih pending, bukan Transfer pending, dan BUKAN dibatalkan
+                    $menungguVerifikasi = $p->payment_method === 'Transfer'
+                                        && $p->payment_status === 'pending'
+                                        && !in_array($p->order_status, ['dibatalkan', 'selesai']);
+
+                    $cancelData = [
+                        'kode' => $p->kode_pesanan,
+                        'total' => (int) $p->total_harga,
+                        'payment_method' => $p->payment_method,
+                        'payment_status' => $p->payment_status,
+                        'route' => route('user.pesanan.cancel', $p->kode_pesanan),
+                    ];
                 @endphp
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition">
                     {{-- Header --}}
@@ -88,7 +94,8 @@
                                 <p class="font-medium text-gray-700 text-sm">{{ $p->tanggal_order->format('d M Y, H:i') }}</p>
                             </div>
                         </div>
-                        <span class="px-3 py-1 rounded-lg text-xs font-bold" style="background: {{ $statusColor[0] }}; color: {{ $statusColor[1] }};">
+                        <span class="px-3 py-1 rounded-lg text-xs font-bold"
+                              style="background: {{ $statusColor[0] }}; color: {{ $statusColor[1] }};">
                             {{ ucfirst($p->order_status) }}
                         </span>
                     </div>
@@ -118,16 +125,18 @@
                                 </p>
                             </div>
                             <div class="flex gap-2">
-                                @if (in_array($p->order_status, ['pending', 'diproses']))
+                                @if ($bolehCancel)
                                     <button type="button"
-                                            onclick='openCancelModal(@json([
-                                                "kode" => $p->kode_pesanan,
-                                                "total" => $p->total_harga,
-                                                "payment_method" => $p->payment_method,
-                                                "payment_status" => $p->payment_status,
-                                                "route" => route("user.pesanan.cancel", $p->kode_pesanan),
-                                            ], JSON_HEX_APOS | JSON_HEX_QUOT))'
+                                            data-cancel="{{ json_encode($cancelData, JSON_HEX_APOS | JSON_HEX_QUOT) }}"
+                                            onclick="openCancelModal(JSON.parse(this.dataset.cancel))"
                                             class="px-4 py-2 bg-white border border-red-200 hover:bg-red-50 text-red-600 text-sm font-semibold rounded-xl transition">
+                                        Batalkan
+                                    </button>
+                                @elseif ($menungguVerifikasi)
+                                    <button type="button"
+                                            disabled
+                                            title="Harap tunggu admin memverifikasi pembayaran Anda terlebih dahulu."
+                                            class="px-4 py-2 bg-gray-100 border border-gray-200 text-gray-400 text-sm font-semibold rounded-xl cursor-not-allowed">
                                         Batalkan
                                     </button>
                                 @endif
@@ -137,6 +146,13 @@
                                 </a>
                             </div>
                         </div>
+
+                        @if ($menungguVerifikasi)
+                            <div class="mt-3 flex items-start gap-2 text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-2.5">
+                                <svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                <span>Pembayaran Anda sedang menunggu verifikasi admin. Harap tunggu sebelum membatalkan pesanan.</span>
+                            </div>
+                        @endif
                     </div>
                 </div>
             @endforeach
@@ -161,17 +177,15 @@
      style="background-color: rgba(0, 0, 0, 0.6);">
     <div style="width: 100%; max-width: 460px;" class="bg-white rounded-2xl overflow-hidden shadow-2xl">
 
-        {{-- Header --}}
         <div class="px-5 py-4 bg-red-500 text-white">
             <h3 class="text-lg font-bold">Batalkan Pesanan?</h3>
             <p class="text-xs opacity-90 mt-0.5">Pesanan #<span id="cKode"></span></p>
         </div>
 
-        {{-- Body --}}
         <form id="cancelForm" method="POST" class="p-5 space-y-4">
             @csrf
             <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800">
-                ⚠️ Pesanan yang sudah dibatalkan tidak dapat dikembalikan.
+                ⚠️ <strong>Setelah dibatalkan, pesanan tidak dapat dikembalikan ke status semula.</strong> Pastikan Anda yakin sebelum melanjutkan.
             </div>
 
             <div id="refundInfo" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-800">
@@ -212,7 +226,6 @@
         document.getElementById('cTotal').textContent = Number(data.total).toLocaleString('id-ID');
         document.getElementById('cancelForm').action = data.route;
 
-        // Tampilkan info refund kalau Transfer + paid
         if (data.payment_method === 'Transfer' && data.payment_status === 'paid') {
             document.getElementById('refundInfo').classList.remove('hidden');
         } else {

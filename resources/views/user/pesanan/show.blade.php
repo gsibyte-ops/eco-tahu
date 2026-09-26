@@ -32,6 +32,15 @@
             'selesai' => ['#d1fae5', '#047857'],
             'dibatalkan' => ['#fee2e2', '#b91c1c'],
         ][$pesanan->order_status] ?? ['#f3f4f6', '#374151'];
+
+        // Boleh cancel kalau: pending/diproses DAN (bukan Transfer OR sudah paid)
+        $bolehCancel = in_array($pesanan->order_status, ['pending', 'diproses'])
+                    && !($pesanan->payment_method === 'Transfer' && $pesanan->payment_status === 'pending');
+
+        // Warning cuma muncul kalau pending, bukan Transfer pending, dan BUKAN dibatalkan
+        $menungguVerifikasi = $pesanan->payment_method === 'Transfer'
+                            && $pesanan->payment_status === 'pending'
+                            && !in_array($pesanan->order_status, ['dibatalkan', 'selesai']);
     @endphp
 
     {{-- Header --}}
@@ -42,15 +51,16 @@
                 <p class="text-2xl font-bold text-gray-800">#{{ $pesanan->kode_pesanan }}</p>
                 <p class="text-sm text-gray-500 mt-1">{{ $pesanan->tanggal_order->format('d M Y, H:i') }}</p>
             </div>
-            <span class="px-3 py-1.5 rounded-lg text-sm font-bold" style="background: {{ $statusColor[0] }}; color: {{ $statusColor[1] }};">
+            <span class="px-3 py-1.5 rounded-lg text-sm font-bold"
+                  style="background: {{ $statusColor[0] }}; color: {{ $statusColor[1] }};">
                 {{ ucfirst($pesanan->order_status) }}
             </span>
         </div>
 
-        {{-- Kalau dibatalkan, tampilkan info refund --}}
+        {{-- Info Refund --}}
         @if ($pesanan->order_status === 'dibatalkan' && $pesanan->refund)
             <div class="bg-red-50 border border-red-200 rounded-xl p-4">
-                <p class="text-xs font-bold text-red-600 uppercase mb-2">💰 Info Refund</p>
+                <p class="text-xs font-bold text-red-600 uppercase mb-3">💰 Info Refund</p>
                 <div class="grid grid-cols-2 gap-3 text-sm">
                     <div>
                         <p class="text-xs text-red-500">Nominal</p>
@@ -60,10 +70,10 @@
                         <p class="text-xs text-red-500">Status Refund</p>
                         @php
                             $refundLabel = [
-                                'pending' => 'Menunggu Diproses',
-                                'diproses' => 'Sedang Diproses',
-                                'selesai' => 'Sudah Ditransfer',
-                                'ditolak' => 'Ditolak',
+                                'pending' => '⏳ Menunggu Diproses',
+                                'diproses' => '🔄 Sedang Diproses',
+                                'selesai' => '✅ Sudah Ditransfer',
+                                'ditolak' => '❌ Ditolak',
                             ][$pesanan->refund->status_refund] ?? '-';
                         @endphp
                         <p class="font-bold text-red-800">{{ $refundLabel }}</p>
@@ -72,6 +82,16 @@
                         <p class="text-xs text-red-500">Alasan Pembatalan</p>
                         <p class="text-red-800">{{ $pesanan->refund->alasan_batal }}</p>
                     </div>
+
+                    @if ($pesanan->refund->catatan_admin)
+                        <div class="col-span-2">
+                            <p class="text-xs text-red-500 mb-1">💬 Pesan dari Admin</p>
+                            <div class="bg-white border border-red-200 rounded-xl p-3">
+                                <p class="text-red-800 leading-relaxed">{{ $pesanan->refund->catatan_admin }}</p>
+                            </div>
+                        </div>
+                    @endif
+
                     @if ($pesanan->refund->bukti_transfer_balik)
                         <div class="col-span-2">
                             <p class="text-xs text-red-500 mb-1">Bukti Transfer Balik</p>
@@ -147,7 +167,7 @@
             </div>
         </div>
 
-        {{-- Upload bukti transfer --}}
+        {{-- Upload Bukti Transfer --}}
         @if ($pesanan->payment_method === 'Transfer' && $pesanan->payment_status !== 'paid' && $pesanan->order_status !== 'dibatalkan')
             <div class="mt-5 pt-5 border-t border-gray-100">
                 <p class="text-xs font-semibold text-gray-500 uppercase mb-3">Upload Bukti Transfer</p>
@@ -187,17 +207,31 @@
     </div>
 
     {{-- Actions --}}
+    @if ($bolehCancel)
+        @php
+            $cancelData = [
+                'kode' => $pesanan->kode_pesanan,
+                'total' => (int) $pesanan->total_harga,
+                'payment_method' => $pesanan->payment_method,
+                'payment_status' => $pesanan->payment_status,
+                'route' => route('user.pesanan.cancel', $pesanan->kode_pesanan),
+            ];
+        @endphp
+    @endif
+
     <div class="flex flex-wrap gap-3">
-        @if (in_array($pesanan->order_status, ['pending', 'diproses']))
+        @if ($bolehCancel)
             <button type="button"
-                    onclick='openCancelModal(@json([
-                        "kode" => $pesanan->kode_pesanan,
-                        "total" => $pesanan->total_harga,
-                        "payment_method" => $pesanan->payment_method,
-                        "payment_status" => $pesanan->payment_status,
-                        "route" => route("user.pesanan.cancel", $pesanan->kode_pesanan),
-                    ], JSON_HEX_APOS | JSON_HEX_QUOT))'
+                    data-cancel="{{ json_encode($cancelData, JSON_HEX_APOS | JSON_HEX_QUOT) }}"
+                    onclick="openCancelModal(JSON.parse(this.dataset.cancel))"
                     class="px-5 py-2.5 bg-white border border-red-200 hover:bg-red-50 text-red-600 font-semibold rounded-xl transition">
+                Batalkan Pesanan
+            </button>
+        @elseif ($menungguVerifikasi)
+            <button type="button"
+                    disabled
+                    title="Harap tunggu admin memverifikasi pembayaran Anda terlebih dahulu."
+                    class="px-5 py-2.5 bg-gray-100 border border-gray-200 text-gray-400 font-semibold rounded-xl cursor-not-allowed">
                 Batalkan Pesanan
             </button>
         @endif
@@ -206,9 +240,20 @@
             Kembali ke Daftar
         </a>
     </div>
+
+    {{-- Info tambahan kalau nunggu verifikasi --}}
+    @if ($menungguVerifikasi)
+        <div class="mt-4 flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4">
+            <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <div class="text-sm">
+                <p class="font-bold mb-1">Menunggu Verifikasi Pembayaran</p>
+                <p class="opacity-90">Pembayaran Anda sedang menunggu verifikasi admin. Harap tunggu sebelum membatalkan pesanan. Jika ada pertanyaan, hubungi admin.</p>
+            </div>
+        </div>
+    @endif
 </div>
 
-{{-- MODAL CANCEL (sama seperti index) --}}
+{{-- MODAL CANCEL --}}
 <div id="cancelModal" class="fixed inset-0 z-[999] hidden items-center justify-center p-4"
      style="background-color: rgba(0, 0, 0, 0.6);">
     <div style="width: 100%; max-width: 460px;" class="bg-white rounded-2xl overflow-hidden shadow-2xl">
@@ -219,7 +264,7 @@
         <form id="cancelForm" method="POST" class="p-5 space-y-4">
             @csrf
             <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800">
-                ⚠️ Pesanan yang sudah dibatalkan tidak dapat dikembalikan.
+                ⚠️ <strong>Setelah dibatalkan, pesanan tidak dapat dikembalikan ke status semula.</strong> Pastikan Anda yakin sebelum melanjutkan.
             </div>
             <div id="refundInfo" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-800">
                 💰 Dana sebesar <strong>Rp <span id="cTotal"></span></strong> akan dikembalikan ke rekening Anda dalam 1x24 jam setelah diverifikasi admin.

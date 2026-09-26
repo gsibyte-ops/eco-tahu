@@ -217,7 +217,6 @@
                                 <div class="space-y-1 max-w-[280px]">
                                     @foreach ($p->detail->take(2) as $d)
                                         <div class="flex items-center gap-1.5 text-sm">
-                                            <span class="text-xs">{{ $d->item_type === 'App\\Models\\ProdukTahu' ? '🥛' : '🌾' }}</span>
                                             <span class="text-gray-700 truncate">{{ $d->nama_item }}</span>
                                             <span class="text-gray-400 text-xs flex-shrink-0">×{{ $d->jumlah }}</span>
                                         </div>

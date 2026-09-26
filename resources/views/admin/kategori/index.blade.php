@@ -40,7 +40,7 @@
                         @if ($k->tipe === 'produk_tahu')
                             <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-bold">Produk Tahu</span>
                         @else
-                            <span class="px-2.5 py-1 bg-amber-50 text-amber-700 rounded-lg text-xs font-bold">Limbah</span>
+                            <span class="px-2.5 py-1 bg-amber-50 text-amber-700 rounded-lg text-xs font-bold">Produk Limbah</span>
                         @endif
                     </td>
                     <td class="px-6 py-4 text-right space-x-2">

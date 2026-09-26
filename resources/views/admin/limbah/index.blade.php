@@ -42,12 +42,20 @@
                             <img src="{{ asset('storage/' . $l->gambar) }}" alt="{{ $l->nama_limbah }}"
                                  class="w-14 h-14 rounded-xl object-cover border border-gray-100">
                         @else
-                            <div class="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 text-xs">No img</div>
+                            <div class="w-14 h-14 rounded-xl bg-amber-50 border border-dashed border-amber-200 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            </div>
                         @endif
                     </td>
                     <td class="px-6 py-4">
                         <p class="text-sm font-semibold text-gray-800">{{ $l->nama_limbah }}</p>
                         <p class="text-xs text-gray-500">{{ Str::limit($l->deskripsi, 50) }}</p>
+                        @if (!$l->gambar)
+                            <p class="text-xs text-amber-600 font-medium mt-1 flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                Belum ada foto
+                            </p>
+                        @endif
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-600">{{ $l->kategori->nama_kategori ?? '-' }}</td>
                     <td class="px-6 py-4 text-sm font-semibold text-gray-800">Rp {{ number_format($l->harga, 0, ',', '.') }}</td>
@@ -69,7 +77,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="7" class="px-6 py-10 text-center text-gray-400">Belum ada data limbah</td></tr>
+                <tr><td colspan="7" class="px-6 py-10 text-center text-gray-400">Belum ada limbah</td></tr>
             @endforelse
         </tbody>
     </table>

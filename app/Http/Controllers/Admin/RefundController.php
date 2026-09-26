@@ -11,19 +11,18 @@ class RefundController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Refund::with(['pesanan.user'])->orderByDesc('id');
+        $query = Refund::with(['pesanan.user', 'pesanan.detail'])->orderByDesc('id');
 
-        // Filter by status
         if ($request->filled('status')) {
             $query->where('status_refund', $request->status);
         }
 
-        // Search by kode pesanan / nama pelanggan
         if ($request->filled('q')) {
             $q = $request->q;
             $query->whereHas('pesanan', function ($w) use ($q) {
                 $w->where('kode_pesanan', 'like', "%{$q}%")
-                  ->orWhereHas('user', fn ($u) => $u->where('username', 'like', "%{$q}%"));
+                  ->orWhereHas('user', fn ($u) => $u->where('username', 'like', "%{$q}%"))
+                  ->orWhereHas('detail', fn ($d) => $d->where('nama_item', 'like', "%{$q}%"));
             });
         }
 
@@ -50,28 +49,39 @@ class RefundController extends Controller
     {
         $request->validate([
             'status_refund' => 'required|in:pending,diproses,selesai,ditolak',
-            'bukti_transfer_balik' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'catatan_admin' => 'nullable|string|max:1000',
+            'bukti_transfer_balik' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+        ], [
+            'bukti_transfer_balik.image' => 'File harus berupa gambar.',
+            'bukti_transfer_balik.mimes' => 'Format gambar harus JPG, JPEG, PNG, atau WEBP. (Kalau dari iPhone, pilih "Most Compatible" saat kirim foto)',
+            'bukti_transfer_balik.max' => 'Ukuran gambar maksimal 5MB.',
         ]);
 
-        $data = ['status_refund' => $request->status_refund];
+        try {
+            $data = [
+                'status_refund' => $request->status_refund,
+                'catatan_admin' => $request->catatan_admin,
+            ];
 
-        if ($request->hasFile('bukti_transfer_balik')) {
-            // Hapus bukti lama kalau ada
-            if ($refund->bukti_transfer_balik && Storage::disk('public')->exists($refund->bukti_transfer_balik)) {
-                Storage::disk('public')->delete($refund->bukti_transfer_balik);
+            if ($request->hasFile('bukti_transfer_balik')) {
+                if ($refund->bukti_transfer_balik && Storage::disk('public')->exists($refund->bukti_transfer_balik)) {
+                    Storage::disk('public')->delete($refund->bukti_transfer_balik);
+                }
+                $data['bukti_transfer_balik'] = $request->file('bukti_transfer_balik')->store('refund-bukti', 'public');
             }
-            $data['bukti_transfer_balik'] = $request->file('bukti_transfer_balik')->store('refund-bukti', 'public');
+
+            $refund->update($data);
+
+            if ($request->status_refund === 'selesai') {
+                $refund->pesanan->update(['payment_status' => 'refunded']);
+            }
+
+            return redirect()->route('admin.refund.show', $refund->id)
+                ->with('success', 'Status refund berhasil diupdate!');
+
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
         }
-
-        $refund->update($data);
-
-        // Kalau refund selesai, update payment_status pesanan jadi 'refunded'
-        if ($request->status_refund === 'selesai') {
-            $refund->pesanan->update(['payment_status' => 'refunded']);
-        }
-
-        return redirect()->route('admin.refund.show', $refund->id)
-            ->with('success', 'Status refund berhasil diupdate!');
     }
 
     public function destroy(Refund $refund)

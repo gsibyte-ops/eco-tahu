@@ -69,12 +69,12 @@
                 Produk Tahu
             </a>
 
-            {{-- Limbah --}}
+            {{-- Produk Limbah --}}
             <a href="{{ route('admin.limbah.index') }}"
                class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition
                       {{ request()->routeIs('admin.limbah.*') ? 'bg-emerald-600 text-white shadow-sm' : 'text-gray-600 hover:bg-emerald-50 hover:text-emerald-700' }}">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h16v16H4z M9 9h6v6H9z"/></svg>
-                Limbah
+                Produk Limbah
             </a>
 
             {{-- Kategori --}}
