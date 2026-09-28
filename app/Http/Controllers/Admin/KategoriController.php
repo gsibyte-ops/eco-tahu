@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Kategori;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -13,7 +14,16 @@ class KategoriController extends Controller
     public function index()
     {
         $kategori = Kategori::orderByDesc('id')->paginate(10);
-        return view('admin.kategori.index', compact('kategori'));
+
+        $kategoriJson = Kategori::orderByDesc('id')->get()->map(function ($k) {
+            return [
+                'id' => $k->id,
+                'nama_kategori' => $k->nama_kategori,
+                'tipe' => $k->tipe,
+            ];
+        })->values();
+
+        return view('admin.kategori.index', compact('kategori', 'kategoriJson'));
     }
 
     public function create()
@@ -23,7 +33,7 @@ class KategoriController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'nama_kategori' => [
                 'required', 'string', 'min:3', 'max:100',
                 'regex:/^[a-zA-Z\s]+$/',
@@ -39,6 +49,11 @@ class KategoriController extends Controller
             'tipe.required' => 'Tipe kategori wajib dipilih.',
             'tipe.in' => 'Tipe kategori tidak valid.',
         ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput()
+                ->with('open_modal', 'create');
+        }
 
         Kategori::create([
             'nama_kategori' => $request->nama_kategori,
@@ -57,7 +72,7 @@ class KategoriController extends Controller
 
     public function update(Request $request, Kategori $kategori)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'nama_kategori' => [
                 'required', 'string', 'min:3', 'max:100',
                 'regex:/^[a-zA-Z\s]+$/',
@@ -73,6 +88,12 @@ class KategoriController extends Controller
             'tipe.required' => 'Tipe kategori wajib dipilih.',
             'tipe.in' => 'Tipe kategori tidak valid.',
         ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput()
+                ->with('open_modal', 'edit')
+                ->with('edit_id', $kategori->id);
+        }
 
         $kategori->update([
             'nama_kategori' => $request->nama_kategori,

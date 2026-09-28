@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class EdukasiController extends Controller
 {
@@ -42,10 +43,28 @@ class EdukasiController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'judul' => 'required|string|max:200',
-            'konten' => 'required|string',
+            'judul' => [
+                'required', 'string', 'min:5', 'max:200',
+                'regex:/^[a-zA-Z0-9\s.,:!?\-]+$/',
+                Rule::unique('edukasi', 'judul'),
+            ],
+            'konten' => 'required|string|min:20|max:10000',
             'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'status' => 'required|in:draft,publish',
+        ], [
+            'judul.required' => 'Judul artikel wajib diisi.',
+            'judul.regex' => 'Judul artikel hanya boleh huruf, angka, spasi, dan tanda baca umum (titik, koma, titik dua, tanda tanya, tanda seru, tanda hubung).',
+            'judul.unique' => 'Judul artikel ini sudah ada. Gunakan judul lain.',
+            'judul.min' => 'Judul artikel minimal 5 karakter.',
+            'judul.max' => 'Judul artikel maksimal 200 karakter.',
+            'konten.required' => 'Konten artikel wajib diisi.',
+            'konten.min' => 'Konten artikel minimal 20 karakter.',
+            'konten.max' => 'Konten artikel maksimal 10.000 karakter.',
+            'thumbnail.image' => 'File harus berupa gambar.',
+            'thumbnail.mimes' => 'Format thumbnail harus JPG, PNG, atau WEBP.',
+            'thumbnail.max' => 'Ukuran thumbnail maksimal 2MB.',
+            'status.required' => 'Status wajib dipilih.',
+            'status.in' => 'Status tidak valid.',
         ]);
 
         $data = $request->only(['judul', 'konten', 'status']);
@@ -70,10 +89,29 @@ class EdukasiController extends Controller
     public function update(Request $request, Edukasi $edukasi)
     {
         $request->validate([
-            'judul' => 'required|string|max:200',
-            'konten' => 'required|string',
+            'judul' => [
+                'required', 'string', 'min:5', 'max:200',
+                'regex:/^[a-zA-Z0-9\s.,:!?\-]+$/',
+                Rule::unique('edukasi', 'judul')->ignore($edukasi->id),
+            ],
+            'konten' => 'required|string|min:20|max:10000',
             'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'status' => 'required|in:draft,publish',
+            'hapus_thumbnail' => 'nullable|in:0,1',
+        ], [
+            'judul.required' => 'Judul artikel wajib diisi.',
+            'judul.regex' => 'Judul artikel hanya boleh huruf, angka, spasi, dan tanda baca umum.',
+            'judul.unique' => 'Judul artikel ini sudah ada. Gunakan judul lain.',
+            'judul.min' => 'Judul artikel minimal 5 karakter.',
+            'judul.max' => 'Judul artikel maksimal 200 karakter.',
+            'konten.required' => 'Konten artikel wajib diisi.',
+            'konten.min' => 'Konten artikel minimal 20 karakter.',
+            'konten.max' => 'Konten artikel maksimal 10.000 karakter.',
+            'thumbnail.image' => 'File harus berupa gambar.',
+            'thumbnail.mimes' => 'Format thumbnail harus JPG, PNG, atau WEBP.',
+            'thumbnail.max' => 'Ukuran thumbnail maksimal 2MB.',
+            'status.required' => 'Status wajib dipilih.',
+            'status.in' => 'Status tidak valid.',
         ]);
 
         $data = $request->only(['judul', 'konten', 'status']);
@@ -84,6 +122,12 @@ class EdukasiController extends Controller
                 Storage::disk('public')->delete($edukasi->thumbnail);
             }
             $data['thumbnail'] = $request->file('thumbnail')->store('edukasi', 'public');
+
+        } elseif ($request->input('hapus_thumbnail') == '1') {
+            if ($edukasi->thumbnail && Storage::disk('public')->exists($edukasi->thumbnail)) {
+                Storage::disk('public')->delete($edukasi->thumbnail);
+            }
+            $data['thumbnail'] = null;
         }
 
         $edukasi->update($data);

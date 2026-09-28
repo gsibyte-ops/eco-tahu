@@ -7,6 +7,7 @@ use App\Models\Kategori;
 use App\Models\Limbah;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -18,7 +19,24 @@ class LimbahController extends Controller
             ->orderByDesc('id')
             ->paginate(10);
 
-        return view('admin.limbah.index', compact('limbah'));
+        $kategori = Kategori::where('tipe', 'limbah')->get();
+
+        $limbahJson = Limbah::orderByDesc('id')->get()->map(function ($l) {
+            return [
+                'id' => $l->id,
+                'nama_limbah' => $l->nama_limbah,
+                'kategori_id' => $l->kategori_id,
+                'kategori_nama' => $l->kategori->nama_kategori ?? '-',
+                'harga' => (int) $l->harga,
+                'stok' => (int) $l->stok,
+                'satuan' => $l->satuan,
+                'deskripsi' => $l->deskripsi,
+                'gambar' => $l->gambar ? asset('storage/' . $l->gambar) : null,
+                'status' => $l->status,
+            ];
+        })->values();
+
+        return view('admin.limbah.index', compact('limbah', 'kategori', 'limbahJson'));
     }
 
     public function create()
@@ -29,7 +47,7 @@ class LimbahController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'nama_limbah' => [
                 'required', 'string', 'min:3', 'max:150',
                 'regex:/^[a-zA-Z\s]+$/',
@@ -44,7 +62,7 @@ class LimbahController extends Controller
             'status' => 'required|in:aktif,nonaktif',
         ], [
             'nama_limbah.required' => 'Nama limbah wajib diisi.',
-            'nama_limbah.regex' => 'Nama limbah hanya boleh huruf dan spasi. Tidak boleh angka atau simbol.',
+            'nama_limbah.regex' => 'Nama limbah hanya boleh huruf dan spasi.',
             'nama_limbah.unique' => 'Nama limbah ini sudah ada. Gunakan nama lain.',
             'nama_limbah.min' => 'Nama limbah minimal 3 karakter.',
             'nama_limbah.max' => 'Nama limbah maksimal 150 karakter.',
@@ -68,6 +86,11 @@ class LimbahController extends Controller
             'status.in' => 'Status tidak valid.',
         ]);
 
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput()
+                ->with('open_modal', 'create');
+        }
+
         $data = $request->only(['kategori_id', 'nama_limbah', 'harga', 'stok', 'satuan', 'deskripsi', 'status']);
         $data['slug'] = Str::slug($request->nama_limbah) . '-' . time();
 
@@ -89,7 +112,7 @@ class LimbahController extends Controller
 
     public function update(Request $request, Limbah $limbah)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'nama_limbah' => [
                 'required', 'string', 'min:3', 'max:150',
                 'regex:/^[a-zA-Z\s]+$/',
@@ -105,29 +128,15 @@ class LimbahController extends Controller
             'hapus_gambar' => 'nullable|in:0,1',
         ], [
             'nama_limbah.required' => 'Nama limbah wajib diisi.',
-            'nama_limbah.regex' => 'Nama limbah hanya boleh huruf dan spasi. Tidak boleh angka atau simbol.',
+            'nama_limbah.regex' => 'Nama limbah hanya boleh huruf dan spasi.',
             'nama_limbah.unique' => 'Nama limbah ini sudah ada. Gunakan nama lain.',
-            'nama_limbah.min' => 'Nama limbah minimal 3 karakter.',
-            'nama_limbah.max' => 'Nama limbah maksimal 150 karakter.',
-            'kategori_id.required' => 'Kategori wajib dipilih.',
-            'kategori_id.exists' => 'Kategori tidak valid.',
-            'harga.required' => 'Harga wajib diisi.',
-            'harga.numeric' => 'Harga harus berupa angka.',
-            'harga.min' => 'Harga minimal Rp 100.',
-            'harga.max' => 'Harga maksimal Rp 99.999.999.',
-            'stok.required' => 'Stok wajib diisi.',
-            'stok.integer' => 'Stok harus berupa angka bulat.',
-            'stok.min' => 'Stok tidak boleh negatif.',
-            'stok.max' => 'Stok maksimal 999.999.',
-            'satuan.required' => 'Satuan wajib diisi. Contoh: kg, ikat, karung.',
-            'satuan.max' => 'Satuan maksimal 20 karakter.',
-            'deskripsi.max' => 'Deskripsi maksimal 1000 karakter.',
-            'gambar.image' => 'File harus berupa gambar.',
-            'gambar.mimes' => 'Format gambar harus JPG, PNG, atau WEBP.',
-            'gambar.max' => 'Ukuran gambar maksimal 2MB.',
-            'status.required' => 'Status wajib dipilih.',
-            'status.in' => 'Status tidak valid.',
         ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput()
+                ->with('open_modal', 'edit')
+                ->with('edit_id', $limbah->id);
+        }
 
         $data = $request->only(['kategori_id', 'nama_limbah', 'harga', 'stok', 'satuan', 'deskripsi', 'status']);
         $data['slug'] = Str::slug($request->nama_limbah) . '-' . time();

@@ -9,8 +9,39 @@
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    {{-- ⚡ STACK UNTUK CUSTOM CSS PER-HALAMAN (Flatpickr, dll) --}}
+    @stack('styles')
+
     <style>
         [x-cloak] { display: none !important; }
+
+        /* Custom Flatpickr theme (match EcoTahu green) */
+        .flatpickr-calendar {
+            border-radius: 16px;
+            border: 1px solid #f3f4f6;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            font-family: inherit;
+        }
+        .flatpickr-day.selected,
+        .flatpickr-day.startRange,
+        .flatpickr-day.endRange,
+        .flatpickr-day.selected.inRange,
+        .flatpickr-day.startRange.inRange,
+        .flatpickr-day.endRange.inRange {
+            background: #10b981;
+            border-color: #10b981;
+        }
+        .flatpickr-day.today {
+            border-color: #10b981;
+        }
+        .flatpickr-day:hover {
+            background: #d1fae5;
+            border-color: #d1fae5;
+        }
+        .flatpickr-months .flatpickr-month,
+        .flatpickr-current-month .flatpickr-monthDropdown-months {
+            font-weight: 600;
+        }
     </style>
 </head>
 <body class="bg-gray-50 font-sans antialiased text-gray-800">

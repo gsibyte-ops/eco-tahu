@@ -11,18 +11,29 @@
 @endif
 
 {{-- Statistik --}}
-<div class="grid grid-cols-3 gap-3 mb-6">
-    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-        <p class="text-xs text-gray-500 mb-1">Total Artikel</p>
-        <p class="text-2xl font-bold text-gray-800">{{ $stats['total'] }}</p>
+<div class="grid grid-cols-3 gap-4 mb-6">
+
+    {{-- Total Artikel (Putih + Accent Sky) --}}
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 relative overflow-hidden">
+        <div class="absolute left-0 top-0 bottom-0 w-1" style="background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);"></div>
+        <div class="pl-3">
+            <p class="text-sm font-semibold text-gray-500 mb-1">Total Artikel</p>
+            <p class="text-3xl font-bold" style="color: #0284c7;">{{ $stats['total'] }}</p>
+        </div>
     </div>
-    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-        <p class="text-xs text-gray-500 mb-1">Published</p>
-        <p class="text-2xl font-bold text-emerald-600">{{ $stats['publish'] }}</p>
+
+    {{-- Published (Gradient Emerald) --}}
+    <div class="rounded-2xl p-4 shadow-md text-white"
+         style="background: linear-gradient(135deg, #34d399 0%, #10b981 100%);">
+        <p class="text-sm font-semibold opacity-95 mb-1">Published</p>
+        <p class="text-3xl font-bold">{{ $stats['publish'] }}</p>
     </div>
-    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-        <p class="text-xs text-gray-500 mb-1">Draft</p>
-        <p class="text-2xl font-bold text-amber-600">{{ $stats['draft'] }}</p>
+
+    {{-- Draft (Gradient Amber) --}}
+    <div class="rounded-2xl p-4 shadow-md text-white"
+         style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);">
+        <p class="text-sm font-semibold opacity-95 mb-1">Draft</p>
+        <p class="text-3xl font-bold">{{ $stats['draft'] }}</p>
     </div>
 </div>
 
@@ -38,29 +49,69 @@
 </div>
 
 {{-- Filter --}}
-<div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-6">
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-6" x-data="{ statusOpen: false }">
     <form method="GET" class="flex flex-wrap gap-3 items-end">
-        <div class="flex-1 min-w-[200px]">
-            <label class="block text-xs font-medium text-gray-600 mb-1">Cari Judul</label>
-            <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari artikel..."
-                   class="w-full px-4 py-2 text-sm rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+
+        {{-- Search --}}
+        <div class="flex-1 min-w-[240px]">
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Cari Artikel</label>
+            <div class="relative">
+                <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input type="text" name="q" value="{{ request('q') }}"
+                       placeholder="Cari judul artikel..."
+                       class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
         </div>
 
-        <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Status</label>
-            <select name="status" class="px-4 py-2 text-sm rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                <option value="">Semua</option>
-                <option value="publish" {{ request('status') == 'publish' ? 'selected' : '' }}>Publish</option>
-                <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Draft</option>
-            </select>
+        {{-- Dropdown Status --}}
+        <div style="width: 180px;" class="relative" @click.away="statusOpen = false">
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Status</label>
+            <button type="button" @click="statusOpen = !statusOpen"
+                    class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
+                <span class="text-gray-700 whitespace-nowrap" id="statusLabel">
+                    @php
+                        $statusLabel = match(request('status')) {
+                            'publish' => 'Publish',
+                            'draft' => 'Draft',
+                            default => 'Semua Status',
+                        };
+                    @endphp
+                    {{ $statusLabel }}
+                </span>
+                <svg class="w-4 h-4 text-gray-400 flex-shrink-0" :class="statusOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+
+            <div x-show="statusOpen" x-cloak
+                 class="absolute left-0 right-0 z-30 mt-2 bg-white rounded-xl border border-gray-100 shadow-lg overflow-hidden">
+                @foreach (['' => 'Semua Status', 'publish' => 'Publish', 'draft' => 'Draft'] as $val => $label)
+                    <button type="button"
+                            data-value="{{ $val }}"
+                            data-label="{{ $label }}"
+                            onclick="selectStatusFilter(this)"
+                            class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-left whitespace-nowrap hover:bg-emerald-50 transition
+                                   {{ request('status') == $val ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-gray-700' }}">
+                        <span>{{ $label }}</span>
+                        @if (request('status') == $val)
+                            <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        @endif
+                    </button>
+                @endforeach
+            </div>
+
+            <input type="hidden" name="status" id="inputStatus" value="{{ request('status') }}">
         </div>
 
-        <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
+        <button type="submit" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition whitespace-nowrap">
             Filter
         </button>
 
         @if (request()->hasAny(['q', 'status']))
-            <a href="{{ route('admin.edukasi.index') }}" class="px-5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition">
+            <a href="{{ route('admin.edukasi.index') }}"
+               class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition flex items-center gap-2 whitespace-nowrap">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 Reset
             </a>
         @endif
@@ -99,9 +150,9 @@
                     <td class="px-6 py-4 text-sm text-gray-500">{{ $e->tanggal_mengunggah->format('d M Y') }}</td>
                     <td class="px-6 py-4">
                         @if ($e->status === 'publish')
-                            <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-bold">Publish</span>
+                            <span class="px-2.5 py-1 rounded-lg text-xs font-bold" style="background:#d1fae5; color:#047857;">Publish</span>
                         @else
-                            <span class="px-2.5 py-1 bg-amber-50 text-amber-700 rounded-lg text-xs font-bold">Draft</span>
+                            <span class="px-2.5 py-1 rounded-lg text-xs font-bold" style="background:#fef3c7; color:#b45309;">Draft</span>
                         @endif
                     </td>
                     <td class="px-6 py-4 text-right space-x-2">
@@ -114,7 +165,13 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="6" class="px-6 py-10 text-center text-gray-400">Belum ada artikel</td></tr>
+                <tr><td colspan="6" class="px-6 py-10 text-center text-gray-400">
+                    @if (request('q'))
+                        Tidak ada artikel dengan kata kunci "<span class="font-semibold text-gray-600">{{ request('q') }}</span>"
+                    @else
+                        Belum ada artikel
+                    @endif
+                </td></tr>
             @endforelse
         </tbody>
     </table>
@@ -123,3 +180,13 @@
 <div class="mt-4">{{ $edukasi->links() }}</div>
 
 @endsection
+
+@push('scripts')
+<script>
+    function selectStatusFilter(el) {
+        document.getElementById('inputStatus').value = el.dataset.value;
+        document.getElementById('statusLabel').textContent = el.dataset.label;
+        document.querySelector('[x-data]').__x.$data.statusOpen = false;
+    }
+</script>
+@endpush

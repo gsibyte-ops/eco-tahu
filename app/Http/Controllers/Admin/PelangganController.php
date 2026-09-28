@@ -18,7 +18,6 @@ class PelangganController extends Controller
             }], 'total_harga')
             ->orderByDesc('id');
 
-        // Search
         if ($request->filled('q')) {
             $q = $request->q;
             $query->where(function ($w) use ($q) {
@@ -30,7 +29,6 @@ class PelangganController extends Controller
 
         $pelanggan = $query->paginate(10)->withQueryString();
 
-        // Statistik
         $stats = [
             'total_pelanggan' => User::where('role_id', 2)->count(),
             'pelanggan_aktif' => User::where('role_id', 2)
@@ -46,11 +44,10 @@ class PelangganController extends Controller
 
     public function show(User $pelanggan)
     {
-        // Pastikan yang diakses adalah pelanggan (bukan admin)
         abort_if($pelanggan->role_id !== 2, 404);
 
         $pelanggan->load(['pesanan' => function ($q) {
-            $q->orderByDesc('tanggal_order')->limit(10);
+            $q->with(['detail', 'refund', 'pembayaran'])->orderByDesc('tanggal_order')->limit(10);
         }]);
 
         $statistik = [
@@ -61,5 +58,68 @@ class PelangganController extends Controller
         ];
 
         return view('admin.pelanggan.show', compact('pelanggan', 'statistik'));
+    }
+
+    public function export(Request $request)
+    {
+        $query = User::where('role_id', 2)
+            ->withCount('pesanan')
+            ->withSum(['pesanan as total_belanja' => function ($q) {
+                $q->where('payment_status', 'paid');
+            }], 'total_harga')
+            ->orderByDesc('id');
+
+        if ($request->filled('q')) {
+            $q = $request->q;
+            $query->where(function ($w) use ($q) {
+                $w->where('username', 'like', "%{$q}%")
+                  ->orWhere('email', 'like', "%{$q}%")
+                  ->orWhere('no_telepon', 'like', "%{$q}%");
+            });
+        }
+
+        $pelanggan = $query->get();
+
+        $filename = 'pelanggan-ecotahu-' . date('Y-m-d-His') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $callback = function () use ($pelanggan) {
+            $file = fopen('php://output', 'w');
+
+            // BOM UTF-8 biar Excel support karakter Indonesia
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+            fputcsv($file, [
+                'No',
+                'Nama',
+                'Email',
+                'No. Telepon',
+                'Alamat',
+                'Total Pesanan',
+                'Total Belanja (Rp)',
+                'Tanggal Daftar',
+            ]);
+
+            foreach ($pelanggan as $i => $p) {
+                fputcsv($file, [
+                    $i + 1,
+                    $p->username,
+                    $p->email,
+                    $p->no_telepon ?? '-',
+                    $p->alamat ?? '-',
+                    $p->pesanan_count,
+                    $p->total_belanja ?? 0,
+                    $p->created_at->format('d M Y'),
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

@@ -13,10 +13,20 @@ class RefundController extends Controller
     {
         $query = Refund::with(['pesanan.user', 'pesanan.detail'])->orderByDesc('id');
 
+        // Filter by status
         if ($request->filled('status')) {
             $query->where('status_refund', $request->status);
         }
 
+        // Filter by date range (tanggal_refund)
+        if ($request->filled('dari')) {
+            $query->where('tanggal_refund', '>=', $request->dari . ' 00:00:00');
+        }
+        if ($request->filled('sampai')) {
+            $query->where('tanggal_refund', '<=', $request->sampai . ' 23:59:59');
+        }
+
+        // Search: kode pesanan / nama pelanggan / nama produk
         if ($request->filled('q')) {
             $q = $request->q;
             $query->whereHas('pesanan', function ($w) use ($q) {

@@ -25,34 +25,29 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // ============================
-// PUBLIC CATALOG
-// ============================
-Route::prefix('produk')->name('user.produk.')->group(function () {
-    Route::get('/', [ProdukController::class, 'index'])->name('index');
-    Route::get('/{slug}', [ProdukController::class, 'show'])->name('show');
-});
-
-Route::prefix('limbah')->name('user.limbah.')->group(function () {
-    Route::get('/', [LimbahController::class, 'index'])->name('index');
-    Route::get('/{slug}', [LimbahController::class, 'show'])->name('show');
-});
-
-Route::prefix('edukasi')->name('user.edukasi.')->group(function () {
-    Route::get('/', [EdukasiController::class, 'index'])->name('index');
-    Route::get('/{slug}', [EdukasiController::class, 'show'])->name('show');
-});
-
-// ============================
-// USER (Pelanggan) — butuh login
+// USER (Pelanggan)
 // ============================
 Route::middleware('auth')->group(function () {
 
-    // Profil (bawaan Breeze)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Cart
+    Route::prefix('produk')->name('user.produk.')->group(function () {
+        Route::get('/', [ProdukController::class, 'index'])->name('index');
+        Route::get('/{slug}', [ProdukController::class, 'show'])->name('show');
+    });
+
+    Route::prefix('limbah')->name('user.limbah.')->group(function () {
+        Route::get('/', [LimbahController::class, 'index'])->name('index');
+        Route::get('/{slug}', [LimbahController::class, 'show'])->name('show');
+    });
+
+    Route::prefix('edukasi')->name('user.edukasi.')->group(function () {
+        Route::get('/', [EdukasiController::class, 'index'])->name('index');
+        Route::get('/{slug}', [EdukasiController::class, 'show'])->name('show');
+    });
+
     Route::prefix('cart')->name('user.cart.')->group(function () {
         Route::get('/', [CartController::class, 'index'])->name('index');
         Route::post('/add', [CartController::class, 'add'])->name('add');
@@ -61,7 +56,6 @@ Route::middleware('auth')->group(function () {
         Route::delete('/clear', [CartController::class, 'clear'])->name('clear');
     });
 
-    // Checkout
     Route::prefix('checkout')->name('user.checkout.')->group(function () {
         Route::get('/', [CheckoutController::class, 'index'])->name('index');
         Route::post('/', [CheckoutController::class, 'store'])->name('store');
@@ -69,7 +63,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/upload-bukti/{kode}', [CheckoutController::class, 'uploadBukti'])->name('uploadBukti');
     });
 
-    // Riwayat Pesanan
     Route::prefix('pesanan')->name('user.pesanan.')->group(function () {
         Route::get('/', [PesananController::class, 'index'])->name('index');
         Route::get('/{kode}', [PesananController::class, 'show'])->name('show');
@@ -85,39 +78,38 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Kategori (CRUD)
+    // Kategori
     Route::resource('kategori', KategoriController::class);
 
-    // Produk Tahu (CRUD)
+    // Produk Tahu
     Route::resource('produk-tahu', ProdukTahuController::class);
 
-    // Limbah (CRUD)
+    // Limbah
     Route::resource('limbah', AdminLimbahController::class);
 
-    // Pesanan (custom)
+    // Pesanan
     Route::get('/pesanan', [AdminPesananController::class, 'index'])->name('pesanan.index');
     Route::get('/pesanan/{pesanan}', [AdminPesananController::class, 'show'])->name('pesanan.show');
     Route::patch('/pesanan/{pesanan}/status', [AdminPesananController::class, 'updateStatus'])->name('pesanan.updateStatus');
     Route::post('/pesanan/{pesanan}/verifikasi', [AdminPesananController::class, 'verifikasiPembayaran'])->name('pesanan.verifikasi');
 
-    // Refund (custom)
+    // Refund
     Route::get('/refund', [RefundController::class, 'index'])->name('refund.index');
     Route::get('/refund/{refund}', [RefundController::class, 'show'])->name('refund.show');
     Route::put('/refund/{refund}', [RefundController::class, 'update'])->name('refund.update');
     Route::delete('/refund/{refund}', [RefundController::class, 'destroy'])->name('refund.destroy');
 
-    // Pelanggan
+    // Pelanggan — export HARUS di atas
+    Route::get('/pelanggan/export', [PelangganController::class, 'export'])->name('pelanggan.export');
     Route::get('/pelanggan', [PelangganController::class, 'index'])->name('pelanggan.index');
     Route::get('/pelanggan/{pelanggan}', [PelangganController::class, 'show'])->name('pelanggan.show');
 
-    // Edukasi (CRUD)
+    // Edukasi
     Route::resource('edukasi', AdminEdukasiController::class);
 
-    // Laporan
+    // Laporan — export HARUS di atas
+    Route::get('/laporan/export', [LaporanController::class, 'export'])->name('laporan.export');
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
 });
 
-// ============================
-// AUTH (Breeze)
-// ============================
 require __DIR__.'/auth.php';

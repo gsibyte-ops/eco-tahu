@@ -9,30 +9,39 @@ use Illuminate\Http\Request;
 
 class PesananController extends Controller
 {
-    public function index(Request $request)
-    {
-        $query = Pesanan::with(['user', 'detail', 'refund', 'pembayaran'])
-            ->orderByDesc('tanggal_order');
+        public function index(Request $request)
+        {
+            $query = Pesanan::with(['user', 'detail', 'refund', 'pembayaran'])
+                ->orderByDesc('tanggal_order');
 
-        // Filter by status
-        if ($request->filled('status')) {
-            $query->where('order_status', $request->status);
-        }
+            // Filter by status
+            if ($request->filled('status')) {
+                $query->where('order_status', $request->status);
+            }
 
-        // Filter by payment method
-        if ($request->filled('payment_method')) {
-            $query->where('payment_method', $request->payment_method);
-        }
+            // Filter by payment method
+            if ($request->filled('payment_method')) {
+                $query->where('payment_method', $request->payment_method);
+            }
 
-        // Search by kode pesanan / nama pelanggan / nama produk
-        if ($request->filled('q')) {
-            $q = $request->q;
-            $query->where(function ($w) use ($q) {
-                $w->where('kode_pesanan', 'like', "%{$q}%")
-                ->orWhereHas('user', fn ($u) => $u->where('username', 'like', "%{$q}%"))
-                ->orWhereHas('detail', fn ($d) => $d->where('nama_item', 'like', "%{$q}%"));
-            });
-        }
+            // Filter by date range
+            if ($request->filled('dari')) {
+                $query->where('tanggal_order', '>=', $request->dari . ' 00:00:00');
+            }
+
+            if ($request->filled('sampai')) {
+                $query->where('tanggal_order', '<=', $request->sampai . ' 23:59:59');
+            }
+
+            // Search by kode pesanan / nama pelanggan / nama produk
+            if ($request->filled('q')) {
+                $q = $request->q;
+                $query->where(function ($w) use ($q) {
+                    $w->where('kode_pesanan', 'like', "%{$q}%")
+                    ->orWhereHas('user', fn ($u) => $u->where('username', 'like', "%{$q}%"))
+                    ->orWhereHas('detail', fn ($d) => $d->where('nama_item', 'like', "%{$q}%"));
+                });
+            }
 
         $pesanan = $query->paginate(10)->withQueryString();
 

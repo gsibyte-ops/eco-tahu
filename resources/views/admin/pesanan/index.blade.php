@@ -2,6 +2,10 @@
 @section('title', 'Kelola Pesanan')
 @section('page-title', 'Kelola Pesanan')
 
+@push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+@endpush
+
 @section('content')
 
 @if (session('success'))
@@ -23,119 +27,127 @@
     @endphp
 
     @foreach ($statusList as $key => $s)
-        <div class="rounded-2xl p-4 shadow-md text-white"
-             style="background: linear-gradient(135deg, {{ $s['color1'] }} 0%, {{ $s['color2'] }} 100%);">
+        <a href="{{ route('admin.pesanan.index', array_merge(request()->except('status', 'page'), ['status' => $key])) }}"
+           class="rounded-2xl p-4 shadow-md text-white transition hover:shadow-lg hover:-translate-y-0.5
+                  {{ request('status') == $key ? 'ring-2 ring-white ring-offset-2 ring-offset-gray-100' : '' }}"
+           style="background: linear-gradient(135deg, {{ $s['color1'] }} 0%, {{ $s['color2'] }} 100%);">
             <p class="text-sm font-semibold opacity-95 mb-1">{{ $s['label'] }}</p>
             <p class="text-3xl font-bold">{{ $stats[$key] ?? 0 }}</p>
-        </div>
+        </a>
     @endforeach
 </div>
 
 {{-- Filter --}}
-<div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6" x-data="{ statusOpen: false, metodeOpen: false }">
-    <form method="GET">
-        <div class="flex flex-wrap gap-4 items-end">
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-6" x-data="{ statusOpen: false, metodeOpen: false }">
+    <form method="GET" class="flex flex-wrap gap-3 items-end">
 
-            {{-- Search --}}
-            <div class="flex-1 min-w-[240px]">
-                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Cari Pesanan</label>
-                <div class="relative">
-                    <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10"
-                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                    <input type="text" name="q" value="{{ request('q') }}"
-                           placeholder="Kode pesanan / nama pelanggan / nama produk..."
-                           class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
-                </div>
+        <div class="flex-1 min-w-[200px]">
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Cari Pesanan</label>
+            <div class="relative">
+                <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input type="text" name="q" value="{{ request('q') }}"
+                       placeholder="Kode / pelanggan / produk..."
+                       class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Dari</label>
+            <input type="text" name="dari" id="dari" value="{{ request('dari') }}" readonly
+                   class="datepicker w-36 px-3 py-2.5 text-sm rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
+        </div>
+
+        <div>
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Sampai</label>
+            <input type="text" name="sampai" id="sampai" value="{{ request('sampai') }}" readonly
+                   class="datepicker w-36 px-3 py-2.5 text-sm rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
+        </div>
+
+        <div style="width: 160px;" class="relative" @click.away="statusOpen = false">
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Status</label>
+            <button type="button" @click="statusOpen = !statusOpen"
+                    class="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
+                <span class="text-gray-700 whitespace-nowrap overflow-hidden text-ellipsis" id="statusLabel">
+                    @php
+                        $statusLabel = match(request('status')) {
+                            'pending' => 'Pending',
+                            'diproses' => 'Diproses',
+                            'dikirim' => 'Dikirim',
+                            'selesai' => 'Selesai',
+                            'dibatalkan' => 'Dibatalkan',
+                            default => 'Semua Status',
+                        };
+                    @endphp
+                    {{ $statusLabel }}
+                </span>
+                <svg class="w-4 h-4 text-gray-400 flex-shrink-0" :class="statusOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+
+            <div x-show="statusOpen" x-cloak
+                 class="absolute left-0 right-0 z-30 mt-2 bg-white rounded-xl border border-gray-100 shadow-lg overflow-hidden">
+                @foreach (['' => 'Semua Status', 'pending' => 'Pending', 'diproses' => 'Diproses', 'dikirim' => 'Dikirim', 'selesai' => 'Selesai', 'dibatalkan' => 'Dibatalkan'] as $val => $label)
+                    <button type="button"
+                            data-value="{{ $val }}"
+                            data-label="{{ $label }}"
+                            onclick="selectStatus(this)"
+                            class="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-left whitespace-nowrap hover:bg-emerald-50 transition
+                                   {{ request('status') == $val ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-gray-700' }}">
+                        <span>{{ $label }}</span>
+                        @if (request('status') == $val)
+                            <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        @endif
+                    </button>
+                @endforeach
             </div>
 
-            {{-- Dropdown Status --}}
-            <div style="width: 200px;" class="relative" @click.away="statusOpen = false">
-                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Status</label>
-                <button type="button" @click="statusOpen = !statusOpen"
-                        class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
-                    <span class="text-gray-700 whitespace-nowrap overflow-hidden text-ellipsis" id="statusLabel">
-                        @php
-                            $statusLabel = match(request('status')) {
-                                'pending' => 'Pending',
-                                'diproses' => 'Diproses',
-                                'dikirim' => 'Dikirim',
-                                'selesai' => 'Selesai',
-                                'dibatalkan' => 'Dibatalkan',
-                                default => 'Semua Status',
-                            };
-                        @endphp
-                        {{ $statusLabel }}
-                    </span>
-                    <svg class="w-4 h-4 text-gray-400 flex-shrink-0" :class="statusOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                </button>
+            <input type="hidden" name="status" id="inputStatus" value="{{ request('status') }}">
+        </div>
 
-                <div x-show="statusOpen" x-cloak
-                     class="absolute left-0 right-0 z-30 mt-2 bg-white rounded-xl border border-gray-100 shadow-lg overflow-hidden">
-                    @foreach (['' => 'Semua Status', 'pending' => 'Pending', 'diproses' => 'Diproses', 'dikirim' => 'Dikirim', 'selesai' => 'Selesai', 'dibatalkan' => 'Dibatalkan'] as $val => $label)
-                        <button type="button"
-                                data-value="{{ $val }}"
-                                data-label="{{ $label }}"
-                                onclick="selectStatus(this)"
-                                class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-left whitespace-nowrap hover:bg-emerald-50 transition
-                                       {{ request('status') == $val ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-gray-700' }}">
-                            <span>{{ $label }}</span>
-                            @if (request('status') == $val)
-                                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                            @endif
-                        </button>
-                    @endforeach
-                </div>
+        <div style="width: 160px;" class="relative" @click.away="metodeOpen = false">
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Metode</label>
+            <button type="button" @click="metodeOpen = !metodeOpen"
+                    class="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
+                <span class="text-gray-700 whitespace-nowrap overflow-hidden text-ellipsis" id="metodeLabel">
+                    {{ request('payment_method') ?: 'Semua Metode' }}
+                </span>
+                <svg class="w-4 h-4 text-gray-400 flex-shrink-0" :class="metodeOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
 
-                <input type="hidden" name="status" id="inputStatus" value="{{ request('status') }}">
+            <div x-show="metodeOpen" x-cloak
+                 class="absolute left-0 right-0 z-30 mt-2 bg-white rounded-xl border border-gray-100 shadow-lg overflow-hidden">
+                @foreach (['' => 'Semua Metode', 'COD' => 'COD', 'Transfer' => 'Transfer'] as $val => $label)
+                    <button type="button"
+                            data-value="{{ $val }}"
+                            data-label="{{ $label }}"
+                            onclick="selectMetode(this)"
+                            class="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-left whitespace-nowrap hover:bg-emerald-50 transition
+                                   {{ request('payment_method') == $val ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-gray-700' }}">
+                        <span>{{ $label }}</span>
+                        @if (request('payment_method') == $val)
+                            <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        @endif
+                    </button>
+                @endforeach
             </div>
 
-            {{-- Dropdown Metode --}}
-            <div style="width: 180px;" class="relative" @click.away="metodeOpen = false">
-                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Metode Bayar</label>
-                <button type="button" @click="metodeOpen = !metodeOpen"
-                        class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
-                    <span class="text-gray-700 whitespace-nowrap overflow-hidden text-ellipsis" id="metodeLabel">
-                        {{ request('payment_method') ?: 'Semua Metode' }}
-                    </span>
-                    <svg class="w-4 h-4 text-gray-400 flex-shrink-0" :class="metodeOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                </button>
+            <input type="hidden" name="payment_method" id="inputMetode" value="{{ request('payment_method') }}">
+        </div>
 
-                <div x-show="metodeOpen" x-cloak
-                     class="absolute left-0 right-0 z-30 mt-2 bg-white rounded-xl border border-gray-100 shadow-lg overflow-hidden">
-                    @foreach (['' => 'Semua Metode', 'COD' => 'COD', 'Transfer' => 'Transfer'] as $val => $label)
-                        <button type="button"
-                                data-value="{{ $val }}"
-                                data-label="{{ $label }}"
-                                onclick="selectMetode(this)"
-                                class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-left whitespace-nowrap hover:bg-emerald-50 transition
-                                       {{ request('payment_method') == $val ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-gray-700' }}">
-                            <span>{{ $label }}</span>
-                            @if (request('payment_method') == $val)
-                                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                            @endif
-                        </button>
-                    @endforeach
-                </div>
+        <div class="flex gap-2">
+            <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition whitespace-nowrap">
+                Filter
+            </button>
 
-                <input type="hidden" name="payment_method" id="inputMetode" value="{{ request('payment_method') }}">
-            </div>
-
-            {{-- Buttons --}}
-            <div class="flex gap-2">
-                <button type="submit" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition whitespace-nowrap">
-                    Filter
-                </button>
-
-                @if (request()->hasAny(['q', 'status', 'payment_method']))
-                    <a href="{{ route('admin.pesanan.index') }}"
-                       class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition flex items-center gap-2 whitespace-nowrap">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                        Reset
-                    </a>
-                @endif
-            </div>
+            @if (request()->hasAny(['q', 'status', 'payment_method', 'dari', 'sampai']))
+                <a href="{{ route('admin.pesanan.index') }}"
+                   class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition flex items-center gap-1.5 whitespace-nowrap">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    Reset
+                </a>
+            @endif
         </div>
     </form>
 </div>
@@ -211,12 +223,12 @@
                             <p class="text-xs text-gray-500">{{ $p->user->email ?? '' }}</p>
                         </td>
 
-                        {{-- KOLOM PRODUK (BARU) --}}
                         <td class="px-5 py-4">
                             @if ($p->detail->count() > 0)
                                 <div class="space-y-1 max-w-[280px]">
                                     @foreach ($p->detail->take(2) as $d)
                                         <div class="flex items-center gap-1.5 text-sm">
+                                            <span class="text-xs">{{ $d->item_type === 'App\\Models\\ProdukTahu' ? '🥛' : '🌾' }}</span>
                                             <span class="text-gray-700 truncate">{{ $d->nama_item }}</span>
                                             <span class="text-gray-400 text-xs flex-shrink-0">×{{ $d->jumlah }}</span>
                                         </div>
@@ -254,8 +266,8 @@
                 @empty
                     <tr>
                         <td colspan="8" class="px-6 py-10 text-center text-gray-400">
-                            @if (request('q'))
-                                Tidak ada pesanan dengan kata kunci "<span class="font-semibold text-gray-600">{{ request('q') }}</span>"
+                            @if (request()->hasAny(['q', 'status', 'dari', 'sampai', 'payment_method']))
+                                Tidak ada pesanan yang sesuai filter
                             @else
                                 Belum ada pesanan
                             @endif
@@ -388,20 +400,42 @@
                 </div>
             </div>
 
+            {{-- UPDATE STATUS (CUSTOM DROPDOWN) --}}
             <div id="mFormStatusWrapper" class="bg-gray-50 rounded-xl p-3">
                 <p class="text-xs font-semibold text-gray-400 uppercase mb-2">Update Status</p>
                 <form id="mFormStatus" method="POST" class="flex gap-2">
                     @csrf @method('PATCH')
-                    <select name="order_status" required
-                            class="flex-1 px-3 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
-                        <option value="pending">Pending</option>
-                        <option value="diproses">Diproses</option>
-                        <option value="dikirim">Dikirim</option>
-                        <option value="selesai">Selesai</option>
-                        <option value="dibatalkan">Dibatalkan</option>
-                    </select>
+
+                    {{-- Custom Alpine Dropdown --}}
+                    <div class="flex-1 relative" x-data="{ statusModalOpen: false }" @click.away="statusModalOpen = false">
+                        <button type="button" @click="statusModalOpen = !statusModalOpen"
+                                class="w-full flex items-center justify-between gap-2 px-3 py-2 text-sm rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
+                            <span class="text-gray-800" id="mStatusFormLabel">Pilih Status</span>
+                            <svg class="w-4 h-4 text-gray-400 flex-shrink-0" :class="statusModalOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+
+                        <div x-show="statusModalOpen" x-cloak
+                             class="absolute left-0 right-0 z-30 bottom-full mb-2 bg-white rounded-xl border border-gray-100 shadow-lg overflow-hidden">
+                            @foreach (['pending' => 'Pending', 'diproses' => 'Diproses', 'dikirim' => 'Dikirim', 'selesai' => 'Selesai', 'dibatalkan' => 'Dibatalkan'] as $val => $label)
+                                <button type="button"
+                                        data-value="{{ $val }}"
+                                        data-label="{{ $label }}"
+                                        onclick="selectOrderStatus(this)"
+                                        class="order-status-option w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-left hover:bg-emerald-50 transition
+                                               {{ 'pending' == $val ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-gray-700' }}">
+                                    <span>{{ $label }}</span>
+                                    @if ('pending' == $val)
+                                        <svg class="checkmark-order-svg w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    @endif
+                                </button>
+                            @endforeach
+                        </div>
+
+                        <input type="hidden" name="order_status" id="mInputOrderStatus" value="pending">
+                    </div>
+
                     <button type="submit"
-                            class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition"
+                            class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition whitespace-nowrap"
                             onclick="return confirm('Update status pesanan ini?')">
                         Update
                     </button>
@@ -414,7 +448,9 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
+    // ==== FILTER HANDLERS ====
     function selectStatus(el) {
         document.getElementById('inputStatus').value = el.dataset.value;
         document.getElementById('statusLabel').textContent = el.dataset.label;
@@ -427,6 +463,69 @@
         document.querySelector('[x-data]').__x.$data.metodeOpen = false;
     }
 
+    // ==== ORDER STATUS DROPDOWN (MODAL) ====
+    function selectOrderStatus(el) {
+        const value = el.dataset.value;
+        const label = el.dataset.label;
+
+        document.getElementById('mInputOrderStatus').value = value;
+        document.getElementById('mStatusFormLabel').textContent = label;
+
+        // Reset semua option
+        document.querySelectorAll('.order-status-option').forEach(function(btn) {
+            btn.classList.remove('bg-emerald-50', 'text-emerald-700', 'font-semibold');
+            btn.classList.add('text-gray-700');
+
+            const check = btn.querySelector('.checkmark-order-svg');
+            if (check) check.remove();
+        });
+
+        // Highlight yang aktif
+        el.classList.remove('text-gray-700');
+        el.classList.add('bg-emerald-50', 'text-emerald-700', 'font-semibold');
+
+        if (!el.querySelector('.checkmark-order-svg')) {
+            el.insertAdjacentHTML('beforeend', '<svg class="checkmark-order-svg w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>');
+        }
+
+        // Close dropdown
+        const container = el.closest('[x-data]');
+        if (container && container.__x) {
+            container.__x.$data.statusModalOpen = false;
+        }
+    }
+
+    // ==== FLATPICKR ====
+    flatpickr(".datepicker", {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d M Y",
+        allowInput: false,
+        monthSelectorType: "static",
+        onReady: function(selectedDates, dateStr, instance) {
+            const yearInput = instance.currentYearElement;
+            if (yearInput) {
+                yearInput.addEventListener('input', function() {
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                });
+                yearInput.addEventListener('keydown', function(e) {
+                    if (['e', 'E', '+', '-', '.', ','].includes(e.key)) {
+                        e.preventDefault();
+                    }
+                });
+                yearInput.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+                    const numbersOnly = pastedText.replace(/[^0-9]/g, '');
+                    if (numbersOnly) {
+                        this.value = numbersOnly.substring(0, 4);
+                    }
+                });
+            }
+        }
+    });
+
+    // ==== MODAL HANDLERS ====
     const STATUS_COLORS = {
         pending: '#f59e0b',
         diproses: '#0ea5e9',
@@ -527,7 +626,26 @@
         } else {
             formStatusWrapper.classList.remove('hidden');
             formStatus.action = data.route_update_status;
-            formStatus.querySelector('select[name="order_status"]').value = data.order_status;
+
+            // Set custom dropdown label
+            const statusLabelForm = data.order_status.charAt(0).toUpperCase() + data.order_status.slice(1);
+            document.getElementById('mInputOrderStatus').value = data.order_status;
+            document.getElementById('mStatusFormLabel').textContent = statusLabelForm;
+
+            // Sync visual dropdown
+            document.querySelectorAll('.order-status-option').forEach(function(btn) {
+                btn.classList.remove('bg-emerald-50', 'text-emerald-700', 'font-semibold');
+                btn.classList.add('text-gray-700');
+
+                const check = btn.querySelector('.checkmark-order-svg');
+                if (check) check.remove();
+
+                if (btn.dataset.value === data.order_status) {
+                    btn.classList.remove('text-gray-700');
+                    btn.classList.add('bg-emerald-50', 'text-emerald-700', 'font-semibold');
+                    btn.insertAdjacentHTML('beforeend', '<svg class="checkmark-order-svg w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>');
+                }
+            });
         }
     }
 
