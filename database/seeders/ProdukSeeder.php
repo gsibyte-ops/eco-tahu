@@ -2,31 +2,59 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
+use App\Models\Kategori;
+use App\Models\Limbah;
 use App\Models\ProdukTahu;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
 class ProdukSeeder extends Seeder
 {
     public function run(): void
     {
-        $produk = [
-            ['kategori_id' => 1, 'nama_produk' => 'Tahu Putih Organik Premium', 'harga' => 12500, 'stok' => 100, 'deskripsi' => 'Tahu putih premium hasil kedelai organik pilihan.'],
-            ['kategori_id' => 2, 'nama_produk' => 'Tahu Goreng Gurih Renyah', 'harga' => 14000, 'stok' => 80, 'deskripsi' => 'Tahu goreng dengan tekstur renyah di luar, lembut di dalam.'],
-            ['kategori_id' => 3, 'nama_produk' => 'Tahu Susu Lembut Bergizi', 'harga' => 18500, 'stok' => 60, 'deskripsi' => 'Tahu susu dengan tekstur super lembut, kaya protein.'],
-            ['kategori_id' => 4, 'nama_produk' => 'Tahu Bakso Spesial Daging Sapi', 'harga' => 16000, 'stok' => 50, 'deskripsi' => 'Tahu bakso isi daging sapi pilihan, cocok untuk lauk.'],
-            ['kategori_id' => 1, 'nama_produk' => 'Tahu Putih Ekonomis', 'harga' => 8000, 'stok' => 150, 'deskripsi' => 'Tahu putih harga terjangkau kualitas tetap oke.'],
+        $kategoriTahu   = Kategori::where('slug', 'tahu')->first();
+        $kategoriLimbah = Kategori::where('slug', 'limbah')->first();
+
+        // ============ PRODUK TAHU ============
+        $tahu = [
+            ['Tahu Putih Ekonomis',          8000,  150, 'Tahu putih harga terjangkau kualitas tetap oke.'],
+            ['Tahu Bakso Spesial Daging Sapi', 18500, 46,  'Tahu bakso isi daging sapi pilihan.'],
+            ['Tahu Susu Lembut Bergizi',     15000, 55,  'Tahu susu dengan tekstur lembut.'],
+            ['Tahu Goreng Gurih Renyah',     10000, 80,  'Tahu goreng dengan tekstur renyah.'],
+            ['Tahu Putih Organik Premium',   12500, 100, 'Tahu putih premium hasil kedelai organik.'],
         ];
 
-        foreach ($produk as $p) {
+        foreach ($tahu as $t) {
             ProdukTahu::create([
-                'kategori_id' => $p['kategori_id'],
-                'nama_produk' => $p['nama_produk'],
-                'slug' => Str::slug($p['nama_produk']),
-                'deskripsi' => $p['deskripsi'],
-                'harga' => $p['harga'],
-                'stok' => $p['stok'],
-                'status' => 'aktif',
+                'kategori_id' => $kategoriTahu->id,
+                'nama_produk' => $t[0],
+                'slug'        => Str::slug($t[0]) . '-' . uniqid(),
+                'deskripsi'   => $t[3],
+                'harga'       => $t[1],
+                'stok'        => $t[2],
+                'satuan'      => 'pcs',
+                'status'      => 'aktif',
+            ]);
+        }
+
+        // ============ LIMBAH ============
+        $limbah = [
+            ['Ampas Tahu Kering Premium',  5000, 120, 'kg', 'Ampas tahu kering kualitas premium.'],
+            ['Ampas Tahu Kering Halus',    6000, 100, 'kg', 'Ampas tahu kering yang sudah dihaluskan.'],
+            ['Ampas Tahu Basah Segar',     3000, 80,  'kg', 'Ampas tahu basah segar langsung dari produksi.'],
+            ['Ampas Tahu Fermentasi',      8000, 60,  'kg', 'Ampas tahu fermentasi siap jadi pakan ternak.'],
+        ];
+
+        foreach ($limbah as $l) {
+            Limbah::create([
+                'kategori_id' => $kategoriLimbah->id,
+                'nama_limbah' => $l[0],
+                'slug'        => Str::slug($l[0]) . '-' . uniqid(),
+                'deskripsi'   => $l[4],
+                'harga'       => $l[1],
+                'stok'        => $l[2],
+                'satuan'      => $l[3],
+                'status'      => 'aktif',
             ]);
         }
     }

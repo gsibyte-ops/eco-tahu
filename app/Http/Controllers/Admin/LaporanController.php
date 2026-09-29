@@ -9,6 +9,7 @@ use App\Models\ProdukTahu;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class LaporanController extends Controller
 {
@@ -21,6 +22,22 @@ class LaporanController extends Controller
         $sampai = $request->filled('sampai')
             ? $request->sampai
             : now()->format('Y-m-d');
+
+        $dariCarbon = Carbon::parse($dari);
+        $sampaiCarbon = Carbon::parse($sampai);
+
+        // ============ VALIDASI: MAX RANGE 1 TAHUN ============
+        if ($dariCarbon->diffInDays($sampaiCarbon) > 365) {
+            $sampaiCarbon = $dariCarbon->copy()->addYear()->subDay();
+            $sampai = $sampaiCarbon->format('Y-m-d');
+        }
+
+        // Swap kalau kebalik
+        if ($dariCarbon->gt($sampaiCarbon)) {
+            [$dariCarbon, $sampaiCarbon] = [$sampaiCarbon, $dariCarbon];
+            $dari = $dariCarbon->format('Y-m-d');
+            $sampai = $sampaiCarbon->format('Y-m-d');
+        }
 
         $periode = [
             'dari' => $dari . ' 00:00:00',
@@ -66,7 +83,7 @@ class LaporanController extends Controller
             ->groupBy('payment_method')
             ->get();
 
-        // ============ GRAFIK HARIAN ============
+        // ============ GRAFIK HARIAN (untuk hitung hari transaksi) ============
         $grafikHarian = Pesanan::select(
                 DB::raw('DATE(tanggal_order) as tanggal'),
                 DB::raw('SUM(total_harga) as total'),
@@ -77,6 +94,46 @@ class LaporanController extends Controller
             ->groupBy('tanggal')
             ->orderBy('tanggal')
             ->get();
+
+        // ============ CHART DATA — HARIAN ATAU BULANAN ============
+        $selisihHari = $dariCarbon->diffInDays($sampaiCarbon);
+        $modeGrafik = $selisihHari > 31 ? 'bulanan' : 'harian';
+
+        $chartLabels = [];
+        $chartData = [];
+
+        if ($modeGrafik === 'harian') {
+            // Fill SEMUA hari dalam range (termasuk 0) biar chart-nya smooth
+            $dataHarian = $grafikHarian->keyBy('tanggal');
+            $cursor = $dariCarbon->copy();
+            while ($cursor->lte($sampaiCarbon)) {
+                $tglStr = $cursor->format('Y-m-d');
+                $chartLabels[] = $cursor->format('d M Y');
+                $chartData[] = isset($dataHarian[$tglStr]) ? (float) $dataHarian[$tglStr]->total : 0;
+                $cursor->addDay();
+            }
+        } else {
+            // Aggregate per bulan
+            $dataBulanan = Pesanan::select(
+                    DB::raw("DATE_FORMAT(tanggal_order, '%Y-%m') as bulan"),
+                    DB::raw('SUM(total_harga) as total')
+                )
+                ->where('payment_status', 'paid')
+                ->whereBetween('tanggal_order', [$periode['dari'], $periode['sampai']])
+                ->groupBy('bulan')
+                ->orderBy('bulan')
+                ->get()
+                ->keyBy('bulan');
+
+            $cursor = $dariCarbon->copy()->startOfMonth();
+            $end = $sampaiCarbon->copy()->startOfMonth();
+            while ($cursor->lte($end)) {
+                $keyBulan = $cursor->format('Y-m');
+                $chartLabels[] = $cursor->format('M Y');
+                $chartData[] = isset($dataBulanan[$keyBulan]) ? (float) $dataBulanan[$keyBulan]->total : 0;
+                $cursor->addMonth();
+            }
+        }
 
         // ============ SEMUA PRODUK (berurut by terlaris) ============
         $semuaProduk = DB::table('produk_tahu')
@@ -127,7 +184,7 @@ class LaporanController extends Controller
             ->orderByDesc('total_qty')
             ->get();
 
-        // ============ TOP PELANGGAN (dengan relasi pesanan) ============
+        // ============ TOP PELANGGAN ============
         $topPelanggan = User::where('role_id', 2)
             ->withCount(['pesanan as total_pesanan' => function ($q) use ($periode) {
                 $q->whereBetween('tanggal_order', [$periode['dari'], $periode['sampai']]);
@@ -160,7 +217,7 @@ class LaporanController extends Controller
             ->limit(10)
             ->get();
 
-        // ============ DATA JSON UNTUK MODAL (build di controller) ============
+        // ============ JSON UNTUK MODAL ============
         $semuaProdukJson = $semuaProduk->map(function ($p) {
             return [
                 'nama' => $p->nama_produk,
@@ -182,6 +239,7 @@ class LaporanController extends Controller
 
         return view('admin.laporan.index', compact(
             'dari', 'sampai', 'ringkasan', 'grafikHarian',
+            'chartLabels', 'chartData', 'modeGrafik',
             'semuaProduk', 'semuaLimbah', 'topPelanggan',
             'metodePembayaran', 'stokMenipis', 'limbahMenipis',
             'semuaProdukJson', 'semuaLimbahJson'
@@ -192,6 +250,15 @@ class LaporanController extends Controller
     {
         $dari = $request->filled('dari') ? $request->dari : now()->startOfMonth()->format('Y-m-d');
         $sampai = $request->filled('sampai') ? $request->sampai : now()->format('Y-m-d');
+
+        $dariCarbon = Carbon::parse($dari);
+        $sampaiCarbon = Carbon::parse($sampai);
+
+        // Validasi max 1 tahun
+        if ($dariCarbon->diffInDays($sampaiCarbon) > 365) {
+            $sampaiCarbon = $dariCarbon->copy()->addYear()->subDay();
+            $sampai = $sampaiCarbon->format('Y-m-d');
+        }
 
         $pesanan = Pesanan::with(['user', 'detail'])
             ->whereBetween('tanggal_order', [$dari . ' 00:00:00', $sampai . ' 23:59:59'])

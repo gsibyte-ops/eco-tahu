@@ -2,40 +2,40 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Admin
+        // Admin (role_id = 1)
         User::create([
             'role_id' => 1,
             'username' => 'admin',
             'email' => 'admin@ecotahu.id',
             'password' => Hash::make('password'),
+            'alamat' => 'Jl. Tahu No. 1, Bandung',
             'no_telepon' => '081234567890',
-            'alamat' => 'Jl. Hijau Lestari No. 88, Bandung',
         ]);
 
-        // Pelanggan dummy
+        // Pelanggan dummy (role_id = 2)
         $pelanggan = [
-            ['username' => 'budi', 'email' => 'budi@test.com', 'alamat' => 'Jl. Merdeka No. 10, Bandung', 'no_telepon' => '081111111111'],
-            ['username' => 'siti', 'email' => 'siti@test.com', 'alamat' => 'Jl. Sudirman No. 25, Bandung', 'no_telepon' => '082222222222'],
-            ['username' => 'andi', 'email' => 'andi@test.com', 'alamat' => 'Jl. Asia Afrika No. 5, Bandung', 'no_telepon' => '083333333333'],
-            ['username' => 'rina', 'email' => 'rina@test.com', 'alamat' => 'Jl. Dago No. 100, Bandung', 'no_telepon' => '084444444444'],
+            ['budi',  'budi@test.com',  '081111111111', 'Jl. Merdeka No. 10, Bandung'],
+            ['rina',  'rina@test.com',  '082222222222', 'Jl. Sudirman No. 25, Bandung'],
+            ['siti',  'siti@test.com',  '083333333333', 'Jl. Asia Afrika No. 5, Bandung'],
+            ['andi',  'andi@test.com',  '084444444444', 'Jl. Riau No. 88, Bandung'],
         ];
 
         foreach ($pelanggan as $p) {
             User::create([
                 'role_id' => 2,
-                'username' => $p['username'],
-                'email' => $p['email'],
+                'username' => $p[0],
+                'email' => $p[1],
                 'password' => Hash::make('password'),
-                'alamat' => $p['alamat'],
-                'no_telepon' => $p['no_telepon'],
+                'no_telepon' => $p[2],
+                'alamat' => $p[3],
             ]);
         }
     }

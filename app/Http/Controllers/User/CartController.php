@@ -9,12 +9,16 @@ use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
+    // 👇 Konstanta minimum pembelian
+    const MINIMAL_PEMBELIAN = 15000; // Rp 15.000
+
     public function index()
     {
         $cart = session('cart', []);
         $subtotal = collect($cart)->sum(fn ($i) => $i['harga'] * $i['qty']);
+        $minimalPembelian = self::MINIMAL_PEMBELIAN;
 
-        return view('user.cart.index', compact('cart', 'subtotal'));
+        return view('user.cart.index', compact('cart', 'subtotal', 'minimalPembelian'));
     }
 
     public function add(Request $request)

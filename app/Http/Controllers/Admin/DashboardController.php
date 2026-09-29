@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Pesanan;
 use App\Models\ProdukTahu;
+use App\Models\Limbah;
 use App\Models\User;
 use App\Models\Refund;
 use Illuminate\Support\Facades\DB;
@@ -13,12 +14,19 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        // ============ BREAKDOWN STOK ============
+        $totalTahu   = ProdukTahu::sum('stok');
+        $totalLimbah = Limbah::sum('stok');
+        $totalProduk = $totalTahu + $totalLimbah;
+
         $stats = [
-            'total_pesanan' => Pesanan::count(),
+            'total_pesanan'    => Pesanan::count(),
             'total_pendapatan' => Pesanan::where('payment_status', 'paid')->sum('total_harga'),
-            'total_produk' => ProdukTahu::sum('stok'),
-            'total_pelanggan' => User::where('role_id', 2)->count(),
-            'refund_pending' => Refund::where('status_refund', 'pending')->count(),
+            'total_produk'     => $totalProduk,
+            'total_tahu'       => $totalTahu,
+            'total_limbah'     => $totalLimbah,
+            'total_pelanggan'  => User::where('role_id', 2)->count(),
+            'refund_pending'   => Refund::where('status_refund', 'pending')->count(),
         ];
 
         // ============ GRAFIK 7 HARI ============
@@ -61,8 +69,8 @@ class DashboardController extends Controller
             $chartDataBulanan[] = $found ? (float) $found->total : 0;
         }
 
-        // ============ PRODUK TERLARIS ============
-        $produkTerlaris = DB::table('detail_pesanan')
+        // ============ PRODUK TERLARIS (Tahu) ============
+        $produkTahuTerlaris = DB::table('detail_pesanan')
             ->join('produk_tahu', 'detail_pesanan.item_id', '=', 'produk_tahu.id')
             ->where('detail_pesanan.item_type', 'App\\Models\\ProdukTahu')
             ->select('produk_tahu.nama_produk', DB::raw('SUM(detail_pesanan.jumlah) as total_terjual'))
@@ -70,6 +78,23 @@ class DashboardController extends Controller
             ->orderByDesc('total_terjual')
             ->limit(5)
             ->get();
+
+        // ============ PRODUK TERLARIS (Limbah) ============
+        $produkLimbahTerlaris = DB::table('detail_pesanan')
+            ->join('limbah', 'detail_pesanan.item_id', '=', 'limbah.id')
+            ->where('detail_pesanan.item_type', 'App\\Models\\Limbah')
+            ->select('limbah.nama_limbah as nama_produk', DB::raw('SUM(detail_pesanan.jumlah) as total_terjual'))
+            ->groupBy('limbah.id', 'limbah.nama_limbah')
+            ->orderByDesc('total_terjual')
+            ->limit(5)
+            ->get();
+
+        // ============ GABUNGIN PRODUK TERLARIS ============
+        $produkTerlaris = $produkTahuTerlaris
+            ->concat($produkLimbahTerlaris)
+            ->sortByDesc('total_terjual')
+            ->take(5)
+            ->values();
 
         // ============ PESANAN TERBARU ============
         $pesananTerbaru = Pesanan::with('user')

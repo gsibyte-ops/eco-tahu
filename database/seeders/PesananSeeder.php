@@ -2,81 +2,97 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\Pesanan;
 use App\Models\DetailPesanan;
 use App\Models\Pembayaran;
-use App\Models\Refund;
+use App\Models\Pesanan;
 use App\Models\ProdukTahu;
+use App\Models\Limbah;
+use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class PesananSeeder extends Seeder
 {
     public function run(): void
     {
-        $dataPesanan = [
-            ['user_id' => 2, 'kode' => 'ETI123456', 'items' => [[1, 2], [2, 2]], 'payment_method' => 'Transfer', 'payment_status' => 'pending', 'order_status' => 'pending', 'jarak_km' => 5, 'refund' => false],
-            ['user_id' => 3, 'kode' => 'ETI123455', 'items' => [[1, 3]], 'payment_method' => 'COD', 'payment_status' => 'pending', 'order_status' => 'diproses', 'jarak_km' => 3, 'refund' => false],
-            ['user_id' => 4, 'kode' => 'ETI123454', 'items' => [[3, 2], [4, 2]], 'payment_method' => 'Transfer', 'payment_status' => 'paid', 'order_status' => 'selesai', 'jarak_km' => 8, 'refund' => false],
-            ['user_id' => 5, 'kode' => 'ETI123453', 'items' => [[2, 2]], 'payment_method' => 'Transfer', 'payment_status' => 'paid', 'order_status' => 'dibatalkan', 'jarak_km' => 4, 'refund' => true],
-        ];
+        $pelanggan = User::where('role_id', 2)->get();
+        $produk = ProdukTahu::where('status', 'aktif')->get();
+        $limbah = Limbah::where('status', 'aktif')->get();
 
-        foreach ($dataPesanan as $dp) {
+        if ($pelanggan->isEmpty() || $produk->isEmpty()) {
+            return;
+        }
+
+        // Bikin 10 pesanan random
+        for ($i = 0; $i < 10; $i++) {
+            $user = $pelanggan->random();
+            $tanggal = now()->subDays(rand(0, 14))->subHours(rand(1, 23));
+            $paymentMethod = rand(0, 1) ? 'COD' : 'Transfer';
+            $deliveryType = rand(0, 1) ? 'pickup' : 'delivery';
+            $butuhOngkir = ($paymentMethod === 'Transfer') || ($paymentMethod === 'COD' && $deliveryType === 'delivery');
+
+            $jarak = $butuhOngkir ? rand(1, 10) : 0;
+            $ongkir = $butuhOngkir ? max($jarak * 2500, 5000) : 0;
+
             $subtotal = 0;
-            $details = [];
+            $items = [];
 
-            foreach ($dp['items'] as $item) {
-                $produk = ProdukTahu::find($item[0]);
-                $sub = $produk->harga * $item[1];
-                $subtotal += $sub;
-                $details[] = [
-                    'item_type' => ProdukTahu::class,
-                    'item_id' => $produk->id,
-                    'nama_item' => $produk->nama_produk,
-                    'harga_satuan' => $produk->harga,
-                    'jumlah' => $item[1],
-                    'subtotal' => $sub,
+            $jumlahItem = rand(1, 3);
+            for ($j = 0; $j < $jumlahItem; $j++) {
+                $pakaiLimbah = rand(0, 1) && $limbah->isNotEmpty();
+                $produk_pilih = $pakaiLimbah ? $limbah->random() : $produk->random();
+                $model = $pakaiLimbah ? Limbah::class : ProdukTahu::class;
+                $nama = $pakaiLimbah ? $produk_pilih->nama_limbah : $produk_pilih->nama_produk;
+                $qty = rand(1, 3);
+                $itemSubtotal = $produk_pilih->harga * $qty;
+                $subtotal += $itemSubtotal;
+
+                $items[] = [
+                    'item_type'    => $model,
+                    'item_id'      => $produk_pilih->id,
+                    'nama_item'    => $nama,
+                    'harga_satuan' => $produk_pilih->harga,
+                    'jumlah'       => $qty,
+                    'subtotal'     => $itemSubtotal,
                 ];
             }
 
-            $ongkir = $dp['jarak_km'] * 5000;
             $total = $subtotal + $ongkir;
 
+            $statusPilihan = ['pending', 'diproses', 'dikirim', 'selesai', 'selesai'];
+            $orderStatus = $statusPilihan[array_rand($statusPilihan)];
+            $paymentStatus = in_array($orderStatus, ['selesai']) ? 'paid' : ($orderStatus === 'pending' ? 'pending' : 'paid');
+
+            $kodePesanan = 'ETI' . $tanggal->format('ymdHis') . rand(10, 99);
+
             $pesanan = Pesanan::create([
-                'user_id' => $dp['user_id'],
-                'kode_pesanan' => $dp['kode'],
-                'subtotal' => $subtotal,
-                'ongkir' => $ongkir,
-                'jarak_km' => $dp['jarak_km'],
-                'total_harga' => $total,
-                'payment_method' => $dp['payment_method'],
-                'payment_status' => $dp['payment_status'],
-                'order_status' => $dp['order_status'],
-                'alamat_pengiriman' => 'Alamat dummy untuk ' . $dp['kode'],
-                'tanggal_order' => now()->subDays(rand(1, 7)),
+                'user_id'          => $user->id,
+                'kode_pesanan'     => $kodePesanan,
+                'subtotal'         => $subtotal,
+                'ongkir'           => $ongkir,
+                'jarak_km'         => $jarak,
+                'total_harga'      => $total,
+                'payment_method'   => $paymentMethod,
+                'delivery_type'    => $deliveryType,
+                'bank_tujuan'      => $paymentMethod === 'Transfer' ? ['BCA', 'BRI', 'Mandiri', 'BNI'][array_rand(['BCA', 'BRI', 'Mandiri', 'BNI'])] : null,
+                'va_number'        => $paymentMethod === 'Transfer' ? '8808' . rand(10000000, 99999999) : null,
+                'payment_status'   => $paymentStatus,
+                'order_status'     => $orderStatus,
+                'alamat_pengiriman' => $user->alamat . ' | Penerima: ' . $user->username,
+                'tanggal_order'    => $tanggal,
+                'expired_at'       => $paymentMethod === 'Transfer' ? $tanggal->copy()->addHours(24) : null,
             ]);
 
-            foreach ($details as $d) {
-                $d['pesanan_id'] = $pesanan->id;
-                DetailPesanan::create($d);
+            foreach ($items as $item) {
+                DetailPesanan::create(array_merge($item, ['pesanan_id' => $pesanan->id]));
             }
 
             Pembayaran::create([
-                'pesanan_id' => $pesanan->id,
-                'metode_pembayaran' => $dp['payment_method'],
-                'status_pembayaran' => $dp['payment_status'] === 'paid' ? 'verified' : 'pending',
-                'jumlah_bayar' => $total,
-                'tanggal_bayar' => $dp['payment_status'] === 'paid' ? now() : null,
+                'pesanan_id'        => $pesanan->id,
+                'metode_pembayaran' => $paymentMethod,
+                'status_pembayaran' => $paymentStatus === 'paid' ? 'verified' : 'pending',
+                'jumlah_bayar'      => $total,
+                'tanggal_bayar'     => $paymentStatus === 'paid' ? $tanggal : null,
             ]);
-
-            // Bikin refund untuk pesanan yang dibatalkan
-            if ($dp['refund']) {
-                Refund::create([
-                    'pesanan_id' => $pesanan->id,
-                    'nominal_refund' => $total,
-                    'alasan_batal' => 'Berubah pikiran, ingin ganti produk lain.',
-                    'status_refund' => 'pending',
-                ]);
-            }
         }
     }
 }

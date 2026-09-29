@@ -55,13 +55,13 @@
         </div>
 
         <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Dari</label>
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Dari Tanggal</label>
             <input type="text" name="dari" id="dari" value="{{ request('dari') }}" readonly
                    class="datepicker w-36 px-3 py-2.5 text-sm rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
         </div>
 
         <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Sampai</label>
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Sampai Tanggal</label>
             <input type="text" name="sampai" id="sampai" value="{{ request('sampai') }}" readonly
                    class="datepicker w-36 px-3 py-2.5 text-sm rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
         </div>
@@ -206,6 +206,7 @@
                             ] : null,
                             'route_update_status' => route('admin.pesanan.updateStatus', $p->id),
                             'route_verifikasi' => route('admin.pesanan.verifikasi', $p->id),
+                            'route_batalkan' => route('admin.pesanan.batalkan', $p->id), // 👈 TAMBAH
                         ];
 
                         $statusStyle = [
@@ -400,14 +401,17 @@
                 </div>
             </div>
 
-            {{-- UPDATE STATUS (CUSTOM DROPDOWN) --}}
+            {{-- UPDATE STATUS --}}
             <div id="mFormStatusWrapper" class="bg-gray-50 rounded-xl p-3">
                 <p class="text-xs font-semibold text-gray-400 uppercase mb-2">Update Status</p>
-                <form id="mFormStatus" method="POST" class="flex gap-2">
-                    @csrf @method('PATCH')
 
-                    {{-- Custom Alpine Dropdown --}}
-                    <div class="flex-1 relative" x-data="{ statusModalOpen: false }" @click.away="statusModalOpen = false">
+                {{-- 👇 FORM: flex-col biar alasan batal bisa full-width --}}
+                <form id="mFormStatus" method="POST" class="flex flex-col gap-2">
+                    @csrf
+                    <input type="hidden" name="_method" id="mMethod" value="PATCH">
+
+                    {{-- Dropdown Status --}}
+                    <div class="relative" x-data="{ statusModalOpen: false }" @click.away="statusModalOpen = false">
                         <button type="button" @click="statusModalOpen = !statusModalOpen"
                                 class="w-full flex items-center justify-between gap-2 px-3 py-2 text-sm rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
                             <span class="text-gray-800" id="mStatusFormLabel">Pilih Status</span>
@@ -434,8 +438,15 @@
                         <input type="hidden" name="order_status" id="mInputOrderStatus" value="pending">
                     </div>
 
+                    {{-- 👇 FIELD ALASAN BATAL (hidden, muncul kalau pilih "Dibatalkan") --}}
+                    <div id="mAlasanWrapper" class="hidden">
+                        <label class="block text-xs font-medium text-red-600 mb-1">Alasan Pembatalan <span class="text-red-500">*</span></label>
+                        <input type="text" name="alasan_batal" id="mAlasanBatal" placeholder="Tulis alasan pembatalan..."
+                               class="w-full px-3 py-2 rounded-xl border border-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm">
+                    </div>
+
                     <button type="submit"
-                            class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition whitespace-nowrap"
+                            class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition"
                             onclick="return confirm('Update status pesanan ini?')">
                         Update
                     </button>
@@ -471,7 +482,6 @@
         document.getElementById('mInputOrderStatus').value = value;
         document.getElementById('mStatusFormLabel').textContent = label;
 
-        // Reset semua option
         document.querySelectorAll('.order-status-option').forEach(function(btn) {
             btn.classList.remove('bg-emerald-50', 'text-emerald-700', 'font-semibold');
             btn.classList.add('text-gray-700');
@@ -480,7 +490,6 @@
             if (check) check.remove();
         });
 
-        // Highlight yang aktif
         el.classList.remove('text-gray-700');
         el.classList.add('bg-emerald-50', 'text-emerald-700', 'font-semibold');
 
@@ -488,7 +497,22 @@
             el.insertAdjacentHTML('beforeend', '<svg class="checkmark-order-svg w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>');
         }
 
-        // Close dropdown
+        // 👇 SWITCH ROUTE + HANDLE ALASAN BATAL
+        const alasanWrapper = document.getElementById('mAlasanWrapper');
+        const alasanInput = document.getElementById('mAlasanBatal');
+        const formStatus = document.getElementById('mFormStatus');
+
+        if (value === 'dibatalkan') {
+            alasanWrapper.classList.remove('hidden');
+            alasanInput.required = true;
+            formStatus.action = formStatus.getAttribute('data-batalkan-route');
+        } else {
+            alasanWrapper.classList.add('hidden');
+            alasanInput.required = false;
+            alasanInput.value = '';
+            formStatus.action = formStatus.getAttribute('data-update-route');
+        }
+
         const container = el.closest('[x-data]');
         if (container && container.__x) {
             container.__x.$data.statusModalOpen = false;
@@ -625,9 +649,19 @@
             formStatusWrapper.classList.add('hidden');
         } else {
             formStatusWrapper.classList.remove('hidden');
+
+            // 👇 SET 2 ROUTE + RESET ALASAN
+            formStatus.setAttribute('data-update-route', data.route_update_status);
+            formStatus.setAttribute('data-batalkan-route', data.route_batalkan);
             formStatus.action = data.route_update_status;
 
-            // Set custom dropdown label
+            const alasanWrapper = document.getElementById('mAlasanWrapper');
+            const alasanInput = document.getElementById('mAlasanBatal');
+            alasanWrapper.classList.add('hidden');
+            alasanInput.value = '';
+            alasanInput.required = false;
+
+            // Set label + input
             const statusLabelForm = data.order_status.charAt(0).toUpperCase() + data.order_status.slice(1);
             document.getElementById('mInputOrderStatus').value = data.order_status;
             document.getElementById('mStatusFormLabel').textContent = statusLabelForm;

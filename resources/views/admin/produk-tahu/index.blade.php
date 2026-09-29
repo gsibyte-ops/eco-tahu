@@ -212,25 +212,45 @@
 
                     {{-- Undo Banner --}}
                     <div x-show="showUndo" x-cloak
-                         class="mb-3 flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl">
-                        <span class="flex-1 text-xs text-amber-800">File dibatalkan</span>
+                         class="mb-3 flex items-center gap-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl">
+                        <svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        <span class="flex-1 text-xs text-amber-800 truncate">
+                            File <strong x-text="undoFileName"></strong> dibatalkan
+                        </span>
                         <button type="button" @click="undoCancel()"
-                                class="text-xs text-emerald-600 hover:text-emerald-700 font-bold underline">Urungkan</button>
+                                class="text-xs text-emerald-600 hover:text-emerald-700 font-bold underline flex-shrink-0">
+                            Urungkan
+                        </button>
                     </div>
 
                     {{-- Preview --}}
                     <div x-show="previewUrl" x-cloak
-                         style="display: flex; align-items: flex-start; gap: 16px; padding: 12px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; margin-bottom: 12px;">
+                         style="display: flex; align-items: flex-start; gap: 16px; padding: 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; margin-bottom: 12px;">
                         <div style="position: relative; flex-shrink: 0;">
-                            <img :src="previewUrl" style="width: 120px; height: 120px; border-radius: 12px; object-fit: cover; border: 2px solid white;">
+                            <div @click="openLightbox(previewUrl)"
+                                 style="position: relative; width: 160px; height: 160px; border-radius: 12px; overflow: hidden; cursor: zoom-in; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.08);"
+                                 onmouseover="this.querySelector('.zoom-overlay').style.opacity='1'"
+                                 onmouseout="this.querySelector('.zoom-overlay').style.opacity='0'">
+                                <img :src="previewUrl" alt="Preview"
+                                     style="width: 160px; height: 160px; object-fit: cover; display: block;">
+                                <div class="zoom-overlay"
+                                     style="position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s;">
+                                    <svg width="24" height="24" fill="none" stroke="white" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+                                </div>
+                            </div>
+
                             <button type="button" @click.stop="cancelFile()"
-                                    style="position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; background: rgba(255,255,255,0.95); color: #ef4444; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15); padding: 0;">
-                                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    style="position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; background: rgba(255,255,255,0.95); color: #ef4444; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.15); padding: 0; transition: all 0.15s;"
+                                    onmouseover="this.style.background='#ef4444'; this.style.color='white'; this.style.transform='scale(1.1)'"
+                                    onmouseout="this.style.background='rgba(255,255,255,0.95)'; this.style.color='#ef4444'; this.style.transform='scale(1)'"
+                                    title="Batalkan file">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </div>
-                        <div style="flex: 1; min-width: 0; padding-top: 4px;">
+                        <div style="flex: 1; min-width: 0; padding-top: 8px;">
                             <p style="font-size: 11px; color: #059669; font-weight: 700; text-transform: uppercase; margin: 0 0 4px 0;">Preview</p>
-                            <p class="break-all" style="font-size: 12px; color: #1f2937; font-weight: 500; margin: 0; line-height: 1.4;" x-text="fileName"></p>
+                            <p class="break-all" style="font-size: 14px; color: #1f2937; font-weight: 500; margin: 0 0 4px 0; line-height: 1.4;" x-text="fileName"></p>
+                            <p style="font-size: 12px; color: #6b7280; margin: 0;">Klik gambar untuk memperbesar.</p>
                         </div>
                     </div>
 
@@ -377,21 +397,33 @@
                            x-ref="fileInput" @change="handleFileChange($event)" class="hidden">
                     <input type="hidden" name="hapus_gambar" :value="hapusGambarLama ? 1 : 0">
 
-                    {{-- Existing --}}
+                    {{-- Existing Image (dengan hover zoom + klik lightbox) --}}
                     <div x-show="existingImage && !hapusGambarLama && !previewUrl" x-cloak class="mb-3">
                         <div style="position: relative; display: inline-block;">
-                            <img :src="existingImage" style="width: 120px; height: 120px; border-radius: 12px; object-fit: cover; border: 1px solid #e5e7eb;">
+                            <div @click="openLightbox(existingImage)"
+                                 style="position: relative; width: 120px; height: 120px; border-radius: 12px; overflow: hidden; cursor: zoom-in; border: 1px solid #e5e7eb;"
+                                 onmouseover="this.querySelector('.zoom-overlay').style.opacity='1'"
+                                 onmouseout="this.querySelector('.zoom-overlay').style.opacity='0'">
+                                <img :src="existingImage" alt="Existing"
+                                     style="width: 120px; height: 120px; object-fit: cover; display: block;">
+                                <div class="zoom-overlay"
+                                     style="position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s;">
+                                    <svg width="22" height="22" fill="none" stroke="white" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+                                </div>
+                            </div>
                             <button type="button" @click.stop="hapusGambarLama = true"
-                                    style="position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; background: rgba(255,255,255,0.95); color: #ef4444; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15); padding: 0;">
+                                    style="position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; background: rgba(255,255,255,0.95); color: #ef4444; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15); padding: 0;"
+                                    title="Hapus gambar">
                                 <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </div>
-                        <p style="font-size: 11px; color: #9ca3af; margin-top: 6px;">Gambar saat ini</p>
+                        <p style="font-size: 11px; color: #9ca3af; margin-top: 6px;">Gambar saat ini · Klik untuk zoom</p>
                     </div>
 
                     {{-- Banner hapus gambar lama --}}
                     <div x-show="hapusGambarLama" x-cloak
-                         class="mb-3 flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl">
+                         class="mb-3 flex items-center gap-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl">
+                        <svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                         <span class="flex-1 text-xs text-amber-800">Gambar lama akan dihapus saat disimpan.</span>
                         <button type="button" @click="hapusGambarLama = false"
                                 class="text-xs text-emerald-600 hover:text-emerald-700 font-bold underline">Urungkan</button>
@@ -399,19 +431,33 @@
 
                     {{-- Undo banner --}}
                     <div x-show="showUndo" x-cloak
-                         class="mb-3 flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl">
-                        <span class="flex-1 text-xs text-amber-800">File dibatalkan</span>
+                         class="mb-3 flex items-center gap-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl">
+                        <svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        <span class="flex-1 text-xs text-amber-800 truncate">
+                            File <strong x-text="undoFileName"></strong> dibatalkan
+                        </span>
                         <button type="button" @click="undoCancel()"
-                                class="text-xs text-emerald-600 hover:text-emerald-700 font-bold underline">Urungkan</button>
+                                class="text-xs text-emerald-600 hover:text-emerald-700 font-bold underline flex-shrink-0">Urungkan</button>
                     </div>
 
-                    {{-- Preview --}}
+                    {{-- Preview gambar baru --}}
                     <div x-show="previewUrl" x-cloak
                          style="display: flex; align-items: flex-start; gap: 16px; padding: 12px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; margin-bottom: 12px;">
                         <div style="position: relative; flex-shrink: 0;">
-                            <img :src="previewUrl" style="width: 120px; height: 120px; border-radius: 12px; object-fit: cover; border: 2px solid white;">
+                            <div @click="openLightbox(previewUrl)"
+                                 style="position: relative; width: 120px; height: 120px; border-radius: 12px; overflow: hidden; cursor: zoom-in; border: 2px solid white;"
+                                 onmouseover="this.querySelector('.zoom-overlay2').style.opacity='1'"
+                                 onmouseout="this.querySelector('.zoom-overlay2').style.opacity='0'">
+                                <img :src="previewUrl" alt="Preview"
+                                     style="width: 120px; height: 120px; object-fit: cover; display: block;">
+                                <div class="zoom-overlay2"
+                                     style="position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s;">
+                                    <svg width="22" height="22" fill="none" stroke="white" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+                                </div>
+                            </div>
                             <button type="button" @click.stop="cancelFile()"
-                                    style="position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; background: rgba(255,255,255,0.95); color: #ef4444; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15); padding: 0;">
+                                    style="position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; background: rgba(255,255,255,0.95); color: #ef4444; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15); padding: 0;"
+                                    title="Batalkan file">
                                 <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </div>
@@ -446,21 +492,55 @@
     </div>
 </div>
 
+{{-- ============================================ --}}
+{{-- GLOBAL LIGHTBOX --}}
+{{-- ============================================ --}}
+<div id="globalLightbox" class="fixed inset-0 hidden"
+     style="z-index: 99999; background: rgba(0,0,0,0.9);">
+    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px;">
+        <img id="globalLightboxImg" src="" alt="Preview"
+             onclick="event.stopPropagation()"
+             style="max-width: 100%; max-height: 85vh; border-radius: 16px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); object-fit: contain;">
+    </div>
+    <button type="button" onclick="closeGlobalLightbox()"
+            style="position: absolute; top: 20px; right: 20px; width: 48px; height: 48px; background: #ef4444; color: white; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100000; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"
+            title="Tutup">
+        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+</div>
+
 @endsection
 
 @push('scripts')
 <script>
     const PRODUK_DATA = @json($produkJson);
 
-    // ==== UNIVERSAL FILE STATE (dipisahkan dari Alpine) ====
+    // ==== GLOBAL LIGHTBOX ====
+    function openGlobalLightbox(url) {
+        const lb = document.getElementById('globalLightbox');
+        document.getElementById('globalLightboxImg').src = url;
+        lb.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeGlobalLightbox() {
+        const lb = document.getElementById('globalLightbox');
+        lb.classList.add('hidden');
+        document.getElementById('globalLightboxImg').src = '';
+        document.body.style.overflow = '';
+    }
+
+    document.getElementById('globalLightbox').addEventListener('click', function(e) {
+        if (e.target === this) closeGlobalLightbox();
+    });
+
+    // ==== UNIVERSAL FILE STATE ====
     const fileState = {
         currentFile: null,
         currentPreviewUrl: null,
         currentFileName: null,
         reset() {
-            if (this.currentPreviewUrl) {
-                URL.revokeObjectURL(this.currentPreviewUrl);
-            }
+            if (this.currentPreviewUrl) URL.revokeObjectURL(this.currentPreviewUrl);
             this.currentFile = null;
             this.currentPreviewUrl = null;
             this.currentFileName = null;
@@ -470,22 +550,20 @@
     // ==== CREATE MODAL ====
     function openCreateModal() {
         fileState.reset();
-
         const modal = document.getElementById('createModal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         document.body.style.overflow = 'hidden';
 
-        // Reset state Alpine biar fresh
         const form = document.getElementById('createForm');
         if (form) {
-            const state = (form.__x && form.__x.$data) ||
-                          (form._x_dataStack && form._x_dataStack[0]);
+            const state = (form.__x && form.__x.$data) || (form._x_dataStack && form._x_dataStack[0]);
             if (state) {
                 state.previewUrl = null;
                 state.fileName = null;
                 state.showUndo = false;
                 state.undoFile = null;
+                state.undoFileName = null;
                 if (state.undoTimer) clearTimeout(state.undoTimer);
             }
         }
@@ -493,26 +571,23 @@
 
     function closeCreateModal() {
         fileState.reset();
-
         const modal = document.getElementById('createModal');
         modal.classList.add('hidden');
         modal.classList.remove('flex');
         document.body.style.overflow = '';
 
-        // Reset file input
         const fileInput = modal.querySelector('input[name="gambar"]');
         if (fileInput) fileInput.value = '';
 
-        // Reset state Alpine
         const form = document.getElementById('createForm');
         if (form) {
-            const state = (form.__x && form.__x.$data) ||
-                          (form._x_dataStack && form._x_dataStack[0]);
+            const state = (form.__x && form.__x.$data) || (form._x_dataStack && form._x_dataStack[0]);
             if (state) {
                 state.previewUrl = null;
                 state.fileName = null;
                 state.showUndo = false;
                 state.undoFile = null;
+                state.undoFileName = null;
                 if (state.undoTimer) clearTimeout(state.undoTimer);
             }
         }
@@ -524,7 +599,6 @@
         if (!data) return;
 
         fileState.reset();
-
         const modal = document.getElementById('editModal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
@@ -532,7 +606,6 @@
 
         document.getElementById('editForm').action = '/admin/produk-tahu/' + id;
 
-        // Set fields
         const namaInput = modal.querySelector('input[name="nama_produk"]');
         const hargaInput = modal.querySelector('input[name="harga"]');
         const stokInput = modal.querySelector('input[name="stok"]');
@@ -548,7 +621,6 @@
 
         const statusLabelText = data.status.charAt(0).toUpperCase() + data.status.slice(1);
 
-        // Set DOM langsung
         const kategoriLabelSpan = modal.querySelector('#editKategoriLabel');
         const statusLabelSpan = modal.querySelector('#editStatusLabel');
         const kategoriHidden = modal.querySelector('#editKategoriHidden');
@@ -559,11 +631,9 @@
         if (kategoriHidden) kategoriHidden.value = data.kategori_id;
         if (statusHidden) statusHidden.value = data.status;
 
-        // Reset state Alpine
         const form = document.getElementById('editForm');
         if (form) {
-            const state = (form.__x && form.__x.$data) ||
-                          (form._x_dataStack && form._x_dataStack[0]);
+            const state = (form.__x && form.__x.$data) || (form._x_dataStack && form._x_dataStack[0]);
             if (state) {
                 state.currentId = id;
                 state.kategoriId = data.kategori_id;
@@ -576,6 +646,7 @@
                 state.fileName = null;
                 state.showUndo = false;
                 state.undoFile = null;
+                state.undoFileName = null;
                 if (state.undoTimer) clearTimeout(state.undoTimer);
             }
         }
@@ -583,7 +654,6 @@
 
     function closeEditModal() {
         fileState.reset();
-
         const modal = document.getElementById('editModal');
         modal.classList.add('hidden');
         modal.classList.remove('flex');
@@ -594,13 +664,13 @@
 
         const form = document.getElementById('editForm');
         if (form) {
-            const state = (form.__x && form.__x.$data) ||
-                          (form._x_dataStack && form._x_dataStack[0]);
+            const state = (form.__x && form.__x.$data) || (form._x_dataStack && form._x_dataStack[0]);
             if (state) {
                 state.previewUrl = null;
                 state.fileName = null;
                 state.showUndo = false;
                 state.undoFile = null;
+                state.undoFileName = null;
                 if (state.undoTimer) clearTimeout(state.undoTimer);
             }
         }
@@ -623,7 +693,6 @@
             undoTimer: null,
 
             init() {
-                // Force reset pas init
                 this.fileName = null;
                 this.previewUrl = null;
                 this.undoFile = null;
@@ -640,6 +709,10 @@
                 this.statusValue = value;
                 this.statusLabel = label;
                 this.statusOpen = false;
+            },
+
+            openLightbox(url) {
+                openGlobalLightbox(url);
             },
 
             handleFileChange(e) {
@@ -660,7 +733,6 @@
                     return;
                 }
 
-                // Simpan di global state juga
                 fileState.currentFile = file;
                 fileState.currentFileName = file.name;
 
@@ -677,7 +749,6 @@
                 const file = this.$refs.fileInput.files[0];
                 if (!file) return;
 
-                // Simpan buat undo
                 this.undoFile = file;
                 this.undoFileName = this.fileName;
 
@@ -696,7 +767,6 @@
 
             undoCancel() {
                 if (!this.undoFile) {
-                    // Kalau timer habis, restore dari fileState
                     if (fileState.currentFile) {
                         this.undoFile = fileState.currentFile;
                         this.undoFileName = fileState.currentFileName;
@@ -709,7 +779,6 @@
                 dt.items.add(this.undoFile);
                 this.$refs.fileInput.files = dt.files;
 
-                // Generate fresh URL biar gak stuck
                 if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
                 this.previewUrl = URL.createObjectURL(this.undoFile);
                 this.fileName = this.undoFile.name;
@@ -755,6 +824,10 @@
                 this.statusValue = value;
                 this.statusLabel = label;
                 this.statusOpen = false;
+            },
+
+            openLightbox(url) {
+                openGlobalLightbox(url);
             },
 
             handleFileChange(e) {
@@ -849,6 +922,11 @@
 
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
+            const lb = document.getElementById('globalLightbox');
+            if (!lb.classList.contains('hidden')) {
+                closeGlobalLightbox();
+                return;
+            }
             closeCreateModal();
             closeEditModal();
         }

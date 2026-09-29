@@ -15,8 +15,9 @@ use Illuminate\Support\Facades\Storage;
 
 class CheckoutController extends Controller
 {
-    const ONGKIR_PER_KM = 5000;
-    const MINIMAL_PEMBELIAN = 50000;
+    const ONGKIR_PER_KM = 2500;
+    const MINIMAL_ONGKIR = 5000;
+    const MINIMAL_PEMBELIAN = 15000;
 
     public function index()
     {
@@ -30,14 +31,17 @@ class CheckoutController extends Controller
         $subtotal = collect($cart)->sum(fn ($i) => $i['harga'] * $i['qty']);
 
         if ($subtotal < self::MINIMAL_PEMBELIAN) {
+            $kurang = self::MINIMAL_PEMBELIAN - $subtotal;
             return redirect()->route('user.cart.index')
-                ->with('error', 'Minimal pembelian Rp 50.000. Tambah produk lagi.');
+                ->with('error', 'Minimal pembelian Rp ' . number_format(self::MINIMAL_PEMBELIAN, 0, ',', '.') .
+                       '. Tambah Rp ' . number_format($kurang, 0, ',', '.') . ' lagi.');
         }
 
         $ongkirPerKm = self::ONGKIR_PER_KM;
+        $minimalOngkir = self::MINIMAL_ONGKIR;
         $user = Auth::user();
 
-        return view('user.checkout.index', compact('cart', 'subtotal', 'ongkirPerKm', 'user'));
+        return view('user.checkout.index', compact('cart', 'subtotal', 'ongkirPerKm', 'minimalOngkir', 'user'));
     }
 
     public function store(Request $request)
@@ -49,25 +53,46 @@ class CheckoutController extends Controller
                 ->with('error', 'Keranjang kosong.');
         }
 
-        $validated = $request->validate([
+        $rules = [
             'nama_penerima' => 'required|string|max:100',
             'no_telepon' => 'required|string|max:20',
             'alamat_pengiriman' => 'required|string|min:10',
-            'jarak_km' => 'required|numeric|min:1|max:100',
             'payment_method' => 'required|in:COD,Transfer',
+            'delivery_type' => 'required|in:pickup,delivery',
             'catatan' => 'nullable|string|max:500',
-        ]);
+        ];
+
+        // 👈 SIMPEL: butuh ongkir cuma kalau delivery
+        $butuhOngkir = $request->delivery_type === 'delivery';
+
+        if ($butuhOngkir) {
+            $rules['jarak_km'] = 'required|numeric|min:1|max:100';
+        }
+
+        if ($request->payment_method === 'Transfer') {
+            $rules['bank_tujuan'] = 'required|in:BCA,BRI,Mandiri,BNI';
+        }
+
+        $validated = $request->validate($rules);
 
         $subtotal = collect($cart)->sum(fn ($i) => $i['harga'] * $i['qty']);
 
         if ($subtotal < self::MINIMAL_PEMBELIAN) {
-            return back()->with('error', 'Minimal pembelian Rp 50.000.');
+            return back()->with('error', 'Minimal pembelian Rp ' . number_format(self::MINIMAL_PEMBELIAN, 0, ',', '.') . '.');
         }
 
-        $ongkir = $validated['jarak_km'] * self::ONGKIR_PER_KM;
+        $jarak = 0;
+        $ongkir = 0;
+
+        if ($butuhOngkir) {
+            $jarak = $validated['jarak_km'];
+            $hitungOngkir = $jarak * self::ONGKIR_PER_KM;
+            $ongkir = max($hitungOngkir, self::MINIMAL_ONGKIR);
+        }
+
         $total = $subtotal + $ongkir;
 
-        // Cek stok semua item dulu
+        // Cek stok
         foreach ($cart as $item) {
             $produk = $item['type'] === 'produk'
                 ? ProdukTahu::find($item['id'])
@@ -81,27 +106,36 @@ class CheckoutController extends Controller
         DB::beginTransaction();
 
         try {
-            // 1. Buat Pesanan
+            $kodePesanan = 'ETI' . date('ymdHis') . rand(10, 99);
+
+            $vaNumber = null;
+            $bankTujuan = null;
+            if ($validated['payment_method'] === 'Transfer') {
+                $bankTujuan = $validated['bank_tujuan'];
+                $vaNumber = $this->generateVA($bankTujuan, $kodePesanan);
+            }
+
             $pesanan = Pesanan::create([
                 'user_id' => Auth::id(),
-                'kode_pesanan' => 'ETI' . date('ymdHis') . rand(10, 99),
+                'kode_pesanan' => $kodePesanan,
                 'subtotal' => $subtotal,
                 'ongkir' => $ongkir,
-                'jarak_km' => $validated['jarak_km'],
+                'jarak_km' => $jarak,
                 'total_harga' => $total,
                 'payment_method' => $validated['payment_method'],
+                'delivery_type' => $validated['delivery_type'],
+                'bank_tujuan' => $bankTujuan,
+                'va_number' => $vaNumber,
                 'payment_status' => 'pending',
                 'order_status' => 'pending',
                 'alamat_pengiriman' => $validated['alamat_pengiriman'] . ' | Penerima: ' . $validated['nama_penerima'] . ' | Telp: ' . $validated['no_telepon'],
                 'catatan' => $validated['catatan'],
                 'tanggal_order' => now(),
+                'expired_at' => $validated['payment_method'] === 'Transfer' ? now()->addHours(24) : null,
             ]);
 
-            // 2. Buat Detail Pesanan + kurangi stok
             foreach ($cart as $item) {
-                $model = $item['type'] === 'produk'
-                    ? ProdukTahu::class
-                    : Limbah::class;
+                $model = $item['type'] === 'produk' ? ProdukTahu::class : Limbah::class;
 
                 DetailPesanan::create([
                     'pesanan_id' => $pesanan->id,
@@ -113,7 +147,6 @@ class CheckoutController extends Controller
                     'subtotal' => $item['harga'] * $item['qty'],
                 ]);
 
-                // Kurangi stok
                 if ($item['type'] === 'produk') {
                     ProdukTahu::where('id', $item['id'])->decrement('stok', $item['qty']);
                 } else {
@@ -121,7 +154,6 @@ class CheckoutController extends Controller
                 }
             }
 
-            // 3. Buat Pembayaran
             Pembayaran::create([
                 'pesanan_id' => $pesanan->id,
                 'metode_pembayaran' => $validated['payment_method'],
@@ -130,7 +162,6 @@ class CheckoutController extends Controller
             ]);
 
             DB::commit();
-
             session()->forget('cart');
 
             return redirect()->route('user.checkout.success', $pesanan->kode_pesanan);
@@ -139,6 +170,21 @@ class CheckoutController extends Controller
             DB::rollBack();
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
+    }
+
+    private function generateVA($bank, $kodePesanan)
+    {
+        $prefix = [
+            'BCA'     => '8808',
+            'BRI'     => '26215',
+            'Mandiri' => '8888',
+            'BNI'     => '8810',
+        ][$bank] ?? '8888';
+
+        $numericPart = preg_replace('/[^0-9]/', '', $kodePesanan);
+        $uniquePart = str_pad(substr($numericPart, -8), 8, '0', STR_PAD_LEFT);
+
+        return $prefix . $uniquePart;
     }
 
     public function success($kode)
@@ -154,7 +200,7 @@ class CheckoutController extends Controller
     public function uploadBukti(Request $request, $kode)
     {
         $request->validate([
-            'bukti_transfer' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'bukti_transfer' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
         $pesanan = Pesanan::where('kode_pesanan', $kode)
@@ -165,7 +211,10 @@ class CheckoutController extends Controller
             return back()->with('error', 'Data pembayaran tidak ditemukan.');
         }
 
-        // Hapus bukti lama kalau ada
+        if ($pesanan->expired_at && $pesanan->expired_at->isPast()) {
+            return back()->with('error', 'Waktu pembayaran sudah habis.');
+        }
+
         if ($pesanan->pembayaran->bukti_transfer && Storage::disk('public')->exists($pesanan->pembayaran->bukti_transfer)) {
             Storage::disk('public')->delete($pesanan->pembayaran->bukti_transfer);
         }

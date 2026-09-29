@@ -92,6 +92,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/pesanan/{pesanan}', [AdminPesananController::class, 'show'])->name('pesanan.show');
     Route::patch('/pesanan/{pesanan}/status', [AdminPesananController::class, 'updateStatus'])->name('pesanan.updateStatus');
     Route::post('/pesanan/{pesanan}/verifikasi', [AdminPesananController::class, 'verifikasiPembayaran'])->name('pesanan.verifikasi');
+    Route::put('/pesanan/{pesanan}/batalkan', [AdminPesananController::class, 'batalkan'])->name('pesanan.batalkan'); // 👈 BARU
 
     // Refund
     Route::get('/refund', [RefundController::class, 'index'])->name('refund.index');

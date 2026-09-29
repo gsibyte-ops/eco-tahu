@@ -2,6 +2,13 @@
 @section('title', 'Keranjang Belanja')
 
 @section('content')
+{{-- DATA UNTUK JS --}}
+<div id="cartData"
+     data-route-update="{{ route('user.cart.update') }}"
+     data-route-remove="{{ route('user.cart.remove') }}"
+     data-csrf="{{ csrf_token() }}"
+     class="hidden"></div>
+
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <nav class="text-sm text-gray-500 mb-6">
         <a href="{{ route('home') }}" class="hover:text-emerald-600">Beranda</a>
@@ -17,6 +24,12 @@
     @if (session('success'))
         <div class="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm">
             {{ session('success') }}
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+            {{ session('error') }}
         </div>
     @endif
 
@@ -92,17 +105,20 @@
                         </div>
                     </div>
 
+                    {{-- 👈 PAKAI VARIABLE $minimalPembelian DARI CONTROLLER --}}
                     <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4 text-xs text-amber-800">
-                        ⚠️ Minimal pembelian <strong>Rp 50.000</strong> (belum termasuk ongkir)
+                        ⚠️ Minimal pembelian <strong>Rp {{ number_format($minimalPembelian, 0, ',', '.') }}</strong> (belum termasuk ongkir)
                     </div>
 
-                    @if ($subtotal < 50000)
+                    @if ($subtotal < $minimalPembelian)
                         <div class="bg-red-50 border border-red-200 rounded-xl p-3 mb-4 text-xs text-red-700">
-                            Belum mencapai minimal pembelian. Tambah <strong>Rp {{ number_format(50000 - $subtotal, 0, ',', '.') }}</strong> lagi.
+                            Belum mencapai minimal pembelian. Tambah <strong>Rp {{ number_format($minimalPembelian - $subtotal, 0, ',', '.') }}</strong> lagi.
                         </div>
                     @endif
 
-                    <a href="{{ route('user.checkout.index') }}" class="block w-full text-center py-3 {{ $subtotal >= 50000 ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-gray-300 cursor-not-allowed' }} text-white font-semibold rounded-xl shadow-lg shadow-emerald-200 transition">
+                    <a href="{{ $subtotal >= $minimalPembelian ? route('user.checkout.index') : '#' }}"
+                       class="block w-full text-center py-3 {{ $subtotal >= $minimalPembelian ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-gray-300 cursor-not-allowed pointer-events-none' }} text-white font-semibold rounded-xl shadow-lg shadow-emerald-200 transition"
+                       {{ $subtotal < $minimalPembelian ? 'onclick=return false;' : '' }}>
                         Lanjut ke Checkout
                     </a>
 
@@ -126,16 +142,21 @@
 
 @push('scripts')
 <script>
+    const cartData = document.getElementById('cartData');
+    const ROUTE_UPDATE = cartData.dataset.routeUpdate;
+    const ROUTE_REMOVE = cartData.dataset.routeRemove;
+    const CSRF_TOKEN = cartData.dataset.csrf;
+
     function updateQty(key, delta) {
         const el = document.getElementById('qty-' + key);
         const newQty = parseInt(el.textContent) + delta;
         if (newQty < 1) return;
 
-        fetch('{{ route('user.cart.update') }}', {
+        fetch(ROUTE_UPDATE, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-CSRF-TOKEN': CSRF_TOKEN,
                 'Accept': 'application/json',
             },
             body: JSON.stringify({ key: key, qty: newQty })
@@ -143,13 +164,6 @@
         .then(r => r.json())
         .then(d => {
             if (d.success) {
-                el.textContent = newQty;
-                document.getElementById('subtotal-' + key).textContent = formatRupiah(d.item_subtotal);
-                document.getElementById('subtotalDisplay').textContent = formatRupiah(d.subtotal);
-
-                let totalItems = 0;
-                document.querySelectorAll('[id^="qty-"]').forEach(q => totalItems += parseInt(q.textContent));
-                document.getElementById('totalItems').textContent = totalItems + ' item';
                 location.reload();
             } else {
                 alert(d.message);
@@ -160,11 +174,11 @@
     function removeItem(key) {
         if (!confirm('Hapus item ini dari keranjang?')) return;
 
-        fetch('{{ route('user.cart.remove') }}', {
+        fetch(ROUTE_REMOVE, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-CSRF-TOKEN': CSRF_TOKEN,
                 'Accept': 'application/json',
             },
             body: JSON.stringify({ key: key })
@@ -172,14 +186,9 @@
         .then(r => r.json())
         .then(d => {
             if (d.success) {
-                document.getElementById('item-' + key).remove();
                 location.reload();
             }
         });
-    }
-
-    function formatRupiah(num) {
-        return 'Rp ' + Number(num).toLocaleString('id-ID');
     }
 </script>
 @endpush

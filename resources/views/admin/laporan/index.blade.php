@@ -14,12 +14,16 @@
         <div>
             <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Dari Tanggal</label>
             <input type="text" name="dari" id="dari" value="{{ $dari }}" readonly
+                   inputmode="none" autocomplete="off"
+                   onkeydown="return false" onpaste="return false" ondrop="return false"
                    class="datepicker w-44 px-4 py-2.5 text-sm rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition cursor-pointer">
         </div>
 
         <div>
             <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Sampai Tanggal</label>
             <input type="text" name="sampai" id="sampai" value="{{ $sampai }}" readonly
+                   inputmode="none" autocomplete="off"
+                   onkeydown="return false" onpaste="return false" ondrop="return false"
                    class="datepicker w-44 px-4 py-2.5 text-sm rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition cursor-pointer">
         </div>
 
@@ -42,6 +46,7 @@
             Periode: <span class="font-semibold text-gray-700">{{ \Carbon\Carbon::parse($dari)->format('d M Y') }} — {{ \Carbon\Carbon::parse($sampai)->format('d M Y') }}</span>
         </div>
     </form>
+    <p class="text-xs text-gray-400 mt-2">💡 Maksimal rentang filter 1 tahun.</p>
 </div>
 
 {{-- Statistik --}}
@@ -122,9 +127,16 @@
             @php
                 $totalHari = \Carbon\Carbon::parse($dari)->diffInDays(\Carbon\Carbon::parse($sampai)) + 1;
                 $hariAdaTransaksi = $grafikHarian->count();
+                $persenAktif = $totalHari > 0 ? round(($hariAdaTransaksi / $totalHari) * 100, 1) : 0;
             @endphp
             <p class="text-xs text-gray-500 mt-1">
-                {{ $hariAdaTransaksi }} hari dengan transaksi dari {{ $totalHari }} hari dalam periode
+                📅 Periode: <span class="font-semibold text-gray-700">{{ $totalHari }} hari</span>
+                · Transaksi aktif: <span class="font-semibold text-emerald-700">{{ $hariAdaTransaksi }} hari</span>
+                <span class="text-gray-400">({{ $persenAktif }}%)</span>
+                @if ($modeGrafik === 'bulanan')
+                    <span class="ml-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded font-semibold">Tampilan Bulanan</span>
+                    <span class="ml-1 text-gray-400">(periode > 31 hari)</span>
+                @endif
             </p>
         </div>
         <div class="flex items-center gap-2 text-xs">
@@ -212,7 +224,13 @@
 
 {{-- Top Pelanggan --}}
 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
-    <h3 class="font-bold text-gray-800 mb-4">👑 Top Pelanggan</h3>
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-gray-800">👑 Top Pelanggan</h3>
+        <a href="{{ route('admin.pelanggan.index') }}"
+           class="text-xs font-semibold text-emerald-600 hover:text-emerald-700">
+            Lihat Semua Pelanggan →
+        </a>
+    </div>
     @if ($topPelanggan->count() > 0)
         <div class="overflow-x-auto">
             <table class="w-full text-left">
@@ -227,49 +245,6 @@
                 </thead>
                 <tbody class="text-sm">
                     @foreach ($topPelanggan as $i => $c)
-                        @php
-                            $pelangganData = [
-                                'username' => $c->username,
-                                'email' => $c->email,
-                                'no_telepon' => $c->no_telepon ?? '-',
-                                'alamat' => $c->alamat ?? '-',
-                                'created_at' => $c->created_at->format('d M Y'),
-                                'total_pesanan' => $c->total_pesanan,
-                                'total_belanja' => (int) $c->total_belanja,
-                                'pesanan' => $c->pesanan->map(function ($p) {
-                                    return [
-                                        'kode' => $p->kode_pesanan,
-                                        'order_status' => $p->order_status,
-                                        'tanggal' => $p->tanggal_order->format('d M Y, H:i'),
-                                        'alamat' => $p->alamat_pengiriman,
-                                        'catatan' => $p->catatan,
-                                        'subtotal' => (int) $p->subtotal,
-                                        'ongkir' => (int) $p->ongkir,
-                                        'jarak_km' => (float) $p->jarak_km,
-                                        'total_harga' => (int) $p->total_harga,
-                                        'payment_method' => $p->payment_method,
-                                        'payment_status' => $p->payment_status,
-                                        'items' => $p->detail->map(function ($d) {
-                                            return [
-                                                'nama' => $d->nama_item,
-                                                'harga' => (int) $d->harga_satuan,
-                                                'qty' => $d->jumlah,
-                                                'subtotal' => (int) $d->subtotal,
-                                            ];
-                                        })->values()->toArray(),
-                                        'pembayaran' => $p->pembayaran ? [
-                                            'status' => $p->pembayaran->status_pembayaran,
-                                            'bukti' => $p->pembayaran->bukti_transfer ? asset('storage/' . $p->pembayaran->bukti_transfer) : null,
-                                        ] : null,
-                                        'refund' => $p->refund ? [
-                                            'nominal' => (int) $p->refund->nominal_refund,
-                                            'alasan' => $p->refund->alasan_batal,
-                                            'status' => $p->refund->status_refund,
-                                        ] : null,
-                                    ];
-                                })->values()->toArray(),
-                            ];
-                        @endphp
                         <tr class="border-b border-gray-50 hover:bg-gray-50/60 transition">
                             <td class="py-3">
                                 <div class="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs"
@@ -284,13 +259,11 @@
                             <td class="py-3 text-gray-600">{{ $c->total_pesanan }}x</td>
                             <td class="py-3 text-right font-bold text-emerald-700">Rp {{ number_format($c->total_belanja ?? 0, 0, ',', '.') }}</td>
                             <td class="py-3 text-right">
-                                <button type="button"
-                                        data-pelanggan="{{ json_encode($pelangganData, JSON_HEX_APOS | JSON_HEX_QUOT) }}"
-                                        onclick="openPelangganModal(JSON.parse(this.dataset.pelanggan))"
-                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-semibold transition">
+                                <a href="{{ route('admin.pelanggan.show', $c->id) }}"
+                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-semibold transition">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                     Detail
-                                </button>
+                                </a>
                             </td>
                         </tr>
                     @endforeach
@@ -426,179 +399,6 @@
     </div>
 </div>
 
-{{-- ============================================ --}}
-{{-- MODAL: Detail Pelanggan --}}
-{{-- ============================================ --}}
-<div id="pelangganModal" class="fixed inset-0 z-[999] hidden items-center justify-center p-4"
-     style="background-color: rgba(0, 0, 0, 0.6);">
-    <div style="width: 100%; max-width: 640px; max-height: 85vh;"
-         class="bg-white rounded-2xl overflow-hidden flex flex-col shadow-2xl">
-
-        <div class="flex items-center justify-between px-5 py-4 bg-emerald-600 text-white flex-shrink-0">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-bold" id="pAvatar">U</div>
-                <div>
-                    <p class="text-base font-bold" id="pUsername">Nama</p>
-                    <p class="text-xs opacity-80" id="pEmail">email@test.com</p>
-                </div>
-            </div>
-            <button onclick="closePelangganModal()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/20 transition">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-        </div>
-
-        <div class="flex-1 overflow-y-auto p-4 space-y-4">
-
-            {{-- Info Pelanggan --}}
-            <div class="grid grid-cols-2 gap-3">
-                <div class="bg-gray-50 rounded-xl p-3">
-                    <p class="text-xs text-gray-500 mb-1">No. Telepon</p>
-                    <p class="text-sm font-semibold text-gray-800" id="pTelepon">-</p>
-                </div>
-                <div class="bg-gray-50 rounded-xl p-3">
-                    <p class="text-xs text-gray-500 mb-1">Terdaftar</p>
-                    <p class="text-sm font-semibold text-gray-800" id="pCreated">-</p>
-                </div>
-                <div class="bg-gray-50 rounded-xl p-3 col-span-2">
-                    <p class="text-xs text-gray-500 mb-1">Alamat</p>
-                    <p class="text-sm text-gray-800" id="pAlamat">-</p>
-                </div>
-            </div>
-
-            {{-- Statistik --}}
-            <div class="grid grid-cols-2 gap-3">
-                <div class="bg-emerald-50 rounded-xl p-3">
-                    <p class="text-xs text-emerald-600 mb-1">Total Pesanan</p>
-                    <p class="text-lg font-bold text-emerald-700" id="pTotalPesanan">0</p>
-                </div>
-                <div class="bg-violet-50 rounded-xl p-3">
-                    <p class="text-xs text-violet-600 mb-1">Total Belanja</p>
-                    <p class="text-lg font-bold text-violet-700" id="pTotalBelanja">Rp 0</p>
-                </div>
-            </div>
-
-            {{-- Riwayat Pesanan --}}
-            <div>
-                <p class="text-xs font-semibold text-gray-400 uppercase mb-2">Riwayat Pesanan</p>
-                <div class="border border-gray-100 rounded-xl overflow-hidden">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
-                            <tr>
-                                <th class="px-3 py-2 text-left">Kode</th>
-                                <th class="px-3 py-2 text-left">Tanggal</th>
-                                <th class="px-3 py-2 text-right">Total</th>
-                                <th class="px-3 py-2 text-right">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pPesananBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- ============================================ --}}
-{{-- MODAL: Detail Pesanan (Nested) --}}
-{{-- ============================================ --}}
-<div id="pesananModal" class="fixed inset-0 z-[1000] hidden items-center justify-center p-4"
-     style="background-color: rgba(0, 0, 0, 0.7);">
-    <div style="width: 100%; max-width: 480px; max-height: 85vh;"
-         class="bg-white rounded-2xl overflow-hidden flex flex-col shadow-2xl">
-
-        <div class="flex items-center justify-between px-5 py-4 bg-emerald-600 text-white flex-shrink-0">
-            <div>
-                <p class="text-xs opacity-80">Pesanan</p>
-                <h3 class="text-base font-bold">#<span id="mKode"></span></h3>
-                <p class="text-xs opacity-80 mt-0.5" id="mTanggal"></p>
-            </div>
-            <div class="flex items-center gap-3">
-                <span id="mStatusBadge" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-white/20 text-white"></span>
-                <button onclick="closePesananModal()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/20 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-        </div>
-
-        <div class="flex-1 overflow-y-auto p-4 space-y-3 text-sm">
-
-            <div class="bg-gray-50 rounded-xl p-3">
-                <p class="text-xs font-semibold text-gray-400 uppercase mb-2">Alamat Pengiriman</p>
-                <p class="text-gray-700" id="mAlamat"></p>
-                <p class="text-xs text-gray-500 mt-1" id="mCatatan"></p>
-            </div>
-
-            <div>
-                <p class="text-xs font-semibold text-gray-400 uppercase mb-2">Item Pesanan</p>
-                <div class="border border-gray-100 rounded-xl overflow-hidden">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
-                            <tr>
-                                <th class="px-3 py-2 text-left">Produk</th>
-                                <th class="px-3 py-2 text-center">Qty</th>
-                                <th class="px-3 py-2 text-right">Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody id="mItemsBody"></tbody>
-                        <tfoot class="bg-gray-50 text-sm">
-                            <tr class="border-t border-gray-100">
-                                <td colspan="2" class="px-3 py-2 text-right text-gray-500">Subtotal</td>
-                                <td class="px-3 py-2 text-right font-medium text-gray-700" id="mSubtotal"></td>
-                            </tr>
-                            <tr>
-                                <td colspan="2" class="px-3 py-2 text-right text-gray-500">
-                                    Ongkir <span class="text-xs text-gray-400" id="mJarak"></span>
-                                </td>
-                                <td class="px-3 py-2 text-right font-medium text-gray-700" id="mOngkir"></td>
-                            </tr>
-                            <tr class="border-t-2 border-gray-100 bg-emerald-50">
-                                <td colspan="2" class="px-3 py-2 text-right font-bold text-gray-700">Total</td>
-                                <td class="px-3 py-2 text-right font-bold text-emerald-600" id="mTotal"></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-
-            <div class="bg-gray-50 rounded-xl p-3">
-                <p class="text-xs font-semibold text-gray-400 uppercase mb-2">Pembayaran</p>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <p class="text-xs text-gray-500 mb-0.5">Metode</p>
-                        <p class="font-semibold text-gray-800" id="mPaymentMethod"></p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500 mb-0.5">Status</p>
-                        <p class="font-semibold" id="mPaymentStatus"></p>
-                    </div>
-                </div>
-                <div id="mBuktiWrapper" class="mt-2 hidden">
-                    <p class="text-xs text-gray-500 mb-1">Bukti Transfer</p>
-                    <img id="mBukti" src="" alt="Bukti" class="w-full rounded-xl border border-gray-200">
-                </div>
-            </div>
-
-            <div id="mRefundBox" class="hidden bg-red-50 border border-red-200 rounded-xl p-3">
-                <p class="text-xs font-semibold text-red-500 uppercase mb-2">⚠️ Pengajuan Refund</p>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <p class="text-xs text-red-600 mb-0.5">Nominal</p>
-                        <p class="font-bold text-red-800" id="mRefundNominal"></p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-red-600 mb-0.5">Status</p>
-                        <p class="font-bold text-red-800" id="mRefundStatus"></p>
-                    </div>
-                    <div class="col-span-2">
-                        <p class="text-xs text-red-600 mb-0.5">Alasan</p>
-                        <p class="text-red-800" id="mRefundAlasan"></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 @endsection
 
 @push('scripts')
@@ -610,14 +410,70 @@
     const SEMUA_PRODUK = @json($semuaProdukJson);
     const SEMUA_LIMBAH = @json($semuaLimbahJson);
 
-    // ==== FLATPICKR ====
-    flatpickr(".datepicker", {
-        dateFormat: "Y-m-d",
-        altInput: true,
-        altFormat: "d M Y",
-        allowInput: false,
-        monthSelectorType: "static",
-    });
+    // ==== FLATPICKR — 2 INSTANCE TERPISAH BIAR BISA SALING BATASI ====
+    let dariPicker, sampaiPicker;
+
+    function makeFlatpickrConfig(extra) {
+        return Object.assign({
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d M Y",
+            allowInput: false,
+            monthSelectorType: "static",
+            clickOpens: true,
+            onReady: function(selectedDates, dateStr, instance) {
+                // (1) Paksa altInput readonly — input yang keliatan user
+                instance.altInput.setAttribute('readonly', 'readonly');
+                instance.altInput.setAttribute('inputmode', 'none');
+                instance.altInput.setAttribute('autocomplete', 'off');
+                instance.altInput.style.cursor = 'pointer';
+                instance.altInput.style.caretColor = 'transparent';
+
+                // (2) Fix input TAHUN di header kalender — block huruf e, +, -, dll
+                const yearInput = instance.calendarContainer.querySelector('.cur-year');
+                if (yearInput) {
+                    yearInput.setAttribute('type', 'text');
+                    yearInput.setAttribute('inputmode', 'numeric');
+                    yearInput.setAttribute('pattern', '[0-9]*');
+                    yearInput.setAttribute('autocomplete', 'off');
+
+                    yearInput.addEventListener('keydown', function(e) {
+                        const allowed = ['Backspace','Delete','Tab','Escape','Enter',
+                                         'ArrowLeft','ArrowRight','ArrowUp','ArrowDown',
+                                         'Home','End'];
+                        if (allowed.includes(e.key) || e.ctrlKey || e.metaKey) return;
+                        if (!/^[0-9]$/.test(e.key)) e.preventDefault();
+                    });
+
+                    yearInput.addEventListener('input', function() {
+                        this.value = this.value.replace(/[^0-9]/g, '');
+                    });
+                }
+            }
+        }, extra || {});
+    }
+
+    dariPicker = flatpickr("#dari", makeFlatpickrConfig({
+        onChange: function(selectedDates) {
+            if (selectedDates[0] && sampaiPicker) {
+                const maxDate = new Date(selectedDates[0].getTime());
+                maxDate.setFullYear(maxDate.getFullYear() + 1);
+                sampaiPicker.set('minDate', selectedDates[0]);
+                sampaiPicker.set('maxDate', maxDate);
+            }
+        }
+    }));
+
+    sampaiPicker = flatpickr("#sampai", makeFlatpickrConfig({
+        onChange: function(selectedDates) {
+            if (selectedDates[0] && dariPicker) {
+                const minDate = new Date(selectedDates[0].getTime());
+                minDate.setFullYear(minDate.getFullYear() - 1);
+                dariPicker.set('minDate', minDate);
+                dariPicker.set('maxDate', selectedDates[0]);
+            }
+        }
+    }));
 
     // ==== RANKING MODAL ====
     function openRankingModal(tipe) {
@@ -670,167 +526,13 @@
         document.body.style.overflow = '';
     }
 
-    // ==== PELANGGAN MODAL ====
-    function openPelangganModal(data) {
-        const modal = document.getElementById('pelangganModal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        document.body.style.overflow = 'hidden';
-
-        document.getElementById('pAvatar').textContent = data.username.charAt(0).toUpperCase();
-        document.getElementById('pUsername').textContent = data.username;
-        document.getElementById('pEmail').textContent = data.email;
-        document.getElementById('pTelepon').textContent = data.no_telepon || '-';
-        document.getElementById('pCreated').textContent = data.created_at;
-        document.getElementById('pAlamat').textContent = data.alamat || '-';
-        document.getElementById('pTotalPesanan').textContent = data.total_pesanan + 'x';
-        document.getElementById('pTotalBelanja').textContent = 'Rp ' + Number(data.total_belanja || 0).toLocaleString('id-ID');
-
-        const tbody = document.getElementById('pPesananBody');
-        tbody.innerHTML = '';
-
-        if (!data.pesanan || data.pesanan.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-gray-400">Belum ada pesanan</td></tr>';
-        } else {
-            data.pesanan.forEach(function(p) {
-                const statusStyle = {
-                    pending: 'background:#fef3c7; color:#b45309;',
-                    diproses: 'background:#dbeafe; color:#1d4ed8;',
-                    dikirim: 'background:#ede9fe; color:#6d28d9;',
-                    selesai: 'background:#d1fae5; color:#047857;',
-                    dibatalkan: 'background:#fee2e2; color:#b91c1c;',
-                }[p.order_status] || 'background:#f3f4f6; color:#374151;';
-
-                const dataPesanan = encodeURIComponent(JSON.stringify(p));
-
-                tbody.innerHTML += `
-                    <tr class="border-b border-gray-50">
-                        <td class="px-3 py-2">
-                            <p class="font-semibold text-gray-800">#${p.kode}</p>
-                            <span style="padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; ${statusStyle}">${p.order_status}</span>
-                        </td>
-                        <td class="px-3 py-2 text-xs text-gray-500">${p.tanggal}</td>
-                        <td class="px-3 py-2 text-right font-semibold text-gray-800">Rp ${Number(p.total_harga).toLocaleString('id-ID')}</td>
-                        <td class="px-3 py-2 text-right">
-                            <button type="button"
-                                    data-pesanan="${dataPesanan.replace(/"/g, '&quot;')}"
-                                    onclick="openPesananModal(decodeURIComponent(this.dataset.pesanan))"
-                                    class="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-semibold transition">
-                                Lihat
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-    }
-
-    function closePelangganModal() {
-        const modal = document.getElementById('pelangganModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        document.body.style.overflow = '';
-    }
-
-    // ==== PESANAN MODAL (NESTED) ====
-    const STATUS_COLORS = {
-        pending: '#f59e0b',
-        diproses: '#0ea5e9',
-        dikirim: '#8b5cf6',
-        selesai: '#10b981',
-        dibatalkan: '#f43f5e',
-    };
-
-    const PAYMENT_STATUS_COLORS = {
-        paid: '#10b981',
-        pending: '#f59e0b',
-        failed: '#ef4444',
-        refunded: '#6b7280',
-    };
-
-    function openPesananModal(jsonString) {
-        const data = JSON.parse(jsonString);
-        const modal = document.getElementById('pesananModal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-
-        document.getElementById('mKode').textContent = data.kode;
-        document.getElementById('mTanggal').textContent = data.tanggal;
-
-        const badge = document.getElementById('mStatusBadge');
-        badge.textContent = data.order_status.charAt(0).toUpperCase() + data.order_status.slice(1);
-        badge.className = 'px-2.5 py-1 rounded-lg text-xs font-bold text-white';
-        badge.style.background = STATUS_COLORS[data.order_status] || '#6b7280';
-
-        document.getElementById('mAlamat').textContent = data.alamat || '-';
-        const catatan = document.getElementById('mCatatan');
-        catatan.textContent = data.catatan ? 'Catatan: ' + data.catatan : '';
-
-        const itemsBody = document.getElementById('mItemsBody');
-        itemsBody.innerHTML = '';
-        data.items.forEach(function(item) {
-            itemsBody.innerHTML += `
-                <tr class="border-b border-gray-50">
-                    <td class="px-3 py-2 text-gray-800">
-                        ${item.nama}
-                        <p class="text-xs text-gray-500">Rp ${Number(item.harga).toLocaleString('id-ID')} × ${item.qty}</p>
-                    </td>
-                    <td class="px-3 py-2 text-center text-gray-600">${item.qty}</td>
-                    <td class="px-3 py-2 text-right font-medium text-gray-800">Rp ${Number(item.subtotal).toLocaleString('id-ID')}</td>
-                </tr>
-            `;
-        });
-
-        document.getElementById('mSubtotal').textContent = 'Rp ' + Number(data.subtotal).toLocaleString('id-ID');
-        document.getElementById('mOngkir').textContent = 'Rp ' + Number(data.ongkir).toLocaleString('id-ID');
-        document.getElementById('mJarak').textContent = '(' + data.jarak_km + ' km)';
-        document.getElementById('mTotal').textContent = 'Rp ' + Number(data.total_harga).toLocaleString('id-ID');
-
-        document.getElementById('mPaymentMethod').textContent = data.payment_method;
-        const payStatus = document.getElementById('mPaymentStatus');
-        payStatus.textContent = data.payment_status.charAt(0).toUpperCase() + data.payment_status.slice(1);
-        payStatus.style.color = PAYMENT_STATUS_COLORS[data.payment_status] || '#6b7280';
-
-        const buktiWrapper = document.getElementById('mBuktiWrapper');
-        if (data.pembayaran && data.pembayaran.bukti) {
-            document.getElementById('mBukti').src = data.pembayaran.bukti;
-            buktiWrapper.classList.remove('hidden');
-        } else {
-            buktiWrapper.classList.add('hidden');
-        }
-
-        const refundBox = document.getElementById('mRefundBox');
-        if (data.refund) {
-            document.getElementById('mRefundNominal').textContent = 'Rp ' + Number(data.refund.nominal).toLocaleString('id-ID');
-            document.getElementById('mRefundAlasan').textContent = data.refund.alasan;
-            document.getElementById('mRefundStatus').textContent = data.refund.status.charAt(0).toUpperCase() + data.refund.status.slice(1);
-            refundBox.classList.remove('hidden');
-        } else {
-            refundBox.classList.add('hidden');
-        }
-    }
-
-    function closePesananModal() {
-        const modal = document.getElementById('pesananModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }
-
     // ==== CLOSE ON OUTSIDE CLICK ====
     document.getElementById('rankingModal').addEventListener('click', function(e) {
         if (e.target === this) closeRankingModal();
     });
-    document.getElementById('pelangganModal').addEventListener('click', function(e) {
-        if (e.target === this) closePelangganModal();
-    });
-    document.getElementById('pesananModal').addEventListener('click', function(e) {
-        if (e.target === this) closePesananModal();
-    });
 
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
-            closePesananModal();
-            closePelangganModal();
             closeRankingModal();
         }
     });
@@ -842,20 +544,20 @@
         laporanChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: @json($grafikHarian->pluck('tanggal')->map(fn($d) => \Carbon\Carbon::parse($d)->format('d M Y'))),
+                labels: @json($chartLabels),
                 datasets: [{
                     label: 'Penjualan',
-                    data: @json($grafikHarian->pluck('total')),
+                    data: @json($chartData),
                     borderColor: '#10b981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
                     borderWidth: 3,
                     tension: 0.4,
                     fill: true,
                     pointBackgroundColor: '#10b981',
                     pointBorderColor: '#fff',
                     pointBorderWidth: 2,
-                    pointRadius: 5,
-                    pointHoverRadius: 8,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
                 }]
             },
             options: {
@@ -892,11 +594,11 @@
                     x: {
                         grid: { display: false },
                         ticks: {
-                            font: { size: 11 },
+                            font: { size: 10 },
                             color: '#9ca3af',
-                            maxRotation: 45,
+                            maxRotation: 0,
                             autoSkip: true,
-                            maxTicksLimit: 20,
+                            maxTicksLimit: 15,
                         }
                     }
                 }

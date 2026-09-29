@@ -13,7 +13,7 @@
          fileName: null,
          previewUrl: null,
          undoFile: null,
-         undoFileName: '',
+         undoFileName: null,
          showUndo: false,
          undoTimer: null,
          showLightbox: false,
@@ -34,11 +34,27 @@
          handleFileChange(e) {
              const file = e.target.files[0];
              if (!file) return;
+
+             const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+             if (!allowed.includes(file.type)) {
+                 alert('⚠️ Hanya file gambar yang diperbolehkan (JPG, PNG, WEBP).');
+                 e.target.value = '';
+                 this.fileName = null;
+                 return;
+             }
+             if (file.size > 2 * 1024 * 1024) {
+                 alert('⚠️ Ukuran gambar maksimal 2MB.');
+                 e.target.value = '';
+                 this.fileName = null;
+                 return;
+             }
+
              if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
              this.previewUrl = URL.createObjectURL(file);
              this.fileName = file.name;
              this.showUndo = false;
              this.undoFile = null;
+             this.undoFileName = null;
              clearTimeout(this.undoTimer);
          },
 
@@ -58,7 +74,8 @@
              this.undoTimer = setTimeout(() => {
                  this.showUndo = false;
                  this.undoFile = null;
-             }, 5000);
+                 this.undoFileName = null;
+             }, 10000);
          },
 
          undoCancel() {
@@ -67,9 +84,8 @@
              dt.items.add(this.undoFile);
              this.$refs.fileInput.files = dt.files;
              this.previewUrl = URL.createObjectURL(this.undoFile);
-             this.fileName = this.undoFileName;
+             this.fileName = this.undoFile.name;
              this.showUndo = false;
-             this.undoFile = null;
              clearTimeout(this.undoTimer);
          }
      }"
@@ -251,7 +267,7 @@
                 <span class="text-gray-400 font-normal">(opsional)</span>
             </label>
 
-            {{-- GAMBAR EXISTING — KIRI --}}
+            {{-- GAMBAR EXISTING --}}
             @if ($limbah->gambar)
                 <div class="mb-3">
                     <div x-show="!hapusGambarLama" class="inline-block">
@@ -295,9 +311,22 @@
 
             <input type="hidden" name="hapus_gambar" :value="hapusGambarLama ? 1 : 0">
 
-            <input type="file" name="gambar" accept="image/*" x-ref="fileInput"
+            <input type="file" name="gambar" accept="image/jpeg,image/jpg,image/png,image/webp" x-ref="fileInput"
                    @change="handleFileChange($event)"
                    class="hidden">
+
+            {{-- Undo banner --}}
+            <div x-show="showUndo" x-cloak
+                 class="mb-3 flex items-center gap-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl">
+                <svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <span class="flex-1 text-xs text-amber-800 truncate">
+                    File <strong x-text="undoFileName"></strong> dibatalkan
+                </span>
+                <button type="button" @click="undoCancel()"
+                        class="text-xs text-emerald-600 hover:text-emerald-700 font-bold underline flex-shrink-0">
+                    Urungkan
+                </button>
+            </div>
 
             {{-- Preview gambar baru --}}
             <div x-show="previewUrl" x-cloak
@@ -324,7 +353,7 @@
                 </div>
                 <div style="flex: 1; min-width: 0; padding-top: 8px;">
                     <p style="font-size: 11px; color: #059669; font-weight: 700; text-transform: uppercase; margin: 0 0 4px 0;">Preview Gambar Baru</p>
-                    <p style="font-size: 14px; color: #1f2937; font-weight: 500; margin: 0 0 4px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" x-text="fileName"></p>
+                    <p class="break-all" style="font-size: 14px; color: #1f2937; font-weight: 500; margin: 0 0 4px 0; line-height: 1.4;" x-text="fileName"></p>
                     <p style="font-size: 12px; color: #6b7280; margin: 0;">Klik gambar untuk memperbesar.</p>
                 </div>
             </div>
@@ -335,26 +364,13 @@
                         class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-semibold transition flex-shrink-0">
                     {{ $limbah->gambar ? 'Ganti File' : 'Choose File' }}
                 </button>
-                <span class="flex-1 min-w-0 text-sm truncate"
+                <span class="flex-1 min-w-0 text-xs break-all"
                       :class="fileName ? 'text-gray-800 font-medium' : 'text-gray-400'"
                       x-text="fileName || 'No file chosen'"></span>
             </div>
 
-            {{-- Undo --}}
-            <div x-show="showUndo" x-cloak
-                 class="mt-2 flex items-center gap-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl">
-                <svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                <span class="flex-1 text-xs text-amber-800 truncate">
-                    File <strong x-text="undoFileName"></strong> dibatalkan
-                </span>
-                <button type="button" @click="undoCancel()"
-                        class="text-xs text-emerald-600 hover:text-emerald-700 font-bold underline flex-shrink-0">
-                    Urungkan
-                </button>
-            </div>
-
             <p class="text-xs text-gray-500 mt-2">
-                Kosongkan jika tidak ingin ganti gambar.
+                Format: JPG, PNG, WEBP. Max 2MB.
                 @if ($limbah->gambar)
                     Klik tombol <strong>X</strong> di gambar untuk menghapus.
                 @endif
@@ -365,7 +381,7 @@
             <a href="{{ route('admin.limbah.index') }}"
                class="px-5 py-2.5 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl font-medium transition">Batal</a>
             <button type="submit"
-                    class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition">
+                    class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-sm transition">
                 Update Limbah
             </button>
         </div>

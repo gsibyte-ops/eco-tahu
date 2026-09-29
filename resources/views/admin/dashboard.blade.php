@@ -40,7 +40,7 @@
         <p class="text-2xl font-bold text-gray-800">Rp {{ number_format($stats['total_pendapatan'], 0, ',', '.') }}</p>
     </a>
 
-    {{-- Stok Produk → ke produk tahu --}}
+    {{-- Stok Produk → ke produk tahu (WITH BREAKDOWN) --}}
     <a href="{{ route('admin.produk-tahu.index') }}"
        class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition cursor-pointer">
         <div class="flex items-center justify-between mb-3">
@@ -50,7 +50,21 @@
             <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">+15.4%</span>
         </div>
         <p class="text-sm text-gray-500 mb-1">Stok Produk</p>
-        <p class="text-2xl font-bold text-gray-800">{{ number_format($stats['total_produk']) }} <span class="text-sm font-normal text-gray-500">unit</span></p>
+        <p class="text-2xl font-bold text-gray-800">
+            {{ number_format($stats['total_produk']) }}
+            <span class="text-sm font-normal text-gray-500">unit</span>
+        </p>
+
+        {{-- Breakdown Tahu & Limbah --}}
+        <div class="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2 text-xs text-gray-500">
+            <span class="flex items-center gap-1">
+                📦 Tahu: <b class="text-gray-700">{{ number_format($stats['total_tahu'] ?? 0) }}</b>
+            </span>
+            <span class="text-gray-300">|</span>
+            <span class="flex items-center gap-1">
+                ♻️ Limbah: <b class="text-gray-700">{{ number_format($stats['total_limbah'] ?? 0) }}</b>
+            </span>
+        </div>
     </a>
 
     {{-- Pelanggan → ke halaman pelanggan --}}

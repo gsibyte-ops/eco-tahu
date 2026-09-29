@@ -21,9 +21,4 @@ class DetailPesanan extends Model
     {
         return $this->morphTo();
     }
-
-    public function detailPesanan()
-    {
-        return $this->morphMany(DetailPesanan::class, 'item');
-    }
 }
