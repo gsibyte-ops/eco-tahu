@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Refund;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class RefundController extends Controller
 {
@@ -13,20 +14,10 @@ class RefundController extends Controller
     {
         $query = Refund::with(['pesanan.user', 'pesanan.detail'])->orderByDesc('id');
 
-        // Filter by status
         if ($request->filled('status')) {
             $query->where('status_refund', $request->status);
         }
 
-        // Filter by date range (tanggal_refund)
-        if ($request->filled('dari')) {
-            $query->where('tanggal_refund', '>=', $request->dari . ' 00:00:00');
-        }
-        if ($request->filled('sampai')) {
-            $query->where('tanggal_refund', '<=', $request->sampai . ' 23:59:59');
-        }
-
-        // Search: kode pesanan / nama pelanggan / nama produk
         if ($request->filled('q')) {
             $q = $request->q;
             $query->whereHas('pesanan', function ($w) use ($q) {
@@ -35,6 +26,29 @@ class RefundController extends Controller
                   ->orWhereHas('detail', fn ($d) => $d->where('nama_item', 'like', "%{$q}%"));
             });
         }
+
+        // ============ FILTER TANGGAL (SERVER-SIDE BACKUP) ============
+        $dari = $request->filled('dari') ? $request->dari : null;
+        $sampai = $request->filled('sampai') ? $request->sampai : null;
+
+        if ($dari && Carbon::parse($dari)->isFuture()) {
+            $dari = now()->format('Y-m-d');
+        }
+        if ($sampai && Carbon::parse($sampai)->isFuture()) {
+            $sampai = now()->format('Y-m-d');
+        }
+
+        if ($dari && $sampai && Carbon::parse($dari)->gt(Carbon::parse($sampai))) {
+            [$dari, $sampai] = [$sampai, $dari];
+        }
+
+        if ($dari) {
+            $query->where('tanggal_refund', '>=', $dari . ' 00:00:00');
+        }
+        if ($sampai) {
+            $query->where('tanggal_refund', '<=', $sampai . ' 23:59:59');
+        }
+        // ===========================================================
 
         $refund = $query->paginate(10)->withQueryString();
 
@@ -63,7 +77,7 @@ class RefundController extends Controller
             'bukti_transfer_balik' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ], [
             'bukti_transfer_balik.image' => 'File harus berupa gambar.',
-            'bukti_transfer_balik.mimes' => 'Format gambar harus JPG, JPEG, PNG, atau WEBP. (Kalau dari iPhone, pilih "Most Compatible" saat kirim foto)',
+            'bukti_transfer_balik.mimes' => 'Format gambar harus JPG, JPEG, PNG, atau WEBP.',
             'bukti_transfer_balik.max' => 'Ukuran gambar maksimal 5MB.',
         ]);
 

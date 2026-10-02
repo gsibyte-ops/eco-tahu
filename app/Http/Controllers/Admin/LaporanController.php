@@ -26,6 +26,16 @@ class LaporanController extends Controller
         $dariCarbon = Carbon::parse($dari);
         $sampaiCarbon = Carbon::parse($sampai);
 
+        // 👈 TAMBAH: gak boleh masa depan
+        if ($dariCarbon->isFuture()) {
+            $dariCarbon = now();
+            $dari = $dariCarbon->format('Y-m-d');
+        }
+        if ($sampaiCarbon->isFuture()) {
+            $sampaiCarbon = now();
+            $sampai = $sampaiCarbon->format('Y-m-d');
+        }
+
         // ============ VALIDASI: MAX RANGE 1 TAHUN ============
         if ($dariCarbon->diffInDays($sampaiCarbon) > 365) {
             $sampaiCarbon = $dariCarbon->copy()->addYear()->subDay();
@@ -83,7 +93,7 @@ class LaporanController extends Controller
             ->groupBy('payment_method')
             ->get();
 
-        // ============ GRAFIK HARIAN (untuk hitung hari transaksi) ============
+        // ============ GRAFIK HARIAN ============
         $grafikHarian = Pesanan::select(
                 DB::raw('DATE(tanggal_order) as tanggal'),
                 DB::raw('SUM(total_harga) as total'),
@@ -103,7 +113,6 @@ class LaporanController extends Controller
         $chartData = [];
 
         if ($modeGrafik === 'harian') {
-            // Fill SEMUA hari dalam range (termasuk 0) biar chart-nya smooth
             $dataHarian = $grafikHarian->keyBy('tanggal');
             $cursor = $dariCarbon->copy();
             while ($cursor->lte($sampaiCarbon)) {
@@ -113,7 +122,6 @@ class LaporanController extends Controller
                 $cursor->addDay();
             }
         } else {
-            // Aggregate per bulan
             $dataBulanan = Pesanan::select(
                     DB::raw("DATE_FORMAT(tanggal_order, '%Y-%m') as bulan"),
                     DB::raw('SUM(total_harga) as total')
@@ -135,7 +143,7 @@ class LaporanController extends Controller
             }
         }
 
-        // ============ SEMUA PRODUK (berurut by terlaris) ============
+        // ============ SEMUA PRODUK ============
         $semuaProduk = DB::table('produk_tahu')
             ->leftJoin('detail_pesanan', function ($join) use ($periode) {
                 $join->on('produk_tahu.id', '=', 'detail_pesanan.item_id')
@@ -159,7 +167,7 @@ class LaporanController extends Controller
             ->orderByDesc('total_qty')
             ->get();
 
-        // ============ SEMUA LIMBAH (berurut by terlaris) ============
+        // ============ SEMUA LIMBAH ============
         $semuaLimbah = DB::table('limbah')
             ->leftJoin('detail_pesanan', function ($join) use ($periode) {
                 $join->on('limbah.id', '=', 'detail_pesanan.item_id')
@@ -254,9 +262,26 @@ class LaporanController extends Controller
         $dariCarbon = Carbon::parse($dari);
         $sampaiCarbon = Carbon::parse($sampai);
 
+        // 👈 TAMBAH: gak boleh masa depan
+        if ($dariCarbon->isFuture()) {
+            $dariCarbon = now();
+            $dari = $dariCarbon->format('Y-m-d');
+        }
+        if ($sampaiCarbon->isFuture()) {
+            $sampaiCarbon = now();
+            $sampai = $sampaiCarbon->format('Y-m-d');
+        }
+
         // Validasi max 1 tahun
         if ($dariCarbon->diffInDays($sampaiCarbon) > 365) {
             $sampaiCarbon = $dariCarbon->copy()->addYear()->subDay();
+            $sampai = $sampaiCarbon->format('Y-m-d');
+        }
+
+        // Swap kalau kebalik
+        if ($dariCarbon->gt($sampaiCarbon)) {
+            [$dariCarbon, $sampaiCarbon] = [$sampaiCarbon, $dariCarbon];
+            $dari = $dariCarbon->format('Y-m-d');
             $sampai = $sampaiCarbon->format('Y-m-d');
         }
 

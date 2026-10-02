@@ -52,14 +52,12 @@
 {{-- Statistik --}}
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
 
-    {{-- Total Pendapatan --}}
     <div class="rounded-2xl p-4 shadow-md text-white"
          style="background: linear-gradient(135deg, #34d399 0%, #10b981 100%);">
         <p class="text-sm font-semibold opacity-95 mb-1">Total Pendapatan</p>
         <p class="text-xl font-bold">Rp {{ number_format($ringkasan['total_pendapatan'], 0, ',', '.') }}</p>
     </div>
 
-    {{-- Total Pesanan --}}
     <div class="rounded-2xl p-4 shadow-md text-white"
          style="background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);">
         <p class="text-sm font-semibold opacity-95 mb-1">Total Pesanan</p>
@@ -83,14 +81,12 @@
         </div>
     </div>
 
-    {{-- Rata-rata Belanja --}}
     <div class="rounded-2xl p-4 shadow-md text-white"
          style="background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);">
         <p class="text-sm font-semibold opacity-95 mb-1">Rata-rata Belanja</p>
         <p class="text-xl font-bold">Rp {{ number_format($ringkasan['rata_rata'], 0, ',', '.') }}</p>
     </div>
 
-    {{-- Metode Bayar --}}
     @php
         $totalMetode = $metodePembayaran->sum('jumlah');
     @endphp
@@ -155,7 +151,6 @@
 {{-- Grid Top Produk & Limbah --}}
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
 
-    {{-- Produk Tahu Terlaris --}}
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <div class="flex items-center justify-between mb-4">
             <h3 class="font-bold text-gray-800">🏆 Produk Tahu Terlaris</h3>
@@ -188,7 +183,6 @@
         @endif
     </div>
 
-    {{-- Produk Limbah Terlaris --}}
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <div class="flex items-center justify-between mb-4">
             <h3 class="font-bold text-gray-800">♻️ Produk Limbah Terlaris</h3>
@@ -278,7 +272,6 @@
 {{-- Peringatan Stok Menipis --}}
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
-    {{-- Stok Produk Menipis --}}
     <div class="{{ $stokMenipis->count() > 0 ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200' }} border rounded-2xl p-6">
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
@@ -320,7 +313,6 @@
         @endif
     </div>
 
-    {{-- Stok Limbah Menipis --}}
     <div class="{{ $limbahMenipis->count() > 0 ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200' }} border rounded-2xl p-6">
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
@@ -363,9 +355,7 @@
     </div>
 </div>
 
-{{-- ============================================ --}}
 {{-- MODAL: Ranking Produk / Limbah --}}
-{{-- ============================================ --}}
 <div id="rankingModal" class="fixed inset-0 z-[999] hidden items-center justify-center p-4"
      style="background-color: rgba(0, 0, 0, 0.6);">
     <div style="width: 100%; max-width: 720px; max-height: 85vh;"
@@ -406,11 +396,13 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 <script>
-    // ==== DATA RANKING (dari server) ====
     const SEMUA_PRODUK = @json($semuaProdukJson);
     const SEMUA_LIMBAH = @json($semuaLimbahJson);
 
-    // ==== FLATPICKR — 2 INSTANCE TERPISAH BIAR BISA SALING BATASI ====
+    // ==== FLATPICKR — VALIDASI TANGGAL ====
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
     let dariPicker, sampaiPicker;
 
     function makeFlatpickrConfig(extra) {
@@ -420,16 +412,15 @@
             altFormat: "d M Y",
             allowInput: false,
             monthSelectorType: "static",
+            maxDate: today,
             clickOpens: true,
             onReady: function(selectedDates, dateStr, instance) {
-                // (1) Paksa altInput readonly — input yang keliatan user
                 instance.altInput.setAttribute('readonly', 'readonly');
                 instance.altInput.setAttribute('inputmode', 'none');
                 instance.altInput.setAttribute('autocomplete', 'off');
                 instance.altInput.style.cursor = 'pointer';
                 instance.altInput.style.caretColor = 'transparent';
 
-                // (2) Fix input TAHUN di header kalender — block huruf e, +, -, dll
                 const yearInput = instance.calendarContainer.querySelector('.cur-year');
                 if (yearInput) {
                     yearInput.setAttribute('type', 'text');
@@ -456,10 +447,8 @@
     dariPicker = flatpickr("#dari", makeFlatpickrConfig({
         onChange: function(selectedDates) {
             if (selectedDates[0] && sampaiPicker) {
-                const maxDate = new Date(selectedDates[0].getTime());
-                maxDate.setFullYear(maxDate.getFullYear() + 1);
                 sampaiPicker.set('minDate', selectedDates[0]);
-                sampaiPicker.set('maxDate', maxDate);
+                sampaiPicker.set('maxDate', today);
             }
         }
     }));
@@ -467,9 +456,6 @@
     sampaiPicker = flatpickr("#sampai", makeFlatpickrConfig({
         onChange: function(selectedDates) {
             if (selectedDates[0] && dariPicker) {
-                const minDate = new Date(selectedDates[0].getTime());
-                minDate.setFullYear(minDate.getFullYear() - 1);
-                dariPicker.set('minDate', minDate);
                 dariPicker.set('maxDate', selectedDates[0]);
             }
         }
@@ -497,10 +483,10 @@
         data.forEach((item, i) => {
             const rankBg = i === 0 ? '#fbbf24' : i === 1 ? '#e5e7eb' : i === 2 ? '#fcd34d' : '#f3f4f6';
             const rankColor = i < 3 ? '#78350f' : '#6b7280';
-            const stokBadge = item.stok <= 10 
+            const stokBadge = item.stok <= 10
                 ? `<span style="background:#fee2e2; color:#b91c1c; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">${item.stok}${item.satuan ? ' ' + item.satuan : ''}</span>`
                 : `<span style="color: #6b7280; font-size: 12px;">${item.stok}${item.satuan ? ' ' + item.satuan : ''}</span>`;
-            
+
             tbody.innerHTML += `
                 <tr class="border-b border-gray-50 hover:bg-gray-50/60">
                     <td class="py-3 pr-3">
@@ -526,7 +512,6 @@
         document.body.style.overflow = '';
     }
 
-    // ==== CLOSE ON OUTSIDE CLICK ====
     document.getElementById('rankingModal').addEventListener('click', function(e) {
         if (e.target === this) closeRankingModal();
     });

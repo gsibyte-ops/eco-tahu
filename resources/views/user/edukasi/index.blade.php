@@ -4,16 +4,16 @@
 @section('content')
 
 {{-- HERO --}}
-<section class="bg-gradient-to-br from-emerald-50 via-white to-amber-50 border-b border-gray-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div class="text-center max-w-3xl mx-auto">
-            <span class="inline-block px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold mb-3">
+<section class="py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="glass-card text-center max-w-3xl mx-auto p-10">
+            <span class="glass-pill">
                 📖 EcoTahu Journal
             </span>
-            <h1 class="text-3xl lg:text-4xl font-extrabold text-gray-800 mb-3">
+            <h1 class="text-3xl lg:text-4xl font-display text-gray-800 mb-3 mt-4">
                 Edukasi Lingkungan
             </h1>
-            <p class="text-gray-600 leading-relaxed">
+            <p class="text-gray-600 leading-relaxed text-pretty">
                 Belajar bareng tentang pelestarian lingkungan, gaya hidup berkelanjutan, dan kisah di balik secuil tahu yang ramah bumi.
             </p>
         </div>
@@ -27,21 +27,21 @@
         <div class="lg:col-span-3">
 
             {{-- Search --}}
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-6">
-                <form method="GET" class="flex gap-3">
-                    <div class="relative flex-1">
+            <div class="glass-card p-4 mb-6">
+                <form method="GET" class="flex flex-wrap gap-3">
+                    <div class="relative flex-1 min-w-[200px]">
                         <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
                              fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
                         <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari artikel edukasi..."
-                               class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                               class="glass-input w-full pl-10 pr-4 py-2.5 text-sm text-gray-700 placeholder-gray-400">
                     </div>
-                    <button type="submit" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition whitespace-nowrap">
+                    <button type="submit" class="glass-btn-primary text-sm whitespace-nowrap">
                         Cari
                     </button>
                     @if (request('q'))
-                        <a href="{{ route('user.edukasi.index') }}" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition whitespace-nowrap">
+                        <a href="{{ route('user.edukasi.index') }}" class="glass-btn text-sm whitespace-nowrap px-5 py-2.5">
                             Reset
                         </a>
                     @endif
@@ -50,9 +50,11 @@
 
             {{-- Result Info --}}
             @if (request('q'))
-                <p class="text-sm text-gray-500 mb-4">
-                    Menampilkan <span class="font-semibold text-gray-800">{{ $edukasi->total() }}</span> hasil untuk "<span class="font-semibold text-emerald-600">{{ request('q') }}</span>"
-                </p>
+                <div class="glass-card inline-flex items-center px-4 py-2 mb-4">
+                    <p class="text-sm text-gray-500">
+                        Menampilkan <span class="font-semibold text-gray-800 tabular-nums">{{ $edukasi->total() }}</span> hasil untuk "<span class="font-semibold text-emerald-600">{{ request('q') }}</span>"
+                    </p>
+                </div>
             @endif
 
             {{-- GRID ARTIKEL --}}
@@ -60,31 +62,31 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     @foreach ($edukasi as $e)
                         <a href="{{ route('user.edukasi.show', $e->slug) }}"
-                           class="group bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-1 transition">
-                            <div class="aspect-video bg-gradient-to-br from-emerald-100 to-amber-50 overflow-hidden">
+                           class="glass-product overflow-hidden block">
+                            <div class="aspect-video bg-gradient-to-br from-emerald-100/50 to-amber-50/50 overflow-hidden">
                                 @if ($e->thumbnail)
                                     <img src="{{ asset('storage/' . $e->thumbnail) }}" alt="{{ $e->judul }}"
-                                         class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                                         class="w-full h-full object-cover">
                                 @else
                                     <div class="w-full h-full flex items-center justify-center text-6xl">📖</div>
                                 @endif
                             </div>
                             <div class="p-5">
                                 <div class="flex items-center gap-2 mb-3">
-                                    <span class="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
+                                    <span class="glass-pill">
                                         Edukasi
                                     </span>
                                     <span class="text-xs text-gray-400">•</span>
-                                    <span class="text-xs text-gray-500">{{ $e->tanggal_mengunggah->format('d M Y') }}</span>
+                                    <span class="text-xs text-gray-500 tabular-nums">{{ $e->tanggal_mengunggah->format('d M Y') }}</span>
                                 </div>
-                                <h3 class="font-bold text-gray-800 mb-2 line-clamp-2 group-hover:text-emerald-600 transition">
+                                <h3 class="font-bold text-gray-800 mb-2 line-clamp-2 leading-snug">
                                     {{ $e->judul }}
                                 </h3>
-                                <p class="text-sm text-gray-500 line-clamp-3 leading-relaxed">
+                                <p class="text-sm text-gray-500 line-clamp-3 leading-relaxed text-pretty">
                                     {{ Str::limit(strip_tags($e->konten), 120) }}
                                 </p>
-                                <div class="flex items-center gap-2 mt-4 pt-4 border-t border-gray-50">
-                                    <div class="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-xs">
+                                <div class="flex items-center gap-2 mt-4 pt-4 border-t border-white/50">
+                                    <div class="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-bold text-xs shadow-sm">
                                         {{ strtoupper(substr($e->user->username ?? 'A', 0, 1)) }}
                                     </div>
                                     <span class="text-xs text-gray-500">{{ $e->user->username ?? 'Admin' }}</span>
@@ -96,12 +98,12 @@
 
                 <div class="mt-8">{{ $edukasi->links() }}</div>
             @else
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-16 text-center">
+                <div class="glass-card p-16 text-center">
                     <div class="text-6xl mb-4">🔍</div>
                     <h3 class="text-xl font-bold text-gray-800 mb-2">Artikel tidak ditemukan</h3>
                     <p class="text-sm text-gray-500 mb-6">Coba kata kunci lain, atau jelajahi semua artikel.</p>
                     <a href="{{ route('user.edukasi.index') }}"
-                       class="inline-block px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition">
+                       class="glass-btn-primary inline-block">
                         Lihat Semua Artikel
                     </a>
                 </div>
@@ -110,13 +112,13 @@
 
         {{-- SIDEBAR --}}
         <aside class="lg:col-span-1">
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sticky top-24">
+            <div class="glass-card p-5 sticky top-24">
                 <h3 class="font-bold text-gray-800 mb-4">📌 Artikel Terbaru</h3>
 
                 <div class="space-y-4">
                     @forelse ($terbaru as $t)
                         <a href="{{ route('user.edukasi.show', $t->slug) }}" class="flex gap-3 group">
-                            <div class="w-14 h-14 rounded-lg bg-emerald-50 flex-shrink-0 overflow-hidden">
+                            <div class="w-14 h-14 rounded-lg bg-emerald-50/60 flex-shrink-0 overflow-hidden border border-white/50">
                                 @if ($t->thumbnail)
                                     <img src="{{ asset('storage/' . $t->thumbnail) }}" class="w-full h-full object-cover">
                                 @else
@@ -124,10 +126,10 @@
                                 @endif
                             </div>
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-800 line-clamp-2 group-hover:text-emerald-600 transition">
+                                <p class="text-sm font-medium text-gray-800 line-clamp-2 group-hover:text-emerald-600 transition leading-snug">
                                     {{ $t->judul }}
                                 </p>
-                                <p class="text-xs text-gray-400 mt-1">{{ $t->tanggal_mengunggah->format('d M Y') }}</p>
+                                <p class="text-xs text-gray-400 mt-1 tabular-nums">{{ $t->tanggal_mengunggah->format('d M Y') }}</p>
                             </div>
                         </a>
                     @empty
@@ -136,8 +138,10 @@
                 </div>
             </div>
 
-            {{-- Info SDG Card --}}
-            <div class="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl p-5 mt-5 text-white">
+            {{-- SDG Card --}}
+            <div class="rounded-2xl p-5 mt-5 text-white
+                        bg-gradient-to-br from-emerald-600 via-emerald-500 to-emerald-700
+                        shadow-xl shadow-emerald-500/30 border border-white/20">
                 <p class="text-xs font-semibold opacity-90 mb-1">SDG 12</p>
                 <h4 class="font-bold text-lg mb-2 leading-tight">Konsumsi & Produksi yang Bertanggung Jawab</h4>
                 <p class="text-xs opacity-90 leading-relaxed">

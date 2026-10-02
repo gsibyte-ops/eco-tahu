@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Pesanan;
 use App\Models\Refund;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class PesananController extends Controller
 {
@@ -30,6 +31,31 @@ class PesananController extends Controller
                 ->orWhereHas('detail', fn ($d) => $d->where('nama_item', 'like', "%{$q}%"));
             });
         }
+
+        // ============ FILTER TANGGAL (SERVER-SIDE BACKUP) ============
+        $dari = $request->filled('dari') ? $request->dari : null;
+        $sampai = $request->filled('sampai') ? $request->sampai : null;
+
+        // Gak boleh masa depan
+        if ($dari && Carbon::parse($dari)->isFuture()) {
+            $dari = now()->format('Y-m-d');
+        }
+        if ($sampai && Carbon::parse($sampai)->isFuture()) {
+            $sampai = now()->format('Y-m-d');
+        }
+
+        // Dari gak boleh > sampai
+        if ($dari && $sampai && Carbon::parse($dari)->gt(Carbon::parse($sampai))) {
+            [$dari, $sampai] = [$sampai, $dari];
+        }
+
+        if ($dari) {
+            $query->where('tanggal_order', '>=', $dari . ' 00:00:00');
+        }
+        if ($sampai) {
+            $query->where('tanggal_order', '<=', $sampai . ' 23:59:59');
+        }
+        // ===========================================================
 
         $pesanan = $query->paginate(10)->withQueryString();
 
@@ -58,7 +84,6 @@ class PesananController extends Controller
 
         $pesanan->update(['order_status' => $request->order_status]);
 
-        // Kalau status jadi 'dibatalkan' & metode Transfer & udah paid → auto-create refund
         $refundBaru = null;
         if ($request->order_status === 'dibatalkan'
             && $pesanan->payment_method === 'Transfer'
@@ -88,7 +113,6 @@ class PesananController extends Controller
             'alasan_batal' => 'required|string|max:255',
         ]);
 
-        // Kembalikan stok
         foreach ($pesanan->detail as $d) {
             if ($d->item_type === 'App\\Models\\ProdukTahu') {
                 \App\Models\ProdukTahu::where('id', $d->item_id)->increment('stok', $d->jumlah);
@@ -102,7 +126,6 @@ class PesananController extends Controller
             'alasan_batal' => $request->alasan_batal,
         ]);
 
-        // Auto-create refund kalau Transfer & udah paid
         $refundBaru = null;
         if ($pesanan->payment_method === 'Transfer'
             && $pesanan->payment_status === 'paid'
@@ -127,7 +150,6 @@ class PesananController extends Controller
 
     public function verifikasiPembayaran(Pesanan $pesanan)
     {
-        // Handle COD yang belum punya record pembayaran
         if (!$pesanan->pembayaran) {
             $pesanan->pembayaran()->create([
                 'metode_pembayaran' => $pesanan->payment_method,

@@ -162,7 +162,6 @@
 
                         $isUrgent = $r->status_refund === 'pending';
 
-                        // Ambil bukti transfer user (kalau ada)
                         $buktiUser = null;
                         if ($r->pesanan && $r->pesanan->pembayaran && $r->pesanan->pembayaran->bukti_transfer) {
                             $buktiUser = asset('storage/' . $r->pesanan->pembayaran->bukti_transfer);
@@ -176,7 +175,7 @@
                             'alasan_batal' => $r->alasan_batal,
                             'catatan_admin' => $r->catatan_admin,
                             'bukti_transfer_balik' => $r->bukti_transfer_balik ? asset('storage/' . $r->bukti_transfer_balik) : null,
-                            'bukti_transfer_user' => $buktiUser, // 👈 BARU
+                            'bukti_transfer_user' => $buktiUser,
                             'pesanan' => [
                                 'kode' => $r->pesanan->kode_pesanan ?? '-',
                                 'total_harga' => (int) ($r->pesanan->total_harga ?? 0),
@@ -266,9 +265,7 @@
 
 <div class="mt-4">{{ $refund->links() }}</div>
 
-{{-- ============================================ --}}
-{{-- MODAL: PROSES REFUND --}}
-{{-- ============================================ --}}
+{{-- MODAL PROSES REFUND --}}
 <div id="refundModal" class="fixed inset-0 z-[999] hidden items-center justify-center p-4"
      style="background-color: rgba(0, 0, 0, 0.6);">
 
@@ -334,7 +331,7 @@
                         </div>
                     </div>
 
-                    {{-- 👇 BUKTI TRANSFER DARI USER (BARU) 👇 --}}
+                    {{-- Bukti Transfer dari User --}}
                     <div id="mBuktiUserWrapper" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-4">
                         <h4 class="font-bold text-blue-800 mb-2 text-sm">📎 Bukti Transfer dari User</h4>
                         <p class="text-xs text-blue-700 mb-3">Bukti ini diupload user saat checkout / pembatalan. Gunakan sebagai referensi verifikasi.</p>
@@ -344,7 +341,7 @@
                         <p class="text-xs text-blue-600 mt-2">Klik gambar untuk lihat full size.</p>
                     </div>
 
-                    {{-- Bukti transfer balik (dari admin) --}}
+                    {{-- Bukti transfer balik dari admin --}}
                     <div id="mBuktiWrapper" class="hidden bg-emerald-50 border border-emerald-200 rounded-xl p-4">
                         <h4 class="font-bold text-emerald-800 mb-2 text-sm">✓ Bukti Transfer Balik</h4>
                         <img id="mBuktiImg" src="" alt="Bukti" class="w-full max-w-xs rounded-xl border border-emerald-200">
@@ -408,47 +405,13 @@
                                           placeholder="Contoh: Dana sudah kami transfer ke rekening Anda..."></textarea>
                             </div>
 
-                            <div x-data="fileUploadState()">
+                            <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Bukti Transfer Balik</label>
-
-                                <input type="file" name="bukti_transfer_balik" x-ref="fileInput"
-                                       @change="handleFile($event)"
-                                       accept="image/jpeg,image/jpg,image/png,image/webp"
-                                       class="hidden">
-
-                                <div x-show="showUndo" x-cloak
-                                     class="mb-2 flex items-center gap-2 px-2.5 py-1.5 bg-amber-50 border border-amber-200 rounded-lg">
-                                    <svg width="12" height="12" fill="none" stroke="#f59e0b" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                                    <span class="flex-1 text-[11px] text-amber-800 truncate">File dibatalkan</span>
-                                    <button type="button" @click="undoFile()" class="text-[11px] text-emerald-600 hover:text-emerald-700 font-bold underline flex-shrink-0">Urungkan</button>
-                                </div>
-
-                                <div x-show="previewUrl" x-cloak
-                                     class="mb-2 flex items-start gap-3 p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg">
-                                    <div class="relative flex-shrink-0">
-                                        <img :src="previewUrl" class="w-16 h-16 rounded-lg object-cover border-2 border-white shadow-sm">
-                                        <button type="button" @click.stop="cancelFile()"
-                                                class="absolute -top-2 -right-2 w-6 h-6 bg-white rounded-full shadow-md flex items-center justify-center text-red-500 hover:bg-red-50 transition"
-                                                title="Batalkan file">
-                                            <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        </button>
-                                    </div>
-                                    <div class="flex-1 min-w-0 pt-0.5">
-                                        <p class="text-[10px] font-bold text-emerald-700 uppercase mb-0.5">Preview</p>
-                                        <p class="text-[11px] text-gray-800 font-medium break-all" x-text="fileName"></p>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white focus-within:ring-2 focus-within:ring-emerald-500 transition">
-                                    <button type="button" @click="$refs.fileInput.click()"
-                                            class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded text-xs font-semibold transition flex-shrink-0">
-                                        Choose File
-                                    </button>
-                                    <span class="flex-1 min-w-0 text-xs truncate"
-                                          :class="fileName ? 'text-gray-800 font-medium' : 'text-gray-400'"
-                                          x-text="fileName || 'No file chosen'"></span>
-                                </div>
-                                <p class="text-[10px] text-gray-400 mt-1">Hanya JPG, PNG, WEBP. Max 5MB.</p>
+                                <input type="file" name="bukti_transfer_balik" accept="image/jpeg,image/jpg,image/png,image/webp"
+                                       class="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs
+                                              file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold
+                                              file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+                                <p class="text-[10px] text-gray-400 mt-1">JPG, PNG, WEBP. Max 5MB.</p>
                             </div>
                         </div>
                     </div>
@@ -488,86 +451,6 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-    // ==== FILE UPLOAD STATE (Alpine component) ====
-    function fileUploadState() {
-        return {
-            previewUrl: null,
-            fileName: null,
-            undoFile: null,
-            undoFileName: null,
-            showUndo: false,
-            undoTimer: null,
-
-            handleFile(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-                if (!allowed.includes(file.type)) {
-                    alert('⚠️ Hanya file gambar (JPG, PNG, WEBP).');
-                    e.target.value = '';
-                    return;
-                }
-                if (file.size > 5 * 1024 * 1024) {
-                    alert('⚠️ Ukuran maksimal 5MB.');
-                    e.target.value = '';
-                    return;
-                }
-
-                if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
-                this.previewUrl = URL.createObjectURL(file);
-                this.fileName = file.name;
-                this.showUndo = false;
-                clearTimeout(this.undoTimer);
-            },
-
-            cancelFile() {
-                const file = this.$refs.fileInput.files[0];
-                if (!file) return;
-
-                this.undoFile = file;
-                this.undoFileName = this.fileName;
-
-                this.$refs.fileInput.value = '';
-                this.fileName = null;
-                this.previewUrl = null;
-
-                this.showUndo = true;
-                clearTimeout(this.undoTimer);
-                this.undoTimer = setTimeout(() => {
-                    this.showUndo = false;
-                    this.undoFile = null;
-                    this.undoFileName = null;
-                }, 10000);
-            },
-
-            undoFile() {
-                if (!this.undoFile) return;
-
-                const dt = new DataTransfer();
-                dt.items.add(this.undoFile);
-                this.$refs.fileInput.files = dt.files;
-
-                if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
-                this.previewUrl = URL.createObjectURL(this.undoFile);
-                this.fileName = this.undoFile.name;
-
-                this.showUndo = false;
-                clearTimeout(this.undoTimer);
-            },
-
-            reset() {
-                this.previewUrl = null;
-                this.fileName = null;
-                this.undoFile = null;
-                this.undoFileName = null;
-                this.showUndo = false;
-                if (this.undoTimer) clearTimeout(this.undoTimer);
-            }
-        };
-    }
-
-    // ==== FILTER DROPDOWN ====
     function selectStatusFilter(el) {
         document.getElementById('inputStatus').value = el.dataset.value;
         document.getElementById('statusLabel').textContent = el.dataset.label;
@@ -577,7 +460,6 @@
         }
     }
 
-    // ==== MODAL DROPDOWN STATUS ====
     function selectModalStatus(el) {
         const value = el.dataset.value;
         const label = el.dataset.label;
@@ -606,13 +488,19 @@
         }
     }
 
-    // ==== FLATPICKR ====
-    flatpickr(".datepicker", {
+    // ==== FLATPICKR — VALIDASI TANGGAL ====
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    let dariPicker, sampaiPicker;
+
+    dariPicker = flatpickr("#dari", {
         dateFormat: "Y-m-d",
         altInput: true,
         altFormat: "d M Y",
         allowInput: false,
         monthSelectorType: "static",
+        maxDate: today,
         onReady: function(selectedDates, dateStr, instance) {
             const yearInput = instance.currentYearElement;
             if (yearInput) {
@@ -620,18 +508,41 @@
                     this.value = this.value.replace(/[^0-9]/g, '');
                 });
                 yearInput.addEventListener('keydown', function(e) {
-                    if (['e', 'E', '+', '-', '.', ','].includes(e.key)) {
-                        e.preventDefault();
-                    }
+                    if (['e', 'E', '+', '-', '.', ','].includes(e.key)) e.preventDefault();
                 });
-                yearInput.addEventListener('paste', function(e) {
-                    e.preventDefault();
-                    const pastedText = (e.clipboardData || window.clipboardData).getData('text');
-                    const numbersOnly = pastedText.replace(/[^0-9]/g, '');
-                    if (numbersOnly) {
-                        this.value = numbersOnly.substring(0, 4);
-                    }
+            }
+            instance.altInput.setAttribute('readonly', 'readonly');
+        },
+        onChange: function(selectedDates) {
+            if (selectedDates[0] && sampaiPicker) {
+                sampaiPicker.set('minDate', selectedDates[0]);
+                sampaiPicker.set('maxDate', today);
+            }
+        }
+    });
+
+    sampaiPicker = flatpickr("#sampai", {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d M Y",
+        allowInput: false,
+        monthSelectorType: "static",
+        maxDate: today,
+        onReady: function(selectedDates, dateStr, instance) {
+            const yearInput = instance.currentYearElement;
+            if (yearInput) {
+                yearInput.addEventListener('input', function() {
+                    this.value = this.value.replace(/[^0-9]/g, '');
                 });
+                yearInput.addEventListener('keydown', function(e) {
+                    if (['e', 'E', '+', '-', '.', ','].includes(e.key)) e.preventDefault();
+                });
+            }
+            instance.altInput.setAttribute('readonly', 'readonly');
+        },
+        onChange: function(selectedDates) {
+            if (selectedDates[0] && dariPicker) {
+                dariPicker.set('maxDate', selectedDates[0]);
             }
         }
     });
@@ -661,15 +572,8 @@
         modal.classList.add('flex');
         document.body.style.overflow = 'hidden';
 
-        // Reset file input
         const fileInput = modal.querySelector('input[name="bukti_transfer_balik"]');
-        if (fileInput) {
-            fileInput.value = '';
-            const fileContainer = fileInput.closest('[x-data]');
-            if (fileContainer && fileContainer.__x) {
-                fileContainer.__x.$data.reset();
-            }
-        }
+        if (fileInput) fileInput.value = '';
 
         document.getElementById('mRefundId').textContent = data.id;
         document.getElementById('mKodePesanan').textContent = data.pesanan.kode;
@@ -699,7 +603,6 @@
             `;
         });
 
-        // 👇 BUKTI TRANSFER USER
         const buktiUserWrapper = document.getElementById('mBuktiUserWrapper');
         if (data.bukti_transfer_user) {
             document.getElementById('mBuktiUserImg').src = data.bukti_transfer_user;
@@ -709,7 +612,6 @@
             buktiUserWrapper.classList.add('hidden');
         }
 
-        // Bukti transfer balik (dari admin)
         const buktiWrapper = document.getElementById('mBuktiWrapper');
         if (data.bukti_transfer_balik) {
             document.getElementById('mBuktiImg').src = data.bukti_transfer_balik;
@@ -756,13 +658,7 @@
         document.body.style.overflow = '';
 
         const fileInput = modal.querySelector('input[name="bukti_transfer_balik"]');
-        if (fileInput) {
-            fileInput.value = '';
-            const fileContainer = fileInput.closest('[x-data]');
-            if (fileContainer && fileContainer.__x) {
-                fileContainer.__x.$data.reset();
-            }
-        }
+        if (fileInput) fileInput.value = '';
     }
 
     document.getElementById('refundModal').addEventListener('click', function(e) {

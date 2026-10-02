@@ -206,7 +206,7 @@
                             ] : null,
                             'route_update_status' => route('admin.pesanan.updateStatus', $p->id),
                             'route_verifikasi' => route('admin.pesanan.verifikasi', $p->id),
-                            'route_batalkan' => route('admin.pesanan.batalkan', $p->id), // 👈 TAMBAH
+                            'route_batalkan' => route('admin.pesanan.batalkan', $p->id),
                         ];
 
                         $statusStyle = [
@@ -282,9 +282,7 @@
 
 <div class="mt-4">{{ $pesanan->links() }}</div>
 
-{{-- ============================================ --}}
 {{-- MODAL DETAIL --}}
-{{-- ============================================ --}}
 <div id="pesananModal"
      class="fixed inset-0 z-[999] hidden items-center justify-center p-4"
      style="background-color: rgba(0, 0, 0, 0.6);">
@@ -405,12 +403,10 @@
             <div id="mFormStatusWrapper" class="bg-gray-50 rounded-xl p-3">
                 <p class="text-xs font-semibold text-gray-400 uppercase mb-2">Update Status</p>
 
-                {{-- 👇 FORM: flex-col biar alasan batal bisa full-width --}}
                 <form id="mFormStatus" method="POST" class="flex flex-col gap-2">
                     @csrf
                     <input type="hidden" name="_method" id="mMethod" value="PATCH">
 
-                    {{-- Dropdown Status --}}
                     <div class="relative" x-data="{ statusModalOpen: false }" @click.away="statusModalOpen = false">
                         <button type="button" @click="statusModalOpen = !statusModalOpen"
                                 class="w-full flex items-center justify-between gap-2 px-3 py-2 text-sm rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
@@ -438,7 +434,6 @@
                         <input type="hidden" name="order_status" id="mInputOrderStatus" value="pending">
                     </div>
 
-                    {{-- 👇 FIELD ALASAN BATAL (hidden, muncul kalau pilih "Dibatalkan") --}}
                     <div id="mAlasanWrapper" class="hidden">
                         <label class="block text-xs font-medium text-red-600 mb-1">Alasan Pembatalan <span class="text-red-500">*</span></label>
                         <input type="text" name="alasan_batal" id="mAlasanBatal" placeholder="Tulis alasan pembatalan..."
@@ -497,20 +492,22 @@
             el.insertAdjacentHTML('beforeend', '<svg class="checkmark-order-svg w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>');
         }
 
-        // 👇 SWITCH ROUTE + HANDLE ALASAN BATAL
         const alasanWrapper = document.getElementById('mAlasanWrapper');
         const alasanInput = document.getElementById('mAlasanBatal');
         const formStatus = document.getElementById('mFormStatus');
+        const methodInput = document.getElementById('mMethod');
 
         if (value === 'dibatalkan') {
             alasanWrapper.classList.remove('hidden');
             alasanInput.required = true;
             formStatus.action = formStatus.getAttribute('data-batalkan-route');
+            methodInput.value = 'PUT';
         } else {
             alasanWrapper.classList.add('hidden');
             alasanInput.required = false;
             alasanInput.value = '';
             formStatus.action = formStatus.getAttribute('data-update-route');
+            methodInput.value = 'PATCH';
         }
 
         const container = el.closest('[x-data]');
@@ -519,13 +516,19 @@
         }
     }
 
-    // ==== FLATPICKR ====
-    flatpickr(".datepicker", {
+    // ==== FLATPICKR — VALIDASI TANGGAL ====
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    let dariPicker, sampaiPicker;
+
+    dariPicker = flatpickr("#dari", {
         dateFormat: "Y-m-d",
         altInput: true,
         altFormat: "d M Y",
         allowInput: false,
         monthSelectorType: "static",
+        maxDate: today,
         onReady: function(selectedDates, dateStr, instance) {
             const yearInput = instance.currentYearElement;
             if (yearInput) {
@@ -533,18 +536,41 @@
                     this.value = this.value.replace(/[^0-9]/g, '');
                 });
                 yearInput.addEventListener('keydown', function(e) {
-                    if (['e', 'E', '+', '-', '.', ','].includes(e.key)) {
-                        e.preventDefault();
-                    }
+                    if (['e', 'E', '+', '-', '.', ','].includes(e.key)) e.preventDefault();
                 });
-                yearInput.addEventListener('paste', function(e) {
-                    e.preventDefault();
-                    const pastedText = (e.clipboardData || window.clipboardData).getData('text');
-                    const numbersOnly = pastedText.replace(/[^0-9]/g, '');
-                    if (numbersOnly) {
-                        this.value = numbersOnly.substring(0, 4);
-                    }
+            }
+            instance.altInput.setAttribute('readonly', 'readonly');
+        },
+        onChange: function(selectedDates) {
+            if (selectedDates[0] && sampaiPicker) {
+                sampaiPicker.set('minDate', selectedDates[0]);
+                sampaiPicker.set('maxDate', today);
+            }
+        }
+    });
+
+    sampaiPicker = flatpickr("#sampai", {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d M Y",
+        allowInput: false,
+        monthSelectorType: "static",
+        maxDate: today,
+        onReady: function(selectedDates, dateStr, instance) {
+            const yearInput = instance.currentYearElement;
+            if (yearInput) {
+                yearInput.addEventListener('input', function() {
+                    this.value = this.value.replace(/[^0-9]/g, '');
                 });
+                yearInput.addEventListener('keydown', function(e) {
+                    if (['e', 'E', '+', '-', '.', ','].includes(e.key)) e.preventDefault();
+                });
+            }
+            instance.altInput.setAttribute('readonly', 'readonly');
+        },
+        onChange: function(selectedDates) {
+            if (selectedDates[0] && dariPicker) {
+                dariPicker.set('maxDate', selectedDates[0]);
             }
         }
     });
@@ -650,7 +676,6 @@
         } else {
             formStatusWrapper.classList.remove('hidden');
 
-            // 👇 SET 2 ROUTE + RESET ALASAN
             formStatus.setAttribute('data-update-route', data.route_update_status);
             formStatus.setAttribute('data-batalkan-route', data.route_batalkan);
             formStatus.action = data.route_update_status;
@@ -661,12 +686,10 @@
             alasanInput.value = '';
             alasanInput.required = false;
 
-            // Set label + input
             const statusLabelForm = data.order_status.charAt(0).toUpperCase() + data.order_status.slice(1);
             document.getElementById('mInputOrderStatus').value = data.order_status;
             document.getElementById('mStatusFormLabel').textContent = statusLabelForm;
 
-            // Sync visual dropdown
             document.querySelectorAll('.order-status-option').forEach(function(btn) {
                 btn.classList.remove('bg-emerald-50', 'text-emerald-700', 'font-semibold');
                 btn.classList.add('text-gray-700');

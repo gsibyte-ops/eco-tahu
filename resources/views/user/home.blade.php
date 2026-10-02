@@ -4,18 +4,18 @@
 @section('content')
 
 {{-- HERO SECTION --}}
-<section class="relative bg-gradient-to-br from-emerald-50 via-white to-amber-50 overflow-hidden">
+<section class="relative overflow-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
         <div class="grid md:grid-cols-2 gap-12 items-center">
 
-            <div>
-                <span class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold mb-4">
+            <div class="glass-card p-8 lg:p-10">
+                <span class="inline-flex items-center gap-2 glass-pill mb-5">
                     🌿 100% Organik & Ramah Lingkungan
                 </span>
 
                 <h1 class="text-4xl lg:text-5xl font-extrabold text-gray-800 leading-tight mb-4">
                     Tahu Sehat,
-                    <span class="text-emerald-600">Lingkungan Kuat</span>
+                    <span class="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">Lingkungan Kuat</span>
                 </h1>
 
                 <p class="text-gray-600 leading-relaxed mb-8">
@@ -24,19 +24,17 @@
                 </p>
 
                 <div class="flex flex-wrap gap-3">
-                    <a href="{{ route('user.produk.index') }}"
-                       class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-lg shadow-emerald-200 transition">
+                    <a href="{{ route('user.produk.index') }}" class="glass-btn-primary inline-flex items-center gap-2">
                         Mulai Belanja
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                     </a>
-                    <a href="#kategori"
-                       class="inline-flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 hover:border-emerald-300 text-gray-700 font-semibold rounded-xl transition">
+                    <a href="#kategori" class="glass-btn inline-flex items-center gap-2 px-6 py-3">
                         Pelajari Dampak Lingkungan
                     </a>
                 </div>
 
                 {{-- Stats --}}
-                <div class="flex gap-8 mt-10">
+                <div class="grid grid-cols-3 gap-4 mt-10 pt-6 border-t border-white/50">
                     <div>
                         <p class="text-2xl font-bold text-emerald-600">12k+</p>
                         <p class="text-xs text-gray-500">Pelanggan Aktif</p>
@@ -53,9 +51,9 @@
             </div>
 
             <div class="relative">
-                <div class="absolute inset-0 bg-gradient-to-tr from-emerald-200 to-amber-100 rounded-full blur-3xl opacity-40"></div>
-                <div class="relative bg-white rounded-3xl shadow-2xl overflow-hidden">
-                    <div class="aspect-square bg-gradient-to-br from-emerald-100 to-amber-50 flex items-center justify-center p-8">
+                <div class="absolute inset-0 bg-gradient-to-tr from-emerald-300 to-amber-200 rounded-full blur-3xl opacity-40"></div>
+                <div class="relative glass-card overflow-hidden">
+                    <div class="aspect-square flex items-center justify-center p-8">
                         <div class="text-center">
                             <div class="text-8xl mb-4">🥛</div>
                             <p class="text-2xl font-bold text-gray-800">Tahu Premium</p>
@@ -69,7 +67,7 @@
 </section>
 
 {{-- KATEGORI --}}
-<section id="kategori" class="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+<section id="kategori" class="py-16 px-4 sm:px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-10">
             <h2 class="text-3xl font-bold text-gray-800 mb-2">Kategori Produk</h2>
@@ -79,13 +77,12 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
             @php
                 $emojiMap = ['🍚', '🍳', '🥛', '🥟'];
-                $bgMap = ['bg-emerald-50', 'bg-amber-50', 'bg-sky-50', 'bg-rose-50'];
             @endphp
             @forelse ($kategori as $i => $k)
                 <a href="{{ route('user.produk.index', ['kategori' => $k->id]) }}"
-                   class="group {{ $bgMap[$i % 4] }} rounded-2xl p-6 text-center hover:shadow-lg hover:-translate-y-1 transition">
+                   class="glass-product p-6 text-center block">
                     <div class="text-5xl mb-3">{{ $emojiMap[$i % 4] }}</div>
-                    <p class="font-semibold text-gray-800 group-hover:text-emerald-600">{{ $k->nama_kategori }}</p>
+                    <p class="font-semibold text-gray-800">{{ $k->nama_kategori }}</p>
                 </a>
             @empty
                 <p class="col-span-4 text-center text-gray-400">Belum ada kategori</p>
@@ -95,7 +92,7 @@
 </section>
 
 {{-- PRODUK PILIHAN --}}
-<section class="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+<section class="py-16 px-4 sm:px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
         <div class="flex items-end justify-between mb-8">
             <div>
@@ -110,19 +107,19 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             @forelse ($produkPilihan as $p)
-                <div class="group bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-1 transition">
+                <div class="glass-product overflow-hidden">
                     <a href="{{ route('user.produk.show', $p->slug) }}" class="block">
-                        <div class="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
+                        <div class="aspect-square flex items-center justify-center overflow-hidden bg-white/30">
                             @if ($p->gambar)
                                 <img src="{{ asset('storage/' . $p->gambar) }}" alt="{{ $p->nama_produk }}"
-                                     class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                                     class="w-full h-full object-cover">
                             @else
                                 <div class="text-6xl">🥛</div>
                             @endif
                         </div>
                     </a>
                     <div class="p-4">
-                        <span class="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
+                        <span class="glass-pill">
                             {{ $p->kategori->nama_kategori ?? '-' }}
                         </span>
                         <h3 class="font-semibold text-gray-800 mt-2 mb-1 line-clamp-2 min-h-[44px]">
@@ -132,7 +129,7 @@
 
                         <button type="button"
                                 onclick="addToCart('produk', {{ $p->id }})"
-                                class="w-full flex items-center justify-center gap-2 py-2 bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-700 rounded-xl text-sm font-semibold transition">
+                                class="w-full flex items-center justify-center gap-2 py-2.5 glass-btn-primary text-sm">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                             Tambah ke Keranjang
                         </button>
@@ -148,7 +145,9 @@
 {{-- PROMO BANNER --}}
 <section class="py-16 px-4 sm:px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
-        <div class="relative bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-3xl overflow-hidden">
+        <div class="relative rounded-3xl overflow-hidden
+                    bg-gradient-to-br from-emerald-600 via-emerald-500 to-emerald-700
+                    shadow-2xl shadow-emerald-500/30 border border-white/20">
             <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32"></div>
             <div class="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-24 -translate-x-24"></div>
 
@@ -158,22 +157,22 @@
                         Dapatkan Promo Menarik
                         <br>Untuk Pembelian Pertama
                     </h3>
-                    <p class="text-emerald-100 mb-6">
+                    <p class="text-emerald-50 mb-6">
                         Daftarkan email Anda dan dapatkan diskon 20% serta informasi seputar pola makan sehat berkelanjutan.
                     </p>
 
                     <form class="flex flex-wrap gap-3">
                         <input type="email" placeholder="Alamat Email Anda"
-                               class="flex-1 min-w-[200px] px-4 py-3 rounded-xl bg-white/95 border-0 focus:outline-none focus:ring-2 focus:ring-white text-sm">
+                               class="flex-1 min-w-[200px] px-4 py-3 rounded-xl bg-white/90 backdrop-blur-md border border-white/60 focus:outline-none focus:ring-2 focus:ring-white text-sm text-gray-800 placeholder-gray-500">
                         <button type="submit"
-                                class="px-6 py-3 bg-white text-emerald-700 font-semibold rounded-xl hover:bg-amber-50 transition whitespace-nowrap">
+                                class="px-6 py-3 bg-white text-emerald-700 font-semibold rounded-xl hover:bg-amber-50 transition whitespace-nowrap shadow-lg">
                             Langganan Sekarang
                         </button>
                     </form>
                 </div>
 
                 <div class="hidden md:flex justify-end">
-                    <div class="w-56 h-56 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                    <div class="w-56 h-56 bg-white/20 backdrop-blur-md border border-white/40 rounded-full flex items-center justify-center shadow-inner">
                         <div class="text-center text-white">
                             <p class="text-6xl font-black">20%</p>
                             <p class="text-sm font-semibold tracking-wider">OFF TODAY</p>
@@ -187,10 +186,10 @@
 
 {{-- LIMBAH / AMPAS TAHU --}}
 @if ($limbahPilihan->count() > 0)
-<section class="py-16 px-4 sm:px-6 lg:px-8 bg-amber-50/50">
+<section class="py-16 px-4 sm:px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-10">
-            <span class="inline-block px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold mb-3">
+            <span class="inline-block glass rounded-full px-3 py-1 text-xs font-semibold mb-3 text-amber-700 border-amber-200/60">
                 ♻️ Zero Waste Movement
             </span>
             <h2 class="text-3xl font-bold text-gray-800 mb-2">Ampas Tahu Bermanfaat</h2>
@@ -201,19 +200,19 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             @foreach ($limbahPilihan as $l)
-                <div class="group bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-1 transition">
+                <div class="glass-amber rounded-2xl overflow-hidden transition hover:-translate-y-1.5 hover:shadow-xl hover:shadow-amber-500/20">
                     <a href="{{ route('user.limbah.show', $l->slug) }}" class="block">
-                        <div class="aspect-square bg-amber-50 flex items-center justify-center overflow-hidden">
+                        <div class="aspect-square flex items-center justify-center overflow-hidden bg-amber-50/50">
                             @if ($l->gambar)
                                 <img src="{{ asset('storage/' . $l->gambar) }}" alt="{{ $l->nama_limbah }}"
-                                     class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                                     class="w-full h-full object-cover">
                             @else
                                 <div class="text-6xl">🌾</div>
                             @endif
                         </div>
                     </a>
                     <div class="p-4">
-                        <span class="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded">
+                        <span class="inline-block bg-amber-500/15 text-amber-700 px-2 py-0.5 rounded text-xs font-medium border border-amber-300/40">
                             {{ $l->kategori->nama_kategori ?? 'Limbah' }}
                         </span>
                         <h3 class="font-semibold text-gray-800 mt-2 mb-1 line-clamp-2 min-h-[44px]">
@@ -226,7 +225,7 @@
 
                         <button type="button"
                                 onclick="addToCart('limbah', {{ $l->id }})"
-                                class="w-full flex items-center justify-center gap-2 py-2 bg-amber-50 hover:bg-amber-500 hover:text-white text-amber-700 rounded-xl text-sm font-semibold transition">
+                                class="glass-btn-amber w-full flex items-center justify-center gap-2 py-2.5 text-sm">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                             Tambah ke Keranjang
                         </button>
@@ -239,7 +238,7 @@
 @endif
 
 {{-- EDUKASI --}}
-<section class="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+<section class="py-16 px-4 sm:px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
         <div class="flex items-end justify-between mb-8">
             <div>
@@ -255,18 +254,18 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             @forelse ($edukasi as $e)
                 <a href="{{ route('user.edukasi.show', $e->slug) }}"
-                   class="group bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-1 transition">
-                    <div class="aspect-video bg-emerald-50 flex items-center justify-center overflow-hidden">
+                   class="glass-product overflow-hidden block">
+                    <div class="aspect-video flex items-center justify-center overflow-hidden bg-emerald-50/40">
                         @if ($e->thumbnail)
                             <img src="{{ asset('storage/' . $e->thumbnail) }}" alt="{{ $e->judul }}"
-                                 class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                                 class="w-full h-full object-cover">
                         @else
                             <div class="text-6xl">📖</div>
                         @endif
                     </div>
                     <div class="p-5">
                         <p class="text-xs text-gray-400 mb-2">{{ $e->tanggal_mengunggah->format('d M Y') }}</p>
-                        <h3 class="font-bold text-gray-800 mb-2 line-clamp-2 group-hover:text-emerald-600 transition">
+                        <h3 class="font-bold text-gray-800 mb-2 line-clamp-2">
                             {{ $e->judul }}
                         </h3>
                         <p class="text-sm text-gray-500 line-clamp-2">
@@ -311,10 +310,16 @@
     }
 
     function showToast(message, type = 'success') {
-        const bg = type === 'success' ? 'bg-emerald-600' : 'bg-red-500';
+        const bg = type === 'success'
+            ? 'linear-gradient(135deg, rgba(16,185,129,0.95), rgba(5,150,105,0.95))'
+            : 'linear-gradient(135deg, rgba(239,68,68,0.95), rgba(220,38,38,0.95))';
         const toast = document.createElement('div');
-        toast.className = `fixed top-20 right-4 z-50 ${bg} text-white px-5 py-3 rounded-xl shadow-lg text-sm font-medium transition-all duration-300`;
+        toast.className = `fixed top-20 right-4 z-50 text-white px-5 py-3 rounded-xl shadow-2xl text-sm font-medium`;
+        toast.style.background = bg;
+        toast.style.backdropFilter = 'blur(12px)';
+        toast.style.border = '1px solid rgba(255,255,255,0.25)';
         toast.style.transform = 'translateX(400px)';
+        toast.style.transition = 'all 0.3s cubic-bezier(0.4,0,0.2,1)';
         toast.textContent = message;
         document.body.appendChild(toast);
 
