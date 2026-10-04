@@ -10,8 +10,8 @@ class EdukasiController extends Controller
     public function index()
     {
         $query = Edukasi::with('user')
-            ->where('status', 'publish')
-            ->orderByDesc('tanggal_mengunggah');
+            ->visibleToUser()
+            ->orderByDesc('published_at');
 
         if (request('q')) {
             $query->where('judul', 'like', '%' . request('q') . '%');
@@ -20,8 +20,8 @@ class EdukasiController extends Controller
         $edukasi = $query->paginate(9)->withQueryString();
 
         // Artikel terbaru untuk sidebar
-        $terbaru = Edukasi::where('status', 'publish')
-            ->orderByDesc('tanggal_mengunggah')
+        $terbaru = Edukasi::visibleToUser()
+            ->orderByDesc('published_at')
             ->limit(5)
             ->get();
 
@@ -31,14 +31,14 @@ class EdukasiController extends Controller
     public function show($slug)
     {
         $artikel = Edukasi::with('user')
+            ->visibleToUser()
             ->where('slug', $slug)
-            ->where('status', 'publish')
             ->firstOrFail();
 
         // Artikel terkait (exclude current)
-        $terkait = Edukasi::where('status', 'publish')
+        $terkait = Edukasi::visibleToUser()
             ->where('id', '!=', $artikel->id)
-            ->orderByDesc('tanggal_mengunggah')
+            ->orderByDesc('published_at')
             ->limit(3)
             ->get();
 

@@ -32,6 +32,10 @@
         $menungguVerifikasi = $pesanan->payment_method === 'Transfer'
                             && $pesanan->payment_status === 'pending'
                             && !in_array($pesanan->order_status, ['dibatalkan', 'selesai']);
+
+        $trackingAktif = $pesanan->order_status === 'dikirim'
+                      && $pesanan->lat_kurir !== null
+                      && $pesanan->lng_kurir !== null;
     @endphp
 
     @if ($pesanan->payment_status === 'paid' && $pesanan->order_status !== 'dibatalkan')
@@ -46,6 +50,78 @@
                     <p class="text-sm opacity-90">Pembayaran Anda sudah kami terima dan terverifikasi.</p>
                 </div>
             </div>
+        </div>
+    @endif
+
+    {{-- ============================================================ --}}
+    {{-- SECTION TRACKING KURIR — cuma muncul kalau status "dikirim" --}}
+    {{-- ============================================================ --}}
+    @if ($pesanan->order_status === 'dikirim')
+        <div id="trackingSection" class="glass-card p-5 mb-5">
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <div>
+                    <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-violet-500 animate-pulse"></span>
+                        Lacak Kurir
+                    </h3>
+                    <p class="text-xs text-gray-500 mt-1" id="trackingSubtitle">
+                        @if ($trackingAktif)
+                            Kurir sedang dalam perjalanan ke lokasi Anda.
+                        @else
+                            Menunggu kurir memulai pengiriman...
+                        @endif
+                    </p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="trackingStatusBadge"
+                          class="text-[10px] font-bold px-2.5 py-1 rounded-full {{ $trackingAktif ? 'bg-violet-600 text-white' : 'bg-gray-200 text-gray-600' }}">
+                        {{ $trackingAktif ? 'LIVE' : 'MENUNGGU' }}
+                    </span>
+                </div>
+            </div>
+
+            {{-- MAP CONTAINER --}}
+            <div id="userTrackingMap"
+                 style="width: 100%; height: 350px; border-radius: 1rem; overflow: hidden; background: #f3f4f6; position: relative;"
+                 data-tracking-active="{{ $trackingAktif ? '1' : '0' }}"
+                 data-lat-toko="{{ config('toko.lat') }}"
+                 data-lng-toko="{{ config('toko.lng') }}"
+                 data-nama-toko="{{ config('toko.nama') }}"
+                 data-lat-tujuan="{{ $pesanan->lat_tujuan ?? '' }}"
+                 data-lng-tujuan="{{ $pesanan->lng_tujuan ?? '' }}"
+                 data-lat-kurir="{{ $pesanan->lat_kurir ?? '' }}"
+                 data-lng-kurir="{{ $pesanan->lng_kurir ?? '' }}"
+                 data-route-tracking="{{ route('user.pesanan.tracking', $pesanan->kode_pesanan) }}"></div>
+
+            {{-- INFO KURIR --}}
+            <div class="grid grid-cols-2 gap-3 mt-4">
+                <div class="glass rounded-xl p-3">
+                    <p class="text-xs text-gray-500 mb-1">Update Terakhir</p>
+                    <p id="trackingUpdateTime" class="text-sm font-bold text-gray-800 tabular-nums">
+                        @if ($pesanan->lokasi_updated_at)
+                            {{ $pesanan->lokasi_updated_at->format('H:i:s') }} WIB
+                        @else
+                            -
+                        @endif
+                    </p>
+                </div>
+                <div class="glass rounded-xl p-3">
+                    <p class="text-xs text-gray-500 mb-1">Status</p>
+                    <p id="trackingStatusText" class="text-sm font-bold text-gray-800">
+                        @if ($trackingAktif)
+                            Sedang di jalan
+                        @else
+                            Menunggu kurir
+                        @endif
+                    </p>
+                </div>
+            </div>
+
+            @if (!$trackingAktif)
+                <div class="mt-3 glass rounded-xl p-3 text-xs text-amber-800 border-amber-300/50">
+                    ⏳ Pesanan Anda sedang disiapkan untuk pengiriman. Peta akan muncul begitu kurir mulai bergerak.
+                </div>
+            @endif
         </div>
     @endif
 
@@ -109,6 +185,9 @@
         <h3 class="font-bold text-gray-800 mb-3">📦 Info Pengiriman</h3>
         <p class="text-sm text-gray-600 leading-relaxed">{{ $pesanan->alamat_pengiriman }}</p>
         <p class="text-xs text-gray-500 mt-2"><strong>Tipe:</strong> {{ $pesanan->delivery_label }}</p>
+        @if ($pesanan->kecamatan)
+            <p class="text-xs text-gray-500 mt-2"><strong>Kecamatan:</strong> {{ $pesanan->kecamatan }}</p>
+        @endif
         @if ($pesanan->catatan)
             <p class="text-xs text-gray-500 mt-2"><strong>Catatan:</strong> {{ $pesanan->catatan }}</p>
         @endif
@@ -220,6 +299,34 @@
         @endif
     </div>
 
+    @if ($pesanan->order_status === 'selesai')
+        <div class="glass-amber rounded-2xl p-5 mb-5">
+            <p class="font-bold text-amber-800 mb-2">⭐ Beri Ulasan</p>
+            <p class="text-sm text-amber-700 mb-3">Sudah menerima produk? Bagikan pengalaman Anda dengan memberi ulasan.</p>
+            <div class="flex flex-wrap gap-2">
+                @foreach ($pesanan->detail as $d)
+                    @php
+                        $slug = null;
+                        $itemType = null;
+                        if ($d->item_type === 'App\\Models\\ProdukTahu') {
+                            $slug = \App\Models\ProdukTahu::find($d->item_id)?->slug;
+                            $itemType = 'produk';
+                        } else {
+                            $slug = \App\Models\Limbah::find($d->item_id)?->slug;
+                            $itemType = 'limbah';
+                        }
+                    @endphp
+                    @if ($slug)
+                        <a href="{{ $itemType === 'produk' ? route('user.produk.show', $slug) : route('user.limbah.show', $slug) }}"
+                           class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-amber-50 border border-amber-200 rounded-xl text-sm font-semibold text-amber-700 transition">
+                            ⭐ Ulas: {{ $d->nama_item }}
+                        </a>
+                    @endif
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     @if ($bolehCancel)
         @php
             $cancelData = [
@@ -263,7 +370,7 @@
     @endif
 </div>
 
-{{-- MODAL CANCEL (sama persis dengan index) --}}
+{{-- MODAL CANCEL --}}
 <div id="cancelModal" class="fixed inset-0 z-[999] hidden items-center justify-center p-4" style="background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px);">
     <div style="width: 100%; max-width: 460px; max-height: 90vh;" class="glass-card overflow-hidden shadow-2xl flex flex-col" onclick="event.stopPropagation()">
         <div class="px-5 py-4 bg-gradient-to-br from-red-500 to-red-600 text-white flex-shrink-0">
@@ -285,7 +392,7 @@
                           placeholder="Min 10 karakter">{{ old('alasan_batal') }}</textarea>
             </div>
 
-            <div>
+            <div id="buktiTransferWrap">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Bukti Transfer (Opsional)</label>
                 <p class="text-xs text-gray-500 mb-2">Kalau sudah transfer sebelumnya, upload bukti biar admin bisa proses refund lebih cepat.</p>
 
@@ -363,8 +470,16 @@
 </div>
 @endsection
 
+@push('styles')
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+@endpush
+
 @push('scripts')
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+    // ============================================================
+    // MODAL CANCEL HANDLERS
+    // ============================================================
     function onFileSelected(input) {
         const file = input.files[0];
         if (!file) return;
@@ -448,6 +563,11 @@
         document.getElementById('cKode').textContent = data.kode;
         document.getElementById('cancelForm').action = data.route;
 
+        const buktiWrap = document.getElementById('buktiTransferWrap');
+        if (buktiWrap) {
+            buktiWrap.style.display = (data.payment_method === 'COD') ? 'none' : '';
+        }
+
         const input = document.getElementById('cancelBuktiInput');
         if (input) input.value = '';
         document.getElementById('flagInput').value = '0';
@@ -477,5 +597,204 @@
             closeCancelModal();
         }
     });
+
+    // ============================================================
+    // TRACKING KURIR — PETA USER
+    // ============================================================
+    (function() {
+        const mapEl = document.getElementById('userTrackingMap');
+        if (!mapEl) return; // section tracking nggak ada (status bukan "dikirim")
+
+        const latToko = parseFloat(mapEl.dataset.latToko);
+        const lngToko = parseFloat(mapEl.dataset.lngToko);
+        const namaToko = mapEl.dataset.namaToko;
+        const latTujuan = mapEl.dataset.latTujuan ? parseFloat(mapEl.dataset.latTujuan) : null;
+        const lngTujuan = mapEl.dataset.lngTujuan ? parseFloat(mapEl.dataset.lngTujuan) : null;
+        const routeTracking = mapEl.dataset.routeTracking;
+        const namaPenerima = @json($pesanan->user->username ?? 'Anda');
+
+        let map = null;
+        let markerKurir = null;
+        let markerToko = null;
+        let markerTujuan = null;
+        let lineKeToko = null;
+        let pollingInterval = null;
+
+        // Init map
+        function initMap() {
+            const centerLat = latTujuan ?? latToko;
+            const centerLng = lngTujuan ?? lngToko;
+
+            map = L.map('userTrackingMap', {
+                zoomControl: true,
+                scrollWheelZoom: false,
+            }).setView([centerLat, centerLng], 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap',
+                maxZoom: 19,
+            }).addTo(map);
+
+            // Marker toko
+            const tokoIcon = L.divIcon({
+                className: 'toko-marker',
+                html: '<div style="background:#10b981; color:white; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; box-shadow: 0 4px 12px rgba(16,185,129,0.5); border: 3px solid white;">🏭</div>',
+                iconSize: [34, 34],
+                iconAnchor: [17, 17],
+            });
+            markerToko = L.marker([latToko, lngToko], { icon: tokoIcon })
+                .addTo(map)
+                .bindPopup('<strong>' + namaToko + '</strong><br><span style="font-size:11px;">Toko</span>');
+
+            // Marker tujuan (kalau ada)
+            if (latTujuan && lngTujuan) {
+                const tujuanIcon = L.divIcon({
+                    className: 'tujuan-marker',
+                    html: '<div style="background:#f59e0b; color:white; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; box-shadow: 0 4px 12px rgba(245,158,11,0.5); border: 3px solid white;">🏠</div>',
+                    iconSize: [34, 34],
+                    iconAnchor: [17, 17],
+                });
+                markerTujuan = L.marker([latTujuan, lngTujuan], { icon: tujuanIcon })
+                    .addTo(map)
+                    .bindPopup('<strong>' + namaPenerima + '</strong><br><span style="font-size:11px;">Alamat Anda</span>');
+
+                // Garis dari toko ke tujuan
+                L.polyline([[latToko, lngToko], [latTujuan, lngTujuan]], {
+                    color: '#10b981',
+                    weight: 2,
+                    opacity: 0.4,
+                    dashArray: '6, 8',
+                }).addTo(map);
+            }
+
+            // Fit bounds awal
+            if (latTujuan && lngTujuan) {
+                const bounds = L.latLngBounds([[latToko, lngToko], [latTujuan, lngTujuan]]);
+                map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+            }
+
+            // Fix size
+            setTimeout(() => {
+                if (map) map.invalidateSize({ animate: false });
+            }, 300);
+        }
+
+        // Update marker kurir
+        function updateKurir(lat, lng) {
+            const kurirIcon = L.divIcon({
+                className: 'kurir-marker',
+                html: '<div style="position:relative;"><div style="background:#8b5cf6; color:white; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; box-shadow: 0 4px 16px rgba(139,92,246,0.6); border: 3px solid white;">🛵</div><div style="position:absolute; inset:-8px; border-radius:50%; background:rgba(139,92,246,0.3); animation:pulse-ring 1.5s ease-out infinite; pointer-events:none;"></div></div>',
+                iconSize: [38, 38],
+                iconAnchor: [19, 19],
+            });
+
+            if (!markerKurir) {
+                markerKurir = L.marker([lat, lng], { icon: kurirIcon }).addTo(map);
+                markerKurir.bindPopup('<strong>Kurir</strong><br><span style="font-size:11px;">Sedang dalam perjalanan</span>');
+            } else {
+                markerKurir.setLatLng([lat, lng]);
+            }
+
+            // Update garis kurir ke tujuan
+            if (lineKeToko) map.removeLayer(lineKeToko);
+            if (latTujuan && lngTujuan) {
+                lineKeToko = L.polyline([[lat, lng], [latTujuan, lngTujuan]], {
+                    color: '#8b5cf6',
+                    weight: 3,
+                    opacity: 0.7,
+                }).addTo(map);
+            }
+        }
+
+        // Update info waktu
+        function updateInfoTime(isoString) {
+            const el = document.getElementById('trackingUpdateTime');
+            if (!el || !isoString) return;
+            const d = new Date(isoString);
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mm = String(d.getMinutes()).padStart(2, '0');
+            const ss = String(d.getSeconds()).padStart(2, '0');
+            el.textContent = hh + ':' + mm + ':' + ss + ' WIB';
+        }
+
+        // Set status LIVE / MENUNGGU
+        function setStatusLive(isLive) {
+            const badge = document.getElementById('trackingStatusBadge');
+            const text = document.getElementById('trackingStatusText');
+            const subtitle = document.getElementById('trackingSubtitle');
+
+            if (isLive) {
+                badge.textContent = 'LIVE';
+                badge.className = 'text-[10px] font-bold px-2.5 py-1 rounded-full bg-violet-600 text-white';
+                text.textContent = 'Sedang di jalan';
+                subtitle.textContent = 'Kurir sedang dalam perjalanan ke lokasi Anda.';
+            } else {
+                badge.textContent = 'MENUNGGU';
+                badge.className = 'text-[10px] font-bold px-2.5 py-1 rounded-full bg-gray-200 text-gray-600';
+                text.textContent = 'Menunggu kurir';
+                subtitle.textContent = 'Menunggu kurir memulai pengiriman...';
+            }
+        }
+
+        // Fetch tracking data dari server
+        async function fetchTracking() {
+            try {
+                const res = await fetch(routeTracking, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+
+                if (!res.ok) return;
+                const data = await res.json();
+
+                // Kalau pesanan udah bukan "dikirim", reload halaman biar UI update
+                if (data.order_status !== 'dikirim') {
+                    if (pollingInterval) clearInterval(pollingInterval);
+                    setTimeout(() => location.reload(), 500);
+                    return;
+                }
+
+                if (data.active && data.kurir) {
+                    setStatusLive(true);
+                    updateKurir(data.kurir.lat, data.kurir.lng);
+                    updateInfoTime(data.kurir.updated_at);
+
+                    // Zoom ke kurir (sekali pas awal aja)
+                    if (!markerKurir._alreadyZoomed) {
+                        const bounds = L.latLngBounds([[latToko, lngToko], [data.kurir.lat, data.kurir.lng]]);
+                        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+                        markerKurir._alreadyZoomed = true;
+                    }
+                } else {
+                    setStatusLive(false);
+                }
+            } catch (e) {
+                console.warn('Fetch tracking error:', e);
+            }
+        }
+
+        // Init
+        initMap();
+
+        // Fetch pertama
+        fetchTracking();
+
+        // Polling tiap 10 detik
+        pollingInterval = setInterval(fetchTracking, 10000);
+
+        // Fix size tiap kali window resize
+        window.addEventListener('resize', () => {
+            if (map) map.invalidateSize({ animate: false });
+        });
+    })();
 </script>
+
+<style>
+    @keyframes pulse-ring {
+        0%   { transform: scale(0.8); opacity: 0.7; }
+        100% { transform: scale(1.6); opacity: 0; }
+    }
+</style>
 @endpush

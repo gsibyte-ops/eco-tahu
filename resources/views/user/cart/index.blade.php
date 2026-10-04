@@ -2,7 +2,6 @@
 @section('title', 'Keranjang Belanja')
 
 @section('content')
-{{-- DATA UNTUK JS --}}
 <div id="cartData"
      data-route-update="{{ route('user.cart.update') }}"
      data-route-remove="{{ route('user.cart.remove') }}"
@@ -114,23 +113,14 @@
                         </div>
                     </div>
 
-                    <div class="glass-amber rounded-xl p-3 mb-4 text-xs text-amber-800">
-                        ⚠️ Minimal pembelian <strong class="tabular-nums">Rp {{ number_format($minimalPembelian, 0, ',', '.') }}</strong> (belum termasuk ongkir)
-                    </div>
-
-                    @if ($subtotal < $minimalPembelian)
-                        <div class="glass rounded-xl p-3 mb-4 text-xs text-red-700 border-red-300/50">
-                            Belum mencapai minimal pembelian. Tambah <strong class="tabular-nums">Rp {{ number_format($minimalPembelian - $subtotal, 0, ',', '.') }}</strong> lagi.
-                        </div>
-                    @endif
-
-                    <a href="{{ $subtotal >= $minimalPembelian ? route('user.checkout.index') : '#' }}"
-                       class="block w-full text-center py-3 {{ $subtotal >= $minimalPembelian ? 'glass-btn-primary' : 'glass-input text-gray-400 cursor-not-allowed pointer-events-none' }} font-semibold"
-                       {{ $subtotal < $minimalPembelian ? 'onclick=return false;' : '' }}>
+                    <a href="{{ route('user.checkout.index') }}"
+                       class="block w-full text-center py-3 glass-btn-primary font-semibold">
                         Lanjut ke Checkout
                     </a>
 
-                    <p class="text-xs text-gray-400 text-center mt-3">Ongkir dihitung otomatis per km saat checkout.</p>
+                    <p class="text-xs text-gray-400 text-center mt-3">
+                        Ongkir & minimum pembelian dicek saat checkout.
+                    </p>
                 </div>
             </div>
         </div>

@@ -18,7 +18,9 @@ return new class extends Migration
             $table->string('slug')->unique();
             $table->longText('konten');
             $table->string('thumbnail')->nullable();
-            $table->enum('status', ['draft', 'publish'])->default('draft');
+            $table->enum('status', ['draft', 'scheduled', 'publish'])->default('draft');
+            $table->timestamp('scheduled_at')->nullable();
+            $table->timestamp('published_at')->nullable();
             $table->timestamp('tanggal_mengunggah')->useCurrent();
             $table->timestamps();
         });

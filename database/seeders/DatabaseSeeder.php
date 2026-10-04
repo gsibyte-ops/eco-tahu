@@ -13,7 +13,8 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             KategoriSeeder::class,
             ProdukSeeder::class,
-            PesananSeeder::class, // dummy pesanan (opsional)
+            EdukasiSeeder::class, // dummy edukasi (opsional)
+            PesananSeeder::class,
         ]);
     }
 }

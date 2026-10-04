@@ -130,7 +130,14 @@
                                 </p>
                                 <p class="font-bold text-lg text-gray-800 mt-1">Total: <span class="price text-gradient-green">Rp {{ number_format($p->total_harga, 0, ',', '.') }}</span></p>
                             </div>
-                            <div class="flex gap-2">
+                            <div class="flex flex-wrap gap-2">
+                                @if ($p->order_status === 'selesai')
+                                    <a href="{{ route('user.pesanan.show', $p->kode_pesanan) }}#ulasan"
+                                       class="glass-btn px-4 py-2 text-amber-600 border-amber-300/50 hover:bg-amber-500/10">
+                                        ⭐ Beri Ulasan
+                                    </a>
+                                @endif
+
                                 @if ($bolehCancel)
                                     <button type="button"
                                             data-cancel="{{ json_encode($cancelData, JSON_HEX_APOS | JSON_HEX_QUOT) }}"
@@ -200,7 +207,7 @@
                           placeholder="Contoh: Salah pesan produk, ingin ganti, dll (min 10 karakter)">{{ old('alasan_batal') }}</textarea>
             </div>
 
-            <div>
+            <div id="buktiTransferWrap">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Bukti Transfer (Opsional)</label>
                 <p class="text-xs text-gray-500 mb-2">Kalau sudah transfer sebelumnya, upload bukti biar admin bisa proses refund lebih cepat.</p>
 
@@ -359,6 +366,12 @@
             document.getElementById('refundInfo').classList.remove('hidden');
         } else {
             document.getElementById('refundInfo').classList.add('hidden');
+        }
+
+        // Sembunyikan upload bukti transfer kalau COD
+        const buktiWrap = document.getElementById('buktiTransferWrap');
+        if (buktiWrap) {
+            buktiWrap.style.display = (data.payment_method === 'COD') ? 'none' : '';
         }
 
         const input = document.getElementById('cancelBuktiInput');

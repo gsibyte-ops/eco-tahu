@@ -2,41 +2,63 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Edukasi;
+use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
 class EdukasiSeeder extends Seeder
 {
     public function run(): void
     {
-        $artikel = [
+        $admin = User::where('username', 'admin')->first()
+              ?? User::first();
+
+        if (! $admin) {
+            $this->command->warn('Tidak ada user, skip EdukasiSeeder.');
+            return;
+        }
+
+        $artikels = [
             [
-                'judul' => 'Cara Mengolah Ampas Tahu Menjadi Pakan Ternak Berkualitas',
-                'konten' => 'Ampas tahu merupakan limbah padat dari proses pembuatan tahu yang masih mengandung protein cukup tinggi. Ampas tahu dapat diolah menjadi pakan ternak berkualitas dengan beberapa langkah sederhana...',
+                'judul'        => 'Manfaat Ampas Tahu untuk Pupuk Organik',
+                'konten'       => 'Ampas tahu mengandung protein dan nutrisi yang sangat baik untuk tanaman. Pupuk organik dari ampas tahu dapat meningkatkan kesuburan tanah dan mengurangi penggunaan pupuk kimia.',
+                'status'       => 'publish',
+                'published_at' => now()->subDays(5),
             ],
             [
-                'judul' => 'Manfaat Ampas Tahu untuk Pupuk Organik Tanaman',
-                'konten' => 'Ampas tahu mengandung nitrogen, fosfor, dan kalium yang baik untuk tanaman. Dengan fermentasi sederhana, ampas tahu bisa menjadi pupuk organik ramah lingkungan...',
+                'judul'        => 'Cara Mengolah Limbah Tahu Menjadi Biogas',
+                'konten'       => 'Limbah cair tahu dapat difermentasi menjadi biogas yang ramah lingkungan. Proses ini melibatkan bakteri metanogenik dalam kondisi anaerob untuk menghasilkan gas metana.',
+                'status'       => 'publish',
+                'published_at' => now()->subDays(2),
             ],
             [
-                'judul' => 'Mendukung SDG 12: Konsumsi dan Produksi yang Bertanggung Jawab',
-                'konten' => 'SDG 12 adalah salah satu tujuan pembangunan berkelanjutan yang menekankan pentingnya pola konsumsi dan produksi yang bertanggung jawab. Industri tahu dapat berkontribusi dengan mengolah limbahnya...',
+                'judul'        => 'Teknik Pengemasan Tahu agar Tahan Lama',
+                'konten'       => 'Pengemasan yang tepat dapat memperpanjang masa simpan tahu. Gunakan wadah kedap udara dan simpan pada suhu rendah untuk menjaga kualitas produk.',
+                'status'       => 'scheduled',
+                'scheduled_at' => now()->addDays(2),
             ],
             [
-                'judul' => 'Resep Olahan Tahu Sehat untuk Keluarga',
-                'konten' => 'Tahu merupakan sumber protein nabati yang murah dan mudah diolah. Berikut beberapa resep olahan tahu sehat yang bisa Anda coba di rumah...',
+                'judul'        => 'Strategi Pemasaran Tahu di Era Digital',
+                'konten'       => 'Artikel ini masih dalam proses penulisan. Akan membahas strategi pemasaran online untuk produk tahu dan cara memanfaatkan media sosial.',
+                'status'       => 'draft',
             ],
         ];
 
-        foreach ($artikel as $a) {
+        foreach ($artikels as $item) {
             Edukasi::create([
-                'user_id' => 1,
-                'judul' => $a['judul'],
-                'slug' => Str::slug($a['judul']),
-                'konten' => $a['konten'],
-                'status' => 'publish',
+                'user_id'            => $admin->id,
+                'judul'              => $item['judul'],
+                'slug'               => Str::slug($item['judul']) . '-' . uniqid(),
+                'konten'             => $item['konten'],
+                'thumbnail'          => null,
+                'status'             => $item['status'],
+                'scheduled_at'       => $item['scheduled_at'] ?? null,
+                'published_at'       => $item['published_at'] ?? null,
+                'tanggal_mengunggah' => now(),
             ]);
         }
+
+        $this->command->info('EdukasiSeeder: 4 artikel berhasil dibuat (2 publish, 1 scheduled, 1 draft).');
     }
 }

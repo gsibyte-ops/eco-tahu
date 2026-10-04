@@ -89,6 +89,23 @@
                                     <p class="mt-1 text-sm text-gray-500">{{ $p->kategori->nama_kategori ?? '-' }}</p>
                                 </div>
 
+                                @php
+                                    $avg = $p->averageRating();
+                                    $cnt = $p->reviewCount();
+                                @endphp
+                                <div class="flex items-center justify-center gap-1 text-xs">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <svg class="w-3 h-3 {{ $i <= round($avg) ? 'text-amber-400 fill-current' : 'text-gray-300 fill-current' }}" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                                    @endfor
+                                    <span class="text-gray-500 ml-1">
+                                        @if ($cnt > 0)
+                                            {{ number_format($avg, 1) }} ({{ $cnt }})
+                                        @else
+                                            Belum ada ulasan
+                                        @endif
+                                    </span>
+                                </div>
+
                                 <p class="text-center text-xl price text-emerald-600">Rp {{ number_format($p->harga, 0, ',', '.') }}</p>
 
                                 <button type="button" onclick="addToCart('produk', {{ $p->id }})"

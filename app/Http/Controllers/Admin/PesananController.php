@@ -32,11 +32,9 @@ class PesananController extends Controller
             });
         }
 
-        // ============ FILTER TANGGAL (SERVER-SIDE BACKUP) ============
         $dari = $request->filled('dari') ? $request->dari : null;
         $sampai = $request->filled('sampai') ? $request->sampai : null;
 
-        // Gak boleh masa depan
         if ($dari && Carbon::parse($dari)->isFuture()) {
             $dari = now()->format('Y-m-d');
         }
@@ -44,7 +42,6 @@ class PesananController extends Controller
             $sampai = now()->format('Y-m-d');
         }
 
-        // Dari gak boleh > sampai
         if ($dari && $sampai && Carbon::parse($dari)->gt(Carbon::parse($sampai))) {
             [$dari, $sampai] = [$sampai, $dari];
         }
@@ -55,7 +52,6 @@ class PesananController extends Controller
         if ($sampai) {
             $query->where('tanggal_order', '<=', $sampai . ' 23:59:59');
         }
-        // ===========================================================
 
         $pesanan = $query->paginate(10)->withQueryString();
 
@@ -82,7 +78,16 @@ class PesananController extends Controller
             'order_status' => 'required|in:pending,diproses,dikirim,selesai,dibatalkan',
         ]);
 
-        $pesanan->update(['order_status' => $request->order_status]);
+        $data = ['order_status' => $request->order_status];
+
+        // Kalau bukan dikirim lagi, clear lokasi kurir
+        if ($request->order_status !== 'dikirim') {
+            $data['lat_kurir'] = null;
+            $data['lng_kurir'] = null;
+            $data['lokasi_updated_at'] = null;
+        }
+
+        $pesanan->update($data);
 
         $refundBaru = null;
         if ($request->order_status === 'dibatalkan'
@@ -124,6 +129,9 @@ class PesananController extends Controller
         $pesanan->update([
             'order_status' => 'dibatalkan',
             'alasan_batal' => $request->alasan_batal,
+            'lat_kurir' => null,
+            'lng_kurir' => null,
+            'lokasi_updated_at' => null,
         ]);
 
         $refundBaru = null;
@@ -167,5 +175,85 @@ class PesananController extends Controller
         $pesanan->update(['payment_status' => 'paid']);
 
         return redirect()->back()->with('success', 'Pembayaran berhasil diverifikasi!');
+    }
+
+    // ============================================================
+    // TRACK KURIR
+    // ============================================================
+
+    /**
+     * Admin klik "Mulai Antar" — set lokasi kurir awal.
+     */
+    public function startTracking(Request $request, Pesanan $pesanan)
+    {
+        $request->validate([
+            'lat' => 'required|numeric|between:-90,90',
+            'lng' => 'required|numeric|between:-180,180',
+        ]);
+
+        if ($pesanan->order_status !== 'dikirim') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Status pesanan harus "dikirim" untuk memulai tracking.',
+            ], 422);
+        }
+
+        $pesanan->update([
+            'lat_kurir' => $request->lat,
+            'lng_kurir' => $request->lng,
+            'lokasi_updated_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tracking dimulai.',
+            'updated_at' => $pesanan->lokasi_updated_at->toIso8601String(),
+        ]);
+    }
+
+    /**
+     * Update lokasi kurir (dipanggil tiap 30 detik dari HP admin).
+     */
+    public function updateLokasi(Request $request, Pesanan $pesanan)
+    {
+        $request->validate([
+            'lat' => 'required|numeric|between:-90,90',
+            'lng' => 'required|numeric|between:-180,180',
+        ]);
+
+        if ($pesanan->order_status !== 'dikirim') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tracking tidak aktif untuk pesanan ini.',
+            ], 422);
+        }
+
+        $pesanan->update([
+            'lat_kurir' => $request->lat,
+            'lng_kurir' => $request->lng,
+            'lokasi_updated_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'updated_at' => $pesanan->lokasi_updated_at->toIso8601String(),
+        ]);
+    }
+
+    /**
+     * Admin klik "Selesai Antar" — clear lokasi kurir.
+     */
+    public function stopTracking(Pesanan $pesanan)
+    {
+        $pesanan->update([
+            'lat_kurir' => null,
+            'lng_kurir' => null,
+            'lokasi_updated_at' => null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tracking dihentikan.',
+        ]);
     }
 }

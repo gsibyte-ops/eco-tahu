@@ -184,6 +184,8 @@
                             'total_harga' => (int) $p->total_harga,
                             'payment_method' => $p->payment_method,
                             'payment_status' => $p->payment_status,
+                            'is_tracking_active' => $p->lat_kurir !== null && $p->lng_kurir !== null,
+                            'lokasi_updated_at' => $p->lokasi_updated_at?->toIso8601String(),
                             'user' => [
                                 'username' => $p->user->username ?? '-',
                                 'email' => $p->user->email ?? '-',
@@ -207,6 +209,9 @@
                             'route_update_status' => route('admin.pesanan.updateStatus', $p->id),
                             'route_verifikasi' => route('admin.pesanan.verifikasi', $p->id),
                             'route_batalkan' => route('admin.pesanan.batalkan', $p->id),
+                            'route_start_tracking' => route('admin.pesanan.startTracking', $p->id),
+                            'route_update_lokasi' => route('admin.pesanan.updateLokasi', $p->id),
+                            'route_stop_tracking' => route('admin.pesanan.stopTracking', $p->id),
                         ];
 
                         $statusStyle = [
@@ -218,7 +223,15 @@
                         ][$p->order_status] ?? 'background:#f3f4f6; color:#374151;';
                     @endphp
                     <tr class="border-b border-gray-50 hover:bg-gray-50/60 transition">
-                        <td class="px-5 py-4 text-sm font-semibold text-gray-800 whitespace-nowrap">#{{ $p->kode_pesanan }}</td>
+                        <td class="px-5 py-4 text-sm font-semibold text-gray-800 whitespace-nowrap">
+                            #{{ $p->kode_pesanan }}
+                            @if ($p->lat_kurir && $p->lng_kurir && $p->order_status === 'dikirim')
+                                <span class="inline-flex items-center gap-1 ml-1 text-[10px] font-bold px-1.5 py-0.5 bg-violet-100 text-violet-700 rounded">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse"></span>
+                                    LIVE
+                                </span>
+                            @endif
+                        </td>
                         <td class="px-5 py-4">
                             <p class="text-sm font-medium text-gray-800">{{ $p->user->username ?? '-' }}</p>
                             <p class="text-xs text-gray-500">{{ $p->user->email ?? '' }}</p>
@@ -287,7 +300,7 @@
      class="fixed inset-0 z-[999] hidden items-center justify-center p-4"
      style="background-color: rgba(0, 0, 0, 0.6);">
 
-    <div style="width: 100%; max-width: 480px; max-height: 80vh;"
+    <div style="width: 100%; max-width: 480px; max-height: 85vh;"
          class="bg-white rounded-2xl overflow-hidden flex flex-col shadow-2xl">
 
         <div class="flex items-center justify-between px-5 py-4 bg-emerald-600 text-white flex-shrink-0">
@@ -399,6 +412,40 @@
                 </div>
             </div>
 
+            {{-- ============================================ --}}
+            {{-- TRACKING KURIR — muncul kalau status = dikirim --}}
+            {{-- ============================================ --}}
+            <div id="mTrackingBox" class="hidden bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-200 rounded-xl p-3">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-xs font-semibold text-violet-700 uppercase flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-violet-500 animate-pulse"></span>
+                        Tracking Kurir
+                    </p>
+                    <span id="mTrackingStatus" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-200 text-gray-600">OFF</span>
+                </div>
+
+                <p id="mTrackingInfo" class="text-xs text-violet-800 mb-3 leading-relaxed">
+                    Mulai tracking untuk mengirim lokasi Anda ke pelanggan secara real-time.
+                </p>
+
+                <div class="flex gap-2">
+                    <button type="button" id="mBtnStartTracking"
+                            onclick="handleStartTracking()"
+                            class="flex-1 py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-lg transition">
+                        🛵 Mulai Antar
+                    </button>
+                    <button type="button" id="mBtnStopTracking"
+                            onclick="handleStopTracking()"
+                            class="hidden flex-1 py-2 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition">
+                        ⏹ Selesai Antar
+                    </button>
+                </div>
+
+                <p class="text-[10px] text-violet-600 mt-2 leading-relaxed">
+                    💡 GPS akan aktif saat Anda klik "Mulai Antar". Pastikan browser Anda mengizinkan akses lokasi. Update posisi tiap 30 detik.
+                </p>
+            </div>
+
             {{-- UPDATE STATUS --}}
             <div id="mFormStatusWrapper" class="bg-gray-50 rounded-xl p-3">
                 <p class="text-xs font-semibold text-gray-400 uppercase mb-2">Update Status</p>
@@ -456,7 +503,16 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-    // ==== FILTER HANDLERS ====
+    // ============================================================
+    // STATE TRACKING (GLOBAL)
+    // ============================================================
+    let currentTrackingPesanan = null;   // { pesanan_id, route_update_lokasi, route_stop_tracking }
+    let trackingInterval = null;
+    let trackingStatusInterval = null;
+
+    // ============================================================
+    // FILTER HANDLERS
+    // ============================================================
     function selectStatus(el) {
         document.getElementById('inputStatus').value = el.dataset.value;
         document.getElementById('statusLabel').textContent = el.dataset.label;
@@ -469,7 +525,9 @@
         document.querySelector('[x-data]').__x.$data.metodeOpen = false;
     }
 
-    // ==== ORDER STATUS DROPDOWN (MODAL) ====
+    // ============================================================
+    // ORDER STATUS DROPDOWN (MODAL)
+    // ============================================================
     function selectOrderStatus(el) {
         const value = el.dataset.value;
         const label = el.dataset.label;
@@ -516,7 +574,9 @@
         }
     }
 
-    // ==== FLATPICKR — VALIDASI TANGGAL ====
+    // ============================================================
+    // FLATPICKR
+    // ============================================================
     const today = new Date();
     today.setHours(23, 59, 59, 999);
 
@@ -575,7 +635,9 @@
         }
     });
 
-    // ==== MODAL HANDLERS ====
+    // ============================================================
+    // MODAL HELPERS
+    // ============================================================
     const STATUS_COLORS = {
         pending: '#f59e0b',
         diproses: '#0ea5e9',
@@ -593,6 +655,10 @@
 
     function formatRupiah(num) {
         return 'Rp ' + Number(num).toLocaleString('id-ID');
+    }
+
+    function csrfToken() {
+        return document.querySelector('meta[name="csrf-token"]')?.content || '';
     }
 
     function openPesananModal(data) {
@@ -704,6 +770,54 @@
                 }
             });
         }
+
+        // ============================================================
+        // TRACKING SECTION
+        // ============================================================
+        const trackingBox = document.getElementById('mTrackingBox');
+        if (data.order_status === 'dikirim') {
+            trackingBox.classList.remove('hidden');
+
+            // Simpan state tracking
+            currentTrackingPesanan = {
+                pesanan_id: data.id,
+                route_start_tracking: data.route_start_tracking,
+                route_update_lokasi: data.route_update_lokasi,
+                route_stop_tracking: data.route_stop_tracking,
+            };
+
+            // Set UI berdasarkan apakah tracking aktif
+            if (data.is_tracking_active) {
+                setTrackingUI(true, data.lokasi_updated_at);
+            } else {
+                setTrackingUI(false);
+            }
+        } else {
+            trackingBox.classList.add('hidden');
+            currentTrackingPesanan = null;
+            stopTrackingCleanup();
+        }
+    }
+
+    function setTrackingUI(active, updatedAt = null) {
+        const statusEl = document.getElementById('mTrackingStatus');
+        const btnStart = document.getElementById('mBtnStartTracking');
+        const btnStop = document.getElementById('mBtnStopTracking');
+        const infoEl = document.getElementById('mTrackingInfo');
+
+        if (active) {
+            statusEl.textContent = 'LIVE';
+            statusEl.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-600 text-white';
+            btnStart.classList.add('hidden');
+            btnStop.classList.remove('hidden');
+            infoEl.innerHTML = '<span class="font-bold">🛵 Sedang mengantar...</span><br>Lokasi Anda dibagikan ke pelanggan.';
+        } else {
+            statusEl.textContent = 'OFF';
+            statusEl.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-200 text-gray-600';
+            btnStart.classList.remove('hidden');
+            btnStop.classList.add('hidden');
+            infoEl.innerHTML = 'Mulai tracking untuk mengirim lokasi Anda ke pelanggan secara real-time.';
+        }
     }
 
     function closePesananModal() {
@@ -711,6 +825,11 @@
         modal.classList.add('hidden');
         modal.classList.remove('flex');
         document.body.style.overflow = '';
+
+        // NOTE: Kita TIDAK stop interval pas modal ditutup,
+        // supaya kalau admin buka lagi, tracking tetap jalan.
+        // Kalau mau stop, ubah di sini:
+        // stopTrackingCleanup();
     }
 
     document.getElementById('pesananModal').addEventListener('click', function(e) {
@@ -720,5 +839,125 @@
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') closePesananModal();
     });
+
+    // ============================================================
+    // TRACKING HANDLERS
+    // ============================================================
+
+    function stopTrackingCleanup() {
+        if (trackingInterval) {
+            clearInterval(trackingInterval);
+            trackingInterval = null;
+        }
+        if (trackingStatusInterval) {
+            clearInterval(trackingStatusInterval);
+            trackingStatusInterval = null;
+        }
+    }
+
+    async function handleStartTracking() {
+        if (!currentTrackingPesanan) {
+            alert('Pesanan tidak valid.');
+            return;
+        }
+
+        if (!navigator.geolocation) {
+            alert('Browser Anda tidak mendukung GPS. Silakan gunakan browser modern (Chrome/Safari/Edge).');
+            return;
+        }
+
+        if (!confirm('Mulai antar pesanan ini? GPS Anda akan aktif dan lokasi akan dikirim ke pelanggan.')) {
+            return;
+        }
+
+        // Get posisi pertama
+        navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+
+                const ok = await kirimLokasi(currentTrackingPesanan.route_start_tracking, lat, lng);
+
+                if (!ok) {
+                    alert('Gagal memulai tracking. Coba lagi.');
+                    return;
+                }
+
+                setTrackingUI(true);
+
+                // Mulai interval update tiap 30 detik
+                trackingInterval = setInterval(() => {
+                    navigator.geolocation.getCurrentPosition(
+                        async (p) => {
+                            await kirimLokasi(currentTrackingPesanan.route_update_lokasi, p.coords.latitude, p.coords.longitude);
+                        },
+                        (err) => {
+                            console.warn('GPS update error:', err);
+                            // Kalau error, jangan stop interval, coba lagi di tick berikutnya
+                        },
+                        { enableHighAccuracy: true, timeout: 20000, maximumAge: 10000 }
+                    );
+                }, 30000);
+
+            },
+            (err) => {
+                const msg = {
+                    1: 'Izin lokasi ditolak. Silakan aktifkan GPS di pengaturan browser.',
+                    2: 'Lokasi tidak tersedia. Pastikan GPS aktif.',
+                    3: 'Timeout mendapatkan lokasi. Coba lagi.',
+                }[err.code] || 'Gagal mendapatkan lokasi.';
+                alert(msg);
+            },
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 10000 }
+        );
+    }
+
+    async function handleStopTracking() {
+        if (!currentTrackingPesanan) return;
+
+        if (!confirm('Selesai antar pesanan ini? Tracking akan dihentikan.')) {
+            return;
+        }
+
+        try {
+            const res = await fetch(currentTrackingPesanan.route_stop_tracking, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken(),
+                    'Accept': 'application/json',
+                },
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                stopTrackingCleanup();
+                setTrackingUI(false);
+                alert('Tracking dihentikan. Jangan lupa ubah status pesanan ke "Selesai".');
+            } else {
+                alert(data.message || 'Gagal menghentikan tracking.');
+            }
+        } catch (e) {
+            alert('Error: ' + e.message);
+        }
+    }
+
+    async function kirimLokasi(route, lat, lng) {
+        try {
+            const res = await fetch(route, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken(),
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ lat, lng }),
+            });
+            const data = await res.json();
+            return !!data.success;
+        } catch (e) {
+            console.warn('Kirim lokasi error:', e);
+            return false;
+        }
+    }
 </script>
 @endpush

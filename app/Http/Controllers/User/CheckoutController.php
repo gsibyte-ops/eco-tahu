@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\User;
 
+use App\Helpers\Haversine;
 use App\Http\Controllers\Controller;
 use App\Models\DetailPesanan;
 use App\Models\Limbah;
@@ -15,9 +16,8 @@ use Illuminate\Support\Facades\Storage;
 
 class CheckoutController extends Controller
 {
-    const ONGKIR_PER_KM = 2500;
-    const MINIMAL_ONGKIR = 5000;
-    const MINIMAL_PEMBELIAN = 15000;
+    // Minimum pembelian HANYA berlaku kalau delivery (dikirim)
+    const MINIMAL_PEMBELIAN_DELIVERY = 15000;
 
     public function index()
     {
@@ -29,19 +29,12 @@ class CheckoutController extends Controller
         }
 
         $subtotal = collect($cart)->sum(fn ($i) => $i['harga'] * $i['qty']);
-
-        if ($subtotal < self::MINIMAL_PEMBELIAN) {
-            $kurang = self::MINIMAL_PEMBELIAN - $subtotal;
-            return redirect()->route('user.cart.index')
-                ->with('error', 'Minimal pembelian Rp ' . number_format(self::MINIMAL_PEMBELIAN, 0, ',', '.') .
-                       '. Tambah Rp ' . number_format($kurang, 0, ',', '.') . ' lagi.');
-        }
-
-        $ongkirPerKm = self::ONGKIR_PER_KM;
-        $minimalOngkir = self::MINIMAL_ONGKIR;
         $user = Auth::user();
+        $toko = config('toko');
+        $kecamatanList = config('toko.kecamatan');
+        $minimalDelivery = self::MINIMAL_PEMBELIAN_DELIVERY;
 
-        return view('user.checkout.index', compact('cart', 'subtotal', 'ongkirPerKm', 'minimalOngkir', 'user'));
+        return view('user.checkout.index', compact('cart', 'subtotal', 'user', 'toko', 'kecamatanList', 'minimalDelivery'));
     }
 
     public function store(Request $request)
@@ -49,45 +42,98 @@ class CheckoutController extends Controller
         $cart = session('cart', []);
 
         if (empty($cart)) {
-            return redirect()->route('user.cart.index')
-                ->with('error', 'Keranjang kosong.');
+            return redirect()->route('user.cart.index')->with('error', 'Keranjang kosong.');
         }
 
         $rules = [
-            'nama_penerima' => 'required|string|max:100',
-            'no_telepon' => 'required|string|max:20',
+            'nama_penerima'     => 'required|string|max:100',
+            'no_telepon'        => 'required|string|max:20',
             'alamat_pengiriman' => 'required|string|min:10',
-            'payment_method' => 'required|in:COD,Transfer',
-            'delivery_type' => 'required|in:pickup,delivery',
-            'catatan' => 'nullable|string|max:500',
+            'payment_method'    => 'required|in:COD,Transfer',
+            'delivery_type'     => 'required|in:pickup,delivery',
+            'catatan'           => 'nullable|string|max:500',
         ];
 
-        // 👈 SIMPEL: butuh ongkir cuma kalau delivery
         $butuhOngkir = $request->delivery_type === 'delivery';
 
         if ($butuhOngkir) {
-            $rules['jarak_km'] = 'required|numeric|min:1|max:100';
+            $rules['kecamatan'] = 'required|string';
+            $rules['lat_pin']   = 'nullable|numeric|between:-90,90';
+            $rules['lng_pin']   = 'nullable|numeric|between:-180,180';
         }
 
         if ($request->payment_method === 'Transfer') {
             $rules['bank_tujuan'] = 'required|in:BCA,BRI,Mandiri,BNI';
         }
 
-        $validated = $request->validate($rules);
+        $validated = $request->validate($rules, [
+            'kecamatan.required'    => 'Kecamatan wajib dipilih untuk pengiriman.',
+            'alamat_pengiriman.min' => 'Alamat minimal 10 karakter.',
+        ]);
+
+        // Cek kecamatan valid
+        if ($butuhOngkir) {
+            $kecamatanList = config('toko.kecamatan', []);
+            if (! array_key_exists($validated['kecamatan'], $kecamatanList)) {
+                return back()->withInput()->with('error', 'Kecamatan tidak valid.');
+            }
+        }
 
         $subtotal = collect($cart)->sum(fn ($i) => $i['harga'] * $i['qty']);
 
-        if ($subtotal < self::MINIMAL_PEMBELIAN) {
-            return back()->with('error', 'Minimal pembelian Rp ' . number_format(self::MINIMAL_PEMBELIAN, 0, ',', '.') . '.');
+        // Cek minimum pembelian HANYA untuk delivery
+        if ($butuhOngkir && $subtotal < self::MINIMAL_PEMBELIAN_DELIVERY) {
+            $kurang = self::MINIMAL_PEMBELIAN_DELIVERY - $subtotal;
+            return back()->withInput()->with(
+                'error',
+                'Minimum pembelian untuk pengiriman adalah Rp ' . number_format(self::MINIMAL_PEMBELIAN_DELIVERY, 0, ',', '.') .
+                '. Tambah Rp ' . number_format($kurang, 0, ',', '.') . ' lagi, atau pilih "Ambil di Tempat".'
+            );
         }
 
+        $latTujuan = null;
+        $lngTujuan = null;
         $jarak = 0;
         $ongkir = 0;
+        $pakaiPin = false;
+        $kecamatan = null;
 
         if ($butuhOngkir) {
-            $jarak = $validated['jarak_km'];
-            $hitungOngkir = $jarak * self::ONGKIR_PER_KM;
-            $ongkir = max($hitungOngkir, self::MINIMAL_ONGKIR);
+            $latToko = (float) config('toko.lat');
+            $lngToko = (float) config('toko.lng');
+
+            $kecamatan = $validated['kecamatan'];
+
+            // Kalau user pin lokasi → pakai koordinat pin
+            if (! empty($validated['lat_pin']) && ! empty($validated['lng_pin'])) {
+                $latTujuan = (float) $validated['lat_pin'];
+                $lngTujuan = (float) $validated['lng_pin'];
+                $pakaiPin = true;
+            } else {
+                // Fallback: pakai koordinat tengah kecamatan
+                $kecData = config('toko.kecamatan')[$kecamatan];
+                $latTujuan = (float) $kecData['lat'];
+                $lngTujuan = (float) $kecData['lng'];
+                $pakaiPin = false;
+            }
+
+            // Server hitung ulang jarak — JANGAN percaya client
+            $jarak = Haversine::distance($latToko, $lngToko, $latTujuan, $lngTujuan);
+
+            // Cek radius
+            $radiusMaks = (float) config('toko.radius_maks_km', 10);
+            if ($jarak > $radiusMaks) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'Lokasi Anda di luar jangkauan pengiriman. Maksimal ' . $radiusMaks . ' km dari toko. Jarak: ' . $jarak . ' km.');
+            }
+
+            // Minimal jarak 0.1 km
+            if ($jarak < 0.1) {
+                $jarak = 0.1;
+            }
+
+            $ongkir = Haversine::hitungOngkir($jarak);
         }
 
         $total = $subtotal + $ongkir;
@@ -116,35 +162,39 @@ class CheckoutController extends Controller
             }
 
             $pesanan = Pesanan::create([
-                'user_id' => Auth::id(),
-                'kode_pesanan' => $kodePesanan,
-                'subtotal' => $subtotal,
-                'ongkir' => $ongkir,
-                'jarak_km' => $jarak,
-                'total_harga' => $total,
-                'payment_method' => $validated['payment_method'],
-                'delivery_type' => $validated['delivery_type'],
-                'bank_tujuan' => $bankTujuan,
-                'va_number' => $vaNumber,
-                'payment_status' => 'pending',
-                'order_status' => 'pending',
+                'user_id'           => Auth::id(),
+                'kode_pesanan'      => $kodePesanan,
+                'subtotal'          => $subtotal,
+                'ongkir'            => $ongkir,
+                'jarak_km'          => $jarak,
+                'lat_tujuan'        => $latTujuan,
+                'lng_tujuan'        => $lngTujuan,
+                'pakai_pin'         => $pakaiPin,
+                'total_harga'       => $total,
+                'payment_method'    => $validated['payment_method'],
+                'delivery_type'     => $validated['delivery_type'],
+                'bank_tujuan'       => $bankTujuan,
+                'va_number'         => $vaNumber,
+                'payment_status'    => 'pending',
+                'order_status'      => 'pending',
                 'alamat_pengiriman' => $validated['alamat_pengiriman'] . ' | Penerima: ' . $validated['nama_penerima'] . ' | Telp: ' . $validated['no_telepon'],
-                'catatan' => $validated['catatan'],
-                'tanggal_order' => now(),
-                'expired_at' => $validated['payment_method'] === 'Transfer' ? now()->addHours(24) : null,
+                'kecamatan'         => $kecamatan,
+                'catatan'           => $validated['catatan'],
+                'tanggal_order'     => now(),
+                'expired_at'        => $validated['payment_method'] === 'Transfer' ? now()->addHours(24) : null,
             ]);
 
             foreach ($cart as $item) {
                 $model = $item['type'] === 'produk' ? ProdukTahu::class : Limbah::class;
 
                 DetailPesanan::create([
-                    'pesanan_id' => $pesanan->id,
-                    'item_type' => $model,
-                    'item_id' => $item['id'],
-                    'nama_item' => $item['nama'],
+                    'pesanan_id'   => $pesanan->id,
+                    'item_type'    => $model,
+                    'item_id'      => $item['id'],
+                    'nama_item'    => $item['nama'],
                     'harga_satuan' => $item['harga'],
-                    'jumlah' => $item['qty'],
-                    'subtotal' => $item['harga'] * $item['qty'],
+                    'jumlah'       => $item['qty'],
+                    'subtotal'     => $item['harga'] * $item['qty'],
                 ]);
 
                 if ($item['type'] === 'produk') {
@@ -155,10 +205,10 @@ class CheckoutController extends Controller
             }
 
             Pembayaran::create([
-                'pesanan_id' => $pesanan->id,
+                'pesanan_id'        => $pesanan->id,
                 'metode_pembayaran' => $validated['payment_method'],
                 'status_pembayaran' => 'pending',
-                'jumlah_bayar' => $total,
+                'jumlah_bayar'      => $total,
             ]);
 
             DB::commit();

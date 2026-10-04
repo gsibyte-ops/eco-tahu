@@ -95,6 +95,24 @@
                                     {{ $l->kategori->nama_kategori ?? 'Limbah' }}
                                 </span>
                                 <h3 class="font-semibold text-gray-800 mt-2 mb-1 line-clamp-2 min-h-[44px]">{{ $l->nama_limbah }}</h3>
+
+                                @php
+                                    $avg = $l->averageRating();
+                                    $cnt = $l->reviewCount();
+                                @endphp
+                                <div class="flex items-center gap-1 text-xs mb-2">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <svg class="w-3 h-3 {{ $i <= round($avg) ? 'text-amber-400 fill-current' : 'text-gray-300 fill-current' }}" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                                    @endfor
+                                    <span class="text-gray-500 ml-1">
+                                        @if ($cnt > 0)
+                                            {{ number_format($avg, 1) }} ({{ $cnt }})
+                                        @else
+                                            Belum ada ulasan
+                                        @endif
+                                    </span>
+                                </div>
+
                                 <p class="text-lg price text-amber-600 mb-3">
                                     Rp {{ number_format($l->harga, 0, ',', '.') }}
                                     <span class="text-xs font-normal text-gray-500">/ {{ $l->satuan }}</span>

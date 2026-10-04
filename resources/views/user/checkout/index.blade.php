@@ -33,12 +33,17 @@
     <form method="POST"
           action="{{ route('user.checkout.store') }}"
           x-data="checkoutForm()"
-          data-jarak="{{ old('jarak_km', 1) }}"
+          data-subtotal="{{ $subtotal }}"
+          data-ongkir-per-km="{{ $toko['ongkir_per_km'] }}"
+          data-ongkir-minimal="{{ $toko['ongkir_minimal'] }}"
+          data-radius-maks="{{ $toko['radius_maks_km'] }}"
+          data-lat-toko="{{ $toko['lat'] }}"
+          data-lng-toko="{{ $toko['lng'] }}"
+          data-kecamatan='@json($kecamatanList)'
           data-payment="{{ old('payment_method', 'COD') }}"
           data-delivery="{{ old('delivery_type', 'delivery') }}"
-          data-subtotal="{{ $subtotal }}"
-          data-ongkir-per-km="{{ $ongkirPerKm }}"
-          data-minimal-ongkir="{{ $minimalOngkir }}">
+          data-kecamatan-old="{{ old('kecamatan') }}"
+          data-minimal-delivery="{{ $minimalDelivery }}">
         @csrf
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-2 space-y-5">
@@ -60,8 +65,8 @@
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Alamat Lengkap <span class="text-red-500">*</span></label>
-                            <textarea name="alamat_pengiriman" required rows="3" class="glass-input w-full px-4 py-2.5 text-sm text-gray-700" placeholder="Jalan, No. Rumah, Kelurahan, Kecamatan, Kota... (min. 10 karakter)">{{ old('alamat_pengiriman', auth()->user()->alamat) }}</textarea>
-                            <p class="text-xs text-gray-500 mt-1">Minimal 10 karakter.</p>
+                            <textarea name="alamat_pengiriman" required rows="3" class="glass-input w-full px-4 py-2.5 text-sm text-gray-700" placeholder="Jalan, No. Rumah, RT/RW, Kelurahan, Kecamatan, Patokan... (min. 10 karakter)">{{ old('alamat_pengiriman', auth()->user()->alamat) }}</textarea>
+                            <p class="text-xs text-gray-500 mt-1">Minimal 10 karakter. Detail alamat (patokan) membantu kurir menemukan lokasi.</p>
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Catatan (Opsional)</label>
@@ -120,7 +125,7 @@
                                             <p class="text-xs text-emerald-600 font-semibold">GRATIS ONGKIR</p>
                                         </div>
                                     </div>
-                                    <p class="text-xs text-gray-500 mt-2">Ambil langsung di toko EcoTahu, tanpa biaya ongkir.</p>
+                                    <p class="text-xs text-gray-500 mt-2">Ambil langsung di pabrik EcoTahu, tanpa biaya ongkir.</p>
                                 </div>
                             </label>
 
@@ -131,10 +136,10 @@
                                         <div class="text-2xl">🚚</div>
                                         <div>
                                             <p class="font-bold text-gray-800 text-sm">Diantar</p>
-                                            <p class="text-xs text-amber-600 font-semibold">Mulai Rp 5.000</p>
+                                            <p class="text-xs text-amber-600 font-semibold">Ongkir otomatis</p>
                                         </div>
                                     </div>
-                                    <p class="text-xs text-gray-500 mt-2">Diantar ke alamat Anda, ongkir sesuai jarak.</p>
+                                    <p class="text-xs text-gray-500 mt-2">Min. belanja Rp 15.000. Pilih kecamatan / pin lokasi.</p>
                                 </div>
                             </label>
                         </div>
@@ -158,25 +163,88 @@
                     </div>
                 </div>
 
-                {{-- 3. Jarak Pengiriman --}}
+                {{-- 3. Lokasi Pengiriman --}}
                 <div x-show="butuhOngkir" x-cloak class="glass-card p-5">
                     <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
                         <span class="w-7 h-7 bg-gradient-to-br from-emerald-500 to-emerald-700 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md shadow-emerald-500/30">3</span>
-                        Jarak Pengiriman
+                        Lokasi Pengiriman
                     </h3>
 
                     <div class="glass-amber rounded-xl p-3 mb-4 text-sm text-amber-800">
-                        📍 Ongkir <strong>Rp 2.500 per kilometer</strong> (minimum Rp 5.000) dari lokasi toko EcoTahu.
+                        📍 Pilih <strong>kecamatan</strong> wajib. Kalau mau lebih presisi, boleh pin lokasi di peta (opsional).
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Jarak dari Toko (km) <span class="text-red-500">*</span></label>
-                        <div class="relative">
-                            <input type="number" name="jarak_km" x-bind:required="butuhOngkir" min="1" max="100" step="0.1" x-model="jarak" value="{{ old('jarak_km', 1) }}" class="glass-input w-full px-4 py-2.5 pr-16 text-sm text-gray-700 tabular-nums">
-                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">km</span>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-1.5">Estimasi jarak pengiriman dari toko ke alamat Anda (min. 1 km).</p>
+                    <div x-show="butuhOngkir && subtotal < minimalDelivery" x-cloak
+                         class="glass rounded-xl p-3 mb-4 text-sm text-red-700 border-red-300/50">
+                        ⚠️ Minimum pembelian untuk pengiriman adalah
+                        <strong class="tabular-nums">Rp <span x-text="formatNumber(minimalDelivery)"></span></strong>.
+                        Belanja Anda kurang <strong class="tabular-nums">Rp <span x-text="formatNumber(minimalDelivery - subtotal)"></span></strong>.
+                        Silakan pilih <strong>"Ambil di Tempat"</strong> atau tambah item.
                     </div>
+
+                    {{-- Dropdown Kecamatan --}}
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Kecamatan <span class="text-red-500">*</span>
+                        </label>
+                        <select name="kecamatan" x-model="kecamatan" required
+                                @change="hitungDariKecamatan()"
+                                class="glass-input w-full px-4 py-2.5 text-sm text-gray-700">
+                            <option value="">-- Pilih Kecamatan --</option>
+                            @foreach ($kecamatanList as $nama => $koord)
+                                <option value="{{ $nama }}">{{ $nama }}</option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Ongkir dihitung otomatis dari titik tengah kecamatan.</p>
+                    </div>
+
+                    {{-- Pin Peta (Opsional) --}}
+                    <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-700">Pin Lokasi di Peta (Opsional)</p>
+                            <p class="text-xs text-gray-500">Kalau di-pin, ongkir lebih presisi. Kalau nggak, pakai kecamatan.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" @click="pakaiLokasiSaya()"
+                                    class="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 rounded-lg text-xs font-semibold transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                Pakai Lokasi Saya
+                            </button>
+                            <button type="button" @click="resetPeta()"
+                                    class="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-medium transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                Reset Pin
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- PETA --}}
+                    <div id="map"
+                         style="width: 100%; height: 400px; border-radius: 1rem; overflow: hidden; background: #f3f4f6; position: relative;"
+                         x-init="$nextTick(() => { setTimeout(() => initMap(), 300) })"></div>
+
+                    <input type="hidden" name="lat_pin" :value="latPin">
+                    <input type="hidden" name="lng_pin" :value="lngPin">
+
+                    {{-- Info jarak & ongkir --}}
+                    <div x-show="jarak > 0" x-cloak class="grid grid-cols-3 gap-3 mt-3">
+                        <div class="glass rounded-xl p-3">
+                            <p class="text-xs text-gray-500 mb-1">Sumber</p>
+                            <p class="text-sm font-bold text-gray-800" x-text="sumber"></p>
+                        </div>
+                        <div class="glass rounded-xl p-3">
+                            <p class="text-xs text-gray-500 mb-1">Jarak</p>
+                            <p class="text-sm font-bold text-gray-800 tabular-nums" x-text="jarak.toFixed(2) + ' km'"></p>
+                        </div>
+                        <div class="glass rounded-xl p-3">
+                            <p class="text-xs text-gray-500 mb-1">Ongkir</p>
+                            <p class="text-sm font-bold text-emerald-600 tabular-nums" x-text="'Rp ' + formatNumber(ongkir)"></p>
+                        </div>
+                    </div>
+
+                    <p x-show="jarak > 0 && diLuarRadius" class="text-xs text-red-600 font-semibold mt-2">
+                        ⚠️ Lokasi di luar jangkauan (maks. {{ $toko['radius_maks_km'] }} km). Silakan pilih kecamatan lain.
+                    </p>
                 </div>
             </div>
 
@@ -213,7 +281,7 @@
                             <span class="text-gray-500">
                                 Ongkir
                                 <span x-show="!butuhOngkir" class="text-xs text-emerald-600">(Ambil di Tempat)</span>
-                                <span x-show="butuhOngkir" class="text-xs">(<span x-text="jarak"></span> km)</span>
+                                <span x-show="butuhOngkir && jarak > 0" class="text-xs">(<span x-text="jarak.toFixed(2)"></span> km)</span>
                             </span>
                             <span class="font-semibold text-gray-800 tabular-nums">Rp <span x-text="formatNumber(ongkir)"></span></span>
                         </div>
@@ -224,8 +292,14 @@
                         <span class="text-xl price text-gradient-green">Rp <span x-text="formatNumber(total)"></span></span>
                     </div>
 
-                    <button type="submit" class="glass-btn-primary w-full py-3">
-                        Buat Pesanan
+                    <button type="submit"
+                            :disabled="butuhOngkir && (!kecamatan || diLuarRadius || subtotal < minimalDelivery)"
+                            class="glass-btn-primary w-full py-3 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none">
+                        <span x-show="!butuhOngkir">Buat Pesanan</span>
+                        <span x-show="butuhOngkir && subtotal < minimalDelivery">Belanja Kurang</span>
+                        <span x-show="butuhOngkir && subtotal >= minimalDelivery && !kecamatan">Pilih Kecamatan Dulu</span>
+                        <span x-show="butuhOngkir && subtotal >= minimalDelivery && kecamatan && diLuarRadius">Di Luar Jangkauan</span>
+                        <span x-show="butuhOngkir && subtotal >= minimalDelivery && kecamatan && !diLuarRadius">Buat Pesanan</span>
                     </button>
 
                     <p class="text-xs text-gray-400 text-center mt-3">Dengan klik "Buat Pesanan", Anda setuju dengan syarat & ketentuan kami.</p>
@@ -236,29 +310,214 @@
 </div>
 @endsection
 
+@push('styles')
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+@endpush
+
 @push('scripts')
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     function checkoutForm() {
         const form = document.querySelector('form[x-data]');
         return {
-            jarak: parseFloat(form.dataset.jarak) || 1,
             payment: form.dataset.payment || 'COD',
             delivery: form.dataset.delivery || 'delivery',
             bank: null,
             subtotal: parseFloat(form.dataset.subtotal) || 0,
             ongkirPerKm: parseFloat(form.dataset.ongkirPerKm) || 2500,
-            minimalOngkir: parseFloat(form.dataset.minimalOngkir) || 5000,
+            ongkirMinimal: parseFloat(form.dataset.ongkirMinimal) || 5000,
+            radiusMaks: parseFloat(form.dataset.radiusMaks) || 10,
+            latToko: parseFloat(form.dataset.latToko),
+            lngToko: parseFloat(form.dataset.lngToko),
+            kecamatanList: JSON.parse(form.dataset.kecamatan),
+            minimalDelivery: parseFloat(form.dataset.minimalDelivery) || 15000,
+
+            kecamatan: form.dataset.kecamatanOld || '',
+            latPin: null,
+            lngPin: null,
+            jarak: 0,
+            sumber: '',
+            mapInitialized: false,
+
+            map: null,
+            marker: null,
+            tokoMarker: null,
+            circle: null,
 
             get butuhOngkir() {
                 return this.delivery === 'delivery';
             },
             get ongkir() {
                 if (!this.butuhOngkir) return 0;
-                const hitung = (parseFloat(this.jarak) || 0) * this.ongkirPerKm;
-                return Math.max(hitung, this.minimalOngkir);
+                if (this.jarak <= 0) return 0;
+                const hitung = Math.ceil(this.jarak) * this.ongkirPerKm;
+                return Math.max(hitung, this.ongkirMinimal);
             },
-            get total() { return this.subtotal + this.ongkir; },
-            formatNumber(num) { return Number(Math.round(num)).toLocaleString('id-ID'); }
+            get total() {
+                return this.subtotal + this.ongkir;
+            },
+            get diLuarRadius() {
+                return this.jarak > this.radiusMaks;
+            },
+
+            formatNumber(num) {
+                return Number(Math.round(num)).toLocaleString('id-ID');
+            },
+
+            haversine(lat1, lng1, lat2, lng2) {
+                const R = 6371;
+                const toRad = d => d * Math.PI / 180;
+                const dLat = toRad(lat2 - lat1);
+                const dLng = toRad(lng2 - lng1);
+                const a = Math.sin(dLat / 2) ** 2
+                        + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                return R * c;
+            },
+
+            init() {
+                if (this.kecamatan) this.hitungDariKecamatan();
+            },
+
+            initMap() {
+                if (this.mapInitialized) return;
+
+                const mapEl = document.getElementById('map');
+                if (!mapEl) return;
+
+                // Cek container punya dimensi
+                if (mapEl.offsetWidth === 0 || mapEl.offsetHeight === 0) {
+                    // Coba lagi 300ms kemudian
+                    setTimeout(() => this.initMap(), 300);
+                    return;
+                }
+
+                this.map = L.map('map', {
+                    zoomControl: true,
+                    scrollWheelZoom: true,
+                }).setView([this.latToko, this.lngToko], 13);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap',
+                    maxZoom: 19,
+                }).addTo(this.map);
+
+                const tokoIcon = L.divIcon({
+                    className: 'toko-marker',
+                    html: '<div style="background:#10b981; color:white; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; box-shadow: 0 4px 12px rgba(16,185,129,0.5); border: 3px solid white;">🏭</div>',
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16],
+                });
+
+                this.tokoMarker = L.marker([this.latToko, this.lngToko], { icon: tokoIcon })
+                    .addTo(this.map)
+                    .bindPopup('<strong>{{ $toko["nama"] }}</strong><br><span style="font-size:11px;">{{ $toko["alamat"] }}</span>');
+
+                this.circle = L.circle([this.latToko, this.lngToko], {
+                    radius: this.radiusMaks * 1000,
+                    color: '#10b981',
+                    fillColor: '#10b981',
+                    fillOpacity: 0.08,
+                    weight: 1.5,
+                    dashArray: '5, 5',
+                }).addTo(this.map);
+
+                this.map.on('click', (e) => {
+                    this.setPin(e.latlng.lat, e.latlng.lng);
+                });
+
+                // Sekali invalidateSize setelah tiles mulai load
+                setTimeout(() => {
+                    if (this.map) this.map.invalidateSize({ animate: false });
+                }, 200);
+
+                this.mapInitialized = true;
+            },
+
+            setPin(lat, lng) {
+                this.latPin = lat;
+                this.lngPin = lng;
+                this.sumber = 'Pin peta';
+
+                this.jarak = this.haversine(this.latToko, this.lngToko, lat, lng);
+
+                if (this.marker) {
+                    this.marker.setLatLng([lat, lng]);
+                } else {
+                    const userIcon = L.divIcon({
+                        className: 'user-marker',
+                        html: '<div style="background:#f59e0b; color:white; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; box-shadow: 0 4px 12px rgba(245,158,11,0.5); border: 3px solid white;">📍</div>',
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 16],
+                    });
+                    this.marker = L.marker([lat, lng], { icon: userIcon, draggable: true }).addTo(this.map);
+                    this.marker.on('dragend', (e) => {
+                        const pos = e.target.getLatLng();
+                        this.setPin(pos.lat, pos.lng);
+                    });
+                }
+
+                const bounds = L.latLngBounds([[this.latToko, this.lngToko], [lat, lng]]);
+                this.map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
+            },
+
+            resetPeta() {
+                if (this.marker) {
+                    this.map.removeLayer(this.marker);
+                    this.marker = null;
+                }
+                this.latPin = null;
+                this.lngPin = null;
+
+                if (this.kecamatan) {
+                    this.hitungDariKecamatan();
+                } else {
+                    this.jarak = 0;
+                    this.sumber = '';
+                }
+
+                if (this.map) this.map.setView([this.latToko, this.lngToko], 13);
+            },
+
+            hitungDariKecamatan() {
+                if (!this.kecamatan) {
+                    if (!this.latPin) {
+                        this.jarak = 0;
+                        this.sumber = '';
+                    }
+                    return;
+                }
+
+                const data = this.kecamatanList[this.kecamatan];
+                if (!data) return;
+
+                if (this.latPin && this.lngPin) return;
+
+                this.jarak = this.haversine(this.latToko, this.lngToko, data.lat, data.lng);
+                this.sumber = 'Kec. ' + this.kecamatan;
+            },
+
+            pakaiLokasiSaya() {
+                if (!navigator.geolocation) {
+                    alert('Browser Anda tidak mendukung GPS. Silakan klik manual di peta.');
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        this.setPin(position.coords.latitude, position.coords.longitude);
+                    },
+                    (error) => {
+                        const msg = {
+                            1: 'Izin lokasi ditolak. Silakan klik manual di peta.',
+                            2: 'Lokasi tidak tersedia. Silakan klik manual di peta.',
+                            3: 'Timeout. Silakan klik manual di peta.',
+                        }[error.code] || 'Gagal mendapatkan lokasi. Silakan klik manual di peta.';
+                        alert(msg);
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            }
         }
     }
 </script>

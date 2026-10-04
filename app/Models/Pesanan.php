@@ -14,23 +14,37 @@ class Pesanan extends Model
         'subtotal',
         'ongkir',
         'jarak_km',
+        'lat_tujuan',
+        'lng_tujuan',
+        'lat_kurir',
+        'lng_kurir',
+        'lokasi_updated_at',
+        'pakai_pin',
         'total_harga',
         'payment_method',
-        'delivery_type',    // 👈 BARU: pickup / delivery
+        'delivery_type',
         'bank_tujuan',
         'va_number',
         'payment_status',
         'order_status',
-        'alasan_batal',     // 👈 BARU
+        'alasan_batal',
         'alamat_pengiriman',
+        'kecamatan',
         'catatan',
         'tanggal_order',
-        'expired_at',       // 👈 BARU
+        'expired_at',
     ];
 
     protected $casts = [
-        'tanggal_order' => 'datetime',
-        'expired_at'    => 'datetime',  // 👈 BARU
+        'tanggal_order'     => 'datetime',
+        'expired_at'        => 'datetime',
+        'lokasi_updated_at' => 'datetime',
+        'jarak_km'          => 'float',
+        'lat_tujuan'        => 'float',
+        'lng_tujuan'        => 'float',
+        'lat_kurir'         => 'float',
+        'lng_kurir'         => 'float',
+        'pakai_pin'         => 'boolean',
     ];
 
     public function user()
@@ -53,7 +67,11 @@ class Pesanan extends Model
         return $this->hasOne(Refund::class);
     }
 
-    // Helper: Cek apakah pesanan sudah expired (belum bayar & lewat 24 jam)
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
     public function isExpired(): bool
     {
         return $this->expired_at
@@ -62,12 +80,20 @@ class Pesanan extends Model
             && $this->order_status === 'pending';
     }
 
-    // Helper: Label tipe pengiriman
     public function getDeliveryLabelAttribute(): string
     {
         if ($this->delivery_type === 'pickup') {
             return 'Ambil di Tempat';
         }
         return 'Diantar';
+    }
+
+    public function isTrackingActive(): bool
+    {
+        return $this->order_status === 'dikirim'
+            && $this->lat_kurir !== null
+            && $this->lng_kurir !== null
+            && $this->lokasi_updated_at !== null
+            && $this->lokasi_updated_at->diffInMinutes(now()) < 5;
     }
 }

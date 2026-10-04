@@ -241,9 +241,16 @@
                 Status <span class="text-red-500">*</span>
             </label>
             <button type="button" @click="statusOpen = !statusOpen"
-                    class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
+                    class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-xl border @error('status') border-red-300 bg-red-50 @else border-gray-200 bg-white @enderror hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
                 <span class="text-gray-700" id="statusLabel">
-                    {{ old('status', $edukasi->status) === 'draft' ? 'Draft' : 'Publish' }}
+                    @php
+                        $st = old('status', $edukasi->status);
+                        echo match($st) {
+                            'draft' => 'Draft',
+                            'scheduled' => 'Schedule',
+                            default => 'Publish',
+                        };
+                    @endphp
                 </span>
                 <svg class="w-4 h-4 text-gray-400 flex-shrink-0" :class="statusOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
             </button>
@@ -264,9 +271,32 @@
                     <span>Publish</span>
                     <span class="text-xs text-gray-400">— langsung tayang</span>
                 </button>
+                <button type="button" data-value="scheduled" data-label="Schedule"
+                        onclick="selectStatusForm(this)"
+                        class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-left hover:bg-emerald-50 transition
+                               {{ old('status', $edukasi->status) == 'scheduled' ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-gray-700' }}">
+                    <span>Schedule</span>
+                    <span class="text-xs text-gray-400">— tayang otomatis</span>
+                </button>
             </div>
 
             <input type="hidden" name="status" id="inputStatus" value="{{ old('status', $edukasi->status) }}">
+        </div>
+
+        {{-- SCHEDULED_AT --}}
+        <div id="scheduleWrap" style="{{ old('status', $edukasi->status) === 'scheduled' ? '' : 'display:none' }}">
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+                Jadwal Tayang <span class="text-red-500">*</span>
+            </label>
+            <input type="datetime-local" name="scheduled_at" id="scheduledAtInput"
+                   value="{{ old('scheduled_at', optional($edukasi->scheduled_at)->format('Y-m-d\TH:i')) }}"
+                   min="{{ now()->addMinutes(5)->format('Y-m-d\TH:i') }}"
+                   class="w-full px-4 py-2.5 rounded-xl border @error('scheduled_at') border-red-300 bg-red-50 @else border-gray-200 @enderror focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            @error('scheduled_at')
+                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+            @else
+                <p class="text-xs text-gray-500 mt-1">Minimal 5 menit dari sekarang. Waktu server: {{ now()->format('d M Y H:i') }}</p>
+            @enderror
         </div>
 
         <div class="flex justify-end gap-3 pt-2">
@@ -304,6 +334,14 @@
         document.getElementById('inputStatus').value = el.dataset.value;
         document.getElementById('statusLabel').textContent = el.dataset.label;
         document.querySelector('[x-data]').__x.$data.statusOpen = false;
+
+        const wrap = document.getElementById('scheduleWrap');
+        if (el.dataset.value === 'scheduled') {
+            wrap.style.display = '';
+        } else {
+            wrap.style.display = 'none';
+            document.getElementById('scheduledAtInput').value = '';
+        }
     }
 </script>
 @endpush

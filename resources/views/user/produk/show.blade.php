@@ -34,12 +34,23 @@
 
             <h1 class="text-3xl lg:text-4xl font-display text-gray-800 mt-4 mb-3">{{ $produk->nama_produk }}</h1>
 
+            @php
+                $avgRating = $produk->averageRating();
+                $totalReview = $produk->reviewCount();
+            @endphp
+
             <div class="flex items-center gap-4 mb-5">
                 <div class="flex items-center gap-1">
                     @for ($i = 1; $i <= 5; $i++)
-                        <svg class="w-4 h-4 text-amber-400 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                        <svg class="w-4 h-4 {{ $i <= round($avgRating) ? 'text-amber-400 fill-current' : 'text-gray-300 fill-current' }}" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
                     @endfor
-                    <span class="text-sm text-gray-500 ml-1 tabular-nums">(4.9)</span>
+                    <span class="text-sm text-gray-500 ml-1 tabular-nums">
+                        @if ($totalReview > 0)
+                            ({{ number_format($avgRating, 1) }} · {{ $totalReview }} ulasan)
+                        @else
+                            (Belum ada ulasan)
+                        @endif
+                    </span>
                 </div>
                 <span class="text-sm text-gray-300">|</span>
                 <span class="text-sm text-gray-500">Stok: <span class="font-semibold text-gray-800 tabular-nums">{{ $produk->stok }}</span></span>
@@ -86,8 +97,11 @@
         </div>
     </div>
 
+    {{-- SECTION ULASAN --}}
+    @include('user.partials.review-section', ['item' => $produk, 'itemType' => 'produk'])
+
     @if ($related->count() > 0)
-    <section>
+    <section class="mt-16">
         <h2 class="text-2xl font-display text-gray-800 mb-6">Produk Serupa</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
             @foreach ($related as $r)

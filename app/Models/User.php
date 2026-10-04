@@ -39,6 +39,12 @@ class User extends Authenticatable
         return $this->hasMany(Edukasi::class);
     }
 
+    // REVIEWS
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
     // Helper
     public function isAdmin(): bool
     {

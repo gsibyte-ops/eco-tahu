@@ -17,6 +17,7 @@ use App\Http\Controllers\User\EdukasiController;
 use App\Http\Controllers\User\LimbahController;
 use App\Http\Controllers\User\PesananController;
 use App\Http\Controllers\User\ProdukController;
+use App\Http\Controllers\User\ReviewController;
 use Illuminate\Support\Facades\Route;
 
 // ============================
@@ -68,6 +69,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/{kode}', [PesananController::class, 'show'])->name('show');
         Route::post('/{kode}/cancel', [PesananController::class, 'cancel'])->name('cancel');
         Route::post('/{kode}/upload-bukti', [PesananController::class, 'uploadBukti'])->name('uploadBukti');
+        Route::get('/{kode}/tracking', [PesananController::class, 'tracking'])->name('tracking');
+    });
+
+    // REVIEW
+    Route::prefix('review')->name('user.review.')->group(function () {
+        Route::post('/pesanan/{pesanan}', [ReviewController::class, 'store'])->name('store');
+        Route::delete('/{review}', [ReviewController::class, 'destroy'])->name('destroy');
     });
 });
 
@@ -92,7 +100,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/pesanan/{pesanan}', [AdminPesananController::class, 'show'])->name('pesanan.show');
     Route::patch('/pesanan/{pesanan}/status', [AdminPesananController::class, 'updateStatus'])->name('pesanan.updateStatus');
     Route::post('/pesanan/{pesanan}/verifikasi', [AdminPesananController::class, 'verifikasiPembayaran'])->name('pesanan.verifikasi');
-    Route::put('/pesanan/{pesanan}/batalkan', [AdminPesananController::class, 'batalkan'])->name('pesanan.batalkan'); // 👈 BARU
+    Route::put('/pesanan/{pesanan}/batalkan', [AdminPesananController::class, 'batalkan'])->name('pesanan.batalkan');
+
+    // TRACK KURIR
+    Route::post('/pesanan/{pesanan}/start-tracking', [AdminPesananController::class, 'startTracking'])->name('pesanan.startTracking');
+    Route::post('/pesanan/{pesanan}/update-lokasi', [AdminPesananController::class, 'updateLokasi'])->name('pesanan.updateLokasi');
+    Route::post('/pesanan/{pesanan}/stop-tracking', [AdminPesananController::class, 'stopTracking'])->name('pesanan.stopTracking');
 
     // Refund
     Route::get('/refund', [RefundController::class, 'index'])->name('refund.index');
@@ -100,7 +113,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/refund/{refund}', [RefundController::class, 'update'])->name('refund.update');
     Route::delete('/refund/{refund}', [RefundController::class, 'destroy'])->name('refund.destroy');
 
-    // Pelanggan — export HARUS di atas
+    // Pelanggan
     Route::get('/pelanggan/export', [PelangganController::class, 'export'])->name('pelanggan.export');
     Route::get('/pelanggan', [PelangganController::class, 'index'])->name('pelanggan.index');
     Route::get('/pelanggan/{pelanggan}', [PelangganController::class, 'show'])->name('pelanggan.show');
@@ -108,7 +121,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Edukasi
     Route::resource('edukasi', AdminEdukasiController::class);
 
-    // Laporan — export HARUS di atas
+    // Laporan
     Route::get('/laporan/export', [LaporanController::class, 'export'])->name('laporan.export');
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
 });

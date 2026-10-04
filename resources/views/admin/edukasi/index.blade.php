@@ -11,9 +11,9 @@
 @endif
 
 {{-- Statistik --}}
-<div class="grid grid-cols-3 gap-4 mb-6">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
 
-    {{-- Total Artikel (Putih + Accent Sky) --}}
+    {{-- Total Artikel --}}
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 relative overflow-hidden">
         <div class="absolute left-0 top-0 bottom-0 w-1" style="background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);"></div>
         <div class="pl-3">
@@ -22,14 +22,21 @@
         </div>
     </div>
 
-    {{-- Published (Gradient Emerald) --}}
+    {{-- Published --}}
     <div class="rounded-2xl p-4 shadow-md text-white"
          style="background: linear-gradient(135deg, #34d399 0%, #10b981 100%);">
         <p class="text-sm font-semibold opacity-95 mb-1">Published</p>
         <p class="text-3xl font-bold">{{ $stats['publish'] }}</p>
     </div>
 
-    {{-- Draft (Gradient Amber) --}}
+    {{-- Scheduled --}}
+    <div class="rounded-2xl p-4 shadow-md text-white"
+         style="background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);">
+        <p class="text-sm font-semibold opacity-95 mb-1">Scheduled</p>
+        <p class="text-3xl font-bold">{{ $stats['scheduled'] }}</p>
+    </div>
+
+    {{-- Draft --}}
     <div class="rounded-2xl p-4 shadow-md text-white"
          style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);">
         <p class="text-sm font-semibold opacity-95 mb-1">Draft</p>
@@ -74,9 +81,10 @@
                 <span class="text-gray-700 whitespace-nowrap" id="statusLabel">
                     @php
                         $statusLabel = match(request('status')) {
-                            'publish' => 'Publish',
-                            'draft' => 'Draft',
-                            default => 'Semua Status',
+                            'publish'   => 'Publish',
+                            'scheduled' => 'Scheduled',
+                            'draft'     => 'Draft',
+                            default     => 'Semua Status',
                         };
                     @endphp
                     {{ $statusLabel }}
@@ -86,7 +94,7 @@
 
             <div x-show="statusOpen" x-cloak
                  class="absolute left-0 right-0 z-30 mt-2 bg-white rounded-xl border border-gray-100 shadow-lg overflow-hidden">
-                @foreach (['' => 'Semua Status', 'publish' => 'Publish', 'draft' => 'Draft'] as $val => $label)
+                @foreach (['' => 'Semua Status', 'publish' => 'Publish', 'scheduled' => 'Scheduled', 'draft' => 'Draft'] as $val => $label)
                     <button type="button"
                             data-value="{{ $val }}"
                             data-label="{{ $label }}"
@@ -147,10 +155,21 @@
                         <p class="text-xs text-gray-500">{{ Str::limit($e->konten, 60) }}</p>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-600">{{ $e->user->username ?? '-' }}</td>
-                    <td class="px-6 py-4 text-sm text-gray-500">{{ $e->tanggal_mengunggah->format('d M Y') }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">
+                        @if ($e->status === 'publish' && $e->published_at)
+                            {{ $e->published_at->format('d M Y') }}
+                        @elseif ($e->status === 'scheduled' && $e->scheduled_at)
+                            <span class="text-blue-600">{{ $e->scheduled_at->format('d M Y H:i') }}</span>
+                        @else
+                            <span class="text-gray-400">—</span>
+                        @endif
+                    </td>
                     <td class="px-6 py-4">
                         @if ($e->status === 'publish')
                             <span class="px-2.5 py-1 rounded-lg text-xs font-bold" style="background:#d1fae5; color:#047857;">Publish</span>
+                        @elseif ($e->status === 'scheduled')
+                            <span class="px-2.5 py-1 rounded-lg text-xs font-bold" style="background:#dbeafe; color:#1d4ed8;">Scheduled</span>
+                            <p class="text-xs text-gray-500 mt-1">→ {{ $e->scheduled_at?->format('d M Y H:i') }}</p>
                         @else
                             <span class="px-2.5 py-1 rounded-lg text-xs font-bold" style="background:#fef3c7; color:#b45309;">Draft</span>
                         @endif

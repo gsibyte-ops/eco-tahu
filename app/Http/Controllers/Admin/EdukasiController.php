@@ -27,9 +27,10 @@ class EdukasiController extends Controller
         $edukasi = $query->paginate(10)->withQueryString();
 
         $stats = [
-            'total' => Edukasi::count(),
-            'publish' => Edukasi::where('status', 'publish')->count(),
-            'draft' => Edukasi::where('status', 'draft')->count(),
+            'total'     => Edukasi::count(),
+            'publish'   => Edukasi::where('status', 'publish')->count(),
+            'scheduled' => Edukasi::where('status', 'scheduled')->count(),
+            'draft'     => Edukasi::where('status', 'draft')->count(),
         ];
 
         return view('admin.edukasi.index', compact('edukasi', 'stats'));
@@ -50,7 +51,8 @@ class EdukasiController extends Controller
             ],
             'konten' => 'required|string|min:20|max:10000',
             'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'status' => 'required|in:draft,publish',
+            'status' => 'required|in:draft,scheduled,publish',
+            'scheduled_at' => 'nullable|required_if:status,scheduled|date|after:+5 minutes',
         ], [
             'judul.required' => 'Judul artikel wajib diisi.',
             'judul.regex' => 'Judul artikel hanya boleh huruf, angka, spasi, dan tanda baca umum (titik, koma, titik dua, tanda tanya, tanda seru, tanda hubung).',
@@ -65,11 +67,32 @@ class EdukasiController extends Controller
             'thumbnail.max' => 'Ukuran thumbnail maksimal 2MB.',
             'status.required' => 'Status wajib dipilih.',
             'status.in' => 'Status tidak valid.',
+            'scheduled_at.required_if' => 'Tanggal jadwal wajib diisi kalau status Schedule.',
+            'scheduled_at.after' => 'Jadwal minimal 5 menit dari sekarang.',
+            'scheduled_at.date' => 'Format tanggal jadwal tidak valid.',
         ]);
 
         $data = $request->only(['judul', 'konten', 'status']);
         $data['user_id'] = Auth::id();
         $data['slug'] = Str::slug($request->judul) . '-' . time();
+
+        switch ($request->status) {
+            case 'scheduled':
+                $data['scheduled_at'] = $request->scheduled_at;
+                $data['published_at'] = null;
+                break;
+
+            case 'publish':
+                $data['scheduled_at'] = null;
+                $data['published_at'] = now();
+                break;
+
+            case 'draft':
+            default:
+                $data['scheduled_at'] = null;
+                $data['published_at'] = null;
+                break;
+        }
 
         if ($request->hasFile('thumbnail')) {
             $data['thumbnail'] = $request->file('thumbnail')->store('edukasi', 'public');
@@ -96,7 +119,8 @@ class EdukasiController extends Controller
             ],
             'konten' => 'required|string|min:20|max:10000',
             'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'status' => 'required|in:draft,publish',
+            'status' => 'required|in:draft,scheduled,publish',
+            'scheduled_at' => 'nullable|required_if:status,scheduled|date|after:+5 minutes',
             'hapus_thumbnail' => 'nullable|in:0,1',
         ], [
             'judul.required' => 'Judul artikel wajib diisi.',
@@ -112,10 +136,32 @@ class EdukasiController extends Controller
             'thumbnail.max' => 'Ukuran thumbnail maksimal 2MB.',
             'status.required' => 'Status wajib dipilih.',
             'status.in' => 'Status tidak valid.',
+            'scheduled_at.required_if' => 'Tanggal jadwal wajib diisi kalau status Schedule.',
+            'scheduled_at.after' => 'Jadwal minimal 5 menit dari sekarang.',
+            'scheduled_at.date' => 'Format tanggal jadwal tidak valid.',
         ]);
 
         $data = $request->only(['judul', 'konten', 'status']);
         $data['slug'] = Str::slug($request->judul) . '-' . time();
+
+        switch ($request->status) {
+            case 'scheduled':
+                $data['scheduled_at'] = $request->scheduled_at;
+                $data['published_at'] = null;
+                break;
+
+            case 'publish':
+                $data['scheduled_at'] = null;
+                // Kalau sebelumnya sudah pernah publish, jangan reset published_at
+                $data['published_at'] = $edukasi->published_at ?? now();
+                break;
+
+            case 'draft':
+            default:
+                $data['scheduled_at'] = null;
+                $data['published_at'] = null;
+                break;
+        }
 
         if ($request->hasFile('thumbnail')) {
             if ($edukasi->thumbnail && Storage::disk('public')->exists($edukasi->thumbnail)) {

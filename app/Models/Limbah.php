@@ -21,4 +21,20 @@ class Limbah extends Model
     {
         return $this->morphMany(DetailPesanan::class, 'item');
     }
+
+    // REVIEWS
+    public function reviews()
+    {
+        return $this->morphMany(Review::class, 'reviewable');
+    }
+
+    public function averageRating(): float
+    {
+        return round((float) ($this->reviews()->avg('rating') ?? 0), 1);
+    }
+
+    public function reviewCount(): int
+    {
+        return $this->reviews()->count();
+    }
 }

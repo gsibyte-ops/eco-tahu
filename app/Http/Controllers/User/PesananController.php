@@ -61,12 +61,10 @@ class PesananController extends Controller
             'alasan_batal.min' => 'Alasan minimal 10 karakter.',
         ]);
 
-        // Validasi: cuma bisa cancel kalau status pending/diproses
         if (!in_array($pesanan->order_status, ['pending', 'diproses'])) {
             return back()->with('error', 'Pesanan tidak dapat dibatalkan karena sudah ' . $pesanan->order_status . '.');
         }
 
-        // Cek kalau sudah ada refund
         if ($pesanan->refund) {
             return back()->with('error', 'Pesanan ini sudah dibatalkan sebelumnya.');
         }
@@ -74,13 +72,11 @@ class PesananController extends Controller
         DB::beginTransaction();
 
         try {
-            // 1. Update status pesanan
             $pesanan->update([
                 'order_status' => 'dibatalkan',
                 'alasan_batal' => $request->alasan_batal,
             ]);
 
-            // 2. Kembalikan stok
             foreach ($pesanan->detail as $d) {
                 if ($d->item_type === 'App\\Models\\ProdukTahu') {
                     \App\Models\ProdukTahu::where('id', $d->item_id)->increment('stok', $d->jumlah);
@@ -89,8 +85,6 @@ class PesananController extends Controller
                 }
             }
 
-            // 3. Upload bukti transfer (opsional)
-            // CEK: kalau user klik X (batalkan_bukti = 1), SKIP upload
             $uploadBukti = $request->hasFile('bukti_transfer')
                         && $request->input('batalkan_bukti') != '1';
 
@@ -113,7 +107,6 @@ class PesananController extends Controller
                 $pesanan->pembayaran->update(['bukti_transfer' => $path]);
             }
 
-            // 4. Buat data Refund
             $nominalRefund = 0;
             if ($pesanan->payment_method === 'Transfer' && $pesanan->payment_status === 'paid') {
                 $nominalRefund = $pesanan->total_harga;
@@ -170,5 +163,39 @@ class PesananController extends Controller
         $pesanan->pembayaran->update(['bukti_transfer' => $path]);
 
         return back()->with('success', 'Bukti transfer berhasil diupload.');
+    }
+
+    /**
+     * Endpoint polling untuk tracking kurir (dipanggil tiap 10 detik).
+     */
+    public function tracking(string $kode)
+    {
+        $pesanan = Pesanan::where('kode_pesanan', $kode)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        // Tracking cuma aktif kalau status = dikirim & ada data kurir
+        $active = $pesanan->order_status === 'dikirim'
+               && $pesanan->lat_kurir !== null
+               && $pesanan->lng_kurir !== null;
+
+        return response()->json([
+            'active' => $active,
+            'order_status' => $pesanan->order_status,
+            'kurir' => $active ? [
+                'lat' => (float) $pesanan->lat_kurir,
+                'lng' => (float) $pesanan->lng_kurir,
+                'updated_at' => $pesanan->lokasi_updated_at?->toIso8601String(),
+            ] : null,
+            'toko' => [
+                'lat' => (float) config('toko.lat'),
+                'lng' => (float) config('toko.lng'),
+                'nama' => config('toko.nama'),
+            ],
+            'tujuan' => $pesanan->lat_tujuan && $pesanan->lng_tujuan ? [
+                'lat' => (float) $pesanan->lat_tujuan,
+                'lng' => (float) $pesanan->lng_tujuan,
+            ] : null,
+        ]);
     }
 }
