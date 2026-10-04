@@ -37,7 +37,7 @@
                     100% Organik & Ramah Lingkungan
                 </span>
 
-                <h1 class="text-4xl lg:text-6xl font-extrabold leading-[1.05] tracking-tight mb-5 text-balance"
+                <h1 class="text-4xl lg:text-6xl font-extrabold leading-[1.15] tracking-tight mb-5 text-balance"
                     style="color: rgb(var(--text-primary));">
                     Tahu Sehat,
                     <span class="text-gradient-green">Lingkungan Kuat</span>
@@ -180,7 +180,7 @@
 </section>
 
 {{-- ============================================================ --}}
-{{-- KATEGORI — redesigned --}}
+{{-- KATEGORI --}}
 {{-- ============================================================ --}}
 <section id="kategori" class="py-20">
     <div class="max-w-[1440px] mx-auto px-6 lg:px-12">
@@ -201,7 +201,9 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
             @forelse ($kategori as $i => $k)
                 @php
-                    $isLimbah = $k->tipe === 'limbah';
+                    // ← CHANGED: deteksi limbah lebih robust (tipe bisa beda case, atau tipe kosong tapi nama ada "limbah")
+                    $isLimbah = strtolower(trim($k->tipe ?? '')) === 'limbah'
+                             || str_contains(strtolower($k->nama_kategori ?? ''), 'limbah');
                     $emoji = $isLimbah ? $emojiLimbah[$i % count($emojiLimbah)] : $emojiProduk[$i % count($emojiProduk)];
                     $count = $isLimbah ? $k->limbah_count : $k->produk_tahu_count;
                     $route = $isLimbah
@@ -211,17 +213,10 @@
                 <a href="{{ $route }}"
                    class="category-card group relative flex flex-col items-center justify-center p-8 rounded-2xl transition overflow-hidden"
                    style="background: rgb(var(--surface)); border: 1px solid rgb(var(--border-soft));">
-                    {{-- Gradient bg overlay --}}
                     <div class="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition duration-500"
                          style="background: radial-gradient(circle at 50% 0%, {{ $isLimbah ? 'rgb(var(--accent) / 0.20)' : 'rgb(var(--brand) / 0.20)' }} 0%, transparent 70%);"></div>
 
-                    {{-- Badge tipe --}}
-                    <span class="absolute top-3 right-3 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full z-10
-                                 {{ $isLimbah ? 'text-amber-700 bg-amber-100' : 'text-emerald-700 bg-emerald-100' }}">
-                        {{ $isLimbah ? 'Limbah' : 'Tahu' }}
-                    </span>
-
-                    {{-- Icon --}}
+                    
                     <div class="relative z-10 w-20 h-20 mb-4 rounded-2xl flex items-center justify-center text-5xl transition duration-500 group-hover:scale-110 group-hover:-rotate-6"
                          style="background: {{ $isLimbah ? 'var(--gradient-accent)' : 'var(--gradient-brand)' }}; box-shadow: 0 8px 24px {{ $isLimbah ? 'rgb(var(--accent) / 0.4)' : 'rgb(var(--brand) / 0.4)' }};">
                         {{ $emoji }}
@@ -352,7 +347,7 @@
 </section>
 
 {{-- ============================================================ --}}
-{{-- BANNER ZERO WASTE (ganti dari promo 20%) --}}
+{{-- BANNER ZERO WASTE --}}
 {{-- ============================================================ --}}
 <section class="py-20">
     <div class="max-w-[1440px] mx-auto px-6 lg:px-12">
@@ -496,7 +491,7 @@
 @endif
 
 {{-- ============================================================ --}}
-{{-- TESTIMONI — dari review real --}}
+{{-- TESTIMONI --}}
 {{-- ============================================================ --}}
 <section class="py-20">
     <div class="max-w-[1440px] mx-auto px-6 lg:px-12">
@@ -519,7 +514,6 @@
                     @php $warna = $warnaAvatar[$i % count($warnaAvatar)]; @endphp
                     <div class="testimoni-card p-6 rounded-2xl transition relative overflow-hidden"
                          style="background: rgb(var(--surface)); border: 1px solid rgb(var(--border-soft)); box-shadow: var(--shadow-sm);">
-                        {{-- Quote decoration --}}
                         <div class="absolute top-3 right-4 text-6xl leading-none font-serif opacity-[0.06]" style="color: rgb(var(--brand));">"</div>
 
                         <div class="flex items-center gap-3 mb-3 relative z-10">
@@ -551,7 +545,6 @@
                     </div>
                 @endforeach
             @else
-                {{-- Placeholder kalau belum ada review real --}}
                 @php
                     $testimoniDefault = [
                         ['nama' => 'Pelanggan EcoTahu', 'emoji' => '👤', 'teks' => 'Jadilah yang pertama memberi ulasan setelah pesanan pertama Anda selesai!'],
@@ -643,9 +636,6 @@
 
 @push('styles')
 <style>
-    /* ============================================================
-       3D MODEL ANIMATION
-       ============================================================ */
     .tofu-float {
         animation: tofu-float 6s ease-in-out infinite;
         will-change: transform;
@@ -655,69 +645,38 @@
         50% { transform: translateY(-16px); }
     }
 
-    /* ============================================================
-       KATEGORI CARD
-       ============================================================ */
     .category-card {
         box-shadow: 0 1px 3px rgb(15 23 42 / 0.05);
     }
-    .category-card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 20px 40px -12px rgb(var(--brand) / 0.25);
-        border-color: rgb(var(--brand) / 0.5) !important;
-    }
 
-    /* ============================================================
-       PRODUCT CARD — fix hover (pakai !important biar nggak ke-override inline style)
-       ============================================================ */
-    .product-card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 24px 48px -12px rgb(var(--brand) / 0.28) !important;
-        border-color: rgb(var(--brand) / 0.6) !important;
-    }
-
-    /* LIMBAH CARD — hover kuning/amber */
-    .limbah-card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 24px 48px -12px rgb(var(--accent) / 0.28) !important;
-        border-color: rgb(var(--accent) / 0.6) !important;
-    }
-
-    /* EDUKASI CARD — hover emerald (sama kaya produk) */
-    .edukasi-card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 24px 48px -12px rgb(var(--brand) / 0.28) !important;
-        border-color: rgb(var(--brand) / 0.6) !important;
-    }
-
-    /* TESTIMONI CARD */
-    .testimoni-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 20px 40px -12px rgb(var(--brand) / 0.2) !important;
-        border-color: rgb(var(--brand) / 0.4) !important;
-    }
-
-    /* Arrow link */
     .arrow-link { gap: 0.375rem; transition: gap 0.25s ease, color 0.25s ease; }
     .arrow-link:hover { gap: 0.625rem; }
 
-    /* Smooth scroll */
     html { scroll-behavior: smooth; }
 
-    /* Mobile */
     @media (max-width: 640px) {
         model-viewer { height: 350px !important; }
     }
 
-    /* Reduced motion */
     @media (prefers-reduced-motion: reduce) {
         .tofu-float { animation: none; }
     }
+
+    /* ← ADDED: animasi pop untuk cart badge */
+    @keyframes cart-badge-pop {
+        0%   { transform: scale(1); }
+        50%  { transform: scale(1.5); }
+        100% { transform: scale(1); }
+    }
+    .cart-badge-pop { animation: cart-badge-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
 </style>
 @endpush
 
 @push('scripts')
 <script>
+    /* ============================================================
+       ADD TO CART — tanpa reload
+       ============================================================ */
     function addToCart(type, id) {
         fetch('{{ route('user.cart.add') }}', {
             method: 'POST',
@@ -732,7 +691,14 @@
         .then(data => {
             if (data.success) {
                 showToast(data.message || 'Ditambahkan ke keranjang!');
-                setTimeout(() => window.location.reload(), 600);
+                // ← CHANGED: update badge tanpa reload
+                if (data.cart_count !== undefined) {
+                    setCartBadge(data.cart_count);
+                } else if (data.count !== undefined) {
+                    setCartBadge(data.count);
+                } else {
+                    incrementCartBadge();
+                }
             } else {
                 showToast(data.message || 'Gagal menambahkan', 'error');
             }
@@ -743,6 +709,44 @@
         });
     }
 
+    /* Update cart badge di navbar */
+    function setCartBadge(count) {
+        const cartLink = document.querySelector('a[title="Keranjang"]');
+        if (!cartLink) return;
+
+        let badge = cartLink.querySelector('[data-cart-badge]');
+
+        if (count <= 0) {
+            if (badge) badge.remove();
+            return;
+        }
+
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.setAttribute('data-cart-badge', '');
+            badge.className = 'absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 text-white text-[9px] font-bold rounded-full flex items-center justify-center tnum';
+            badge.style.cssText = 'background: var(--gradient-brand); box-shadow: 0 0 0 2px rgb(var(--surface)), 0 2px 6px rgb(var(--brand) / 0.5);';
+            cartLink.appendChild(badge);
+        }
+
+        badge.textContent = count > 9 ? '9+' : count;
+        badge.classList.remove('cart-badge-pop');
+        void badge.offsetWidth;
+        badge.classList.add('cart-badge-pop');
+    }
+
+    function incrementCartBadge() {
+        const cartLink = document.querySelector('a[title="Keranjang"]');
+        if (!cartLink) return;
+
+        let badge = cartLink.querySelector('[data-cart-badge]');
+        const current = badge ? parseInt(badge.textContent.replace('+', '')) || 0 : 0;
+        setCartBadge(current + 1);
+    }
+
+    /* ============================================================
+       TOAST
+       ============================================================ */
     function showToast(message, type = 'success') {
         const isSuccess = type === 'success';
         const toast = document.createElement('div');
@@ -768,6 +772,9 @@
         }, 2500);
     }
 
+    /* ============================================================
+       MODEL LOADING
+       ============================================================ */
     document.addEventListener('DOMContentLoaded', () => {
         const mv = document.querySelector('model-viewer');
         const loading = document.getElementById('modelLoading');

@@ -165,16 +165,6 @@
             transform: translateY(-1px);
             box-shadow: 0 6px 16px rgb(var(--brand) / 0.5);
         }
-
-        /* ← ADDED: animasi pop untuk cart badge */
-        @keyframes cart-badge-pop {
-            0%   { transform: scale(1); }
-            50%  { transform: scale(1.5); }
-            100% { transform: scale(1); }
-        }
-        .cart-badge-pop {
-            animation: cart-badge-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-        }
     </style>
 </head>
 <body class="font-sans antialiased">
@@ -197,9 +187,9 @@
                 $navItems = [
                     ['route' => 'home', 'pattern' => 'home', 'label' => 'Beranda',
                      'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/>'],
-                    ['route' => 'user.produk.index', 'pattern' => 'user.produk.*', 'label' => 'Produk Tahu',
+                    ['route' => 'user.produk.index', 'pattern' => 'user.produk.*', 'label' => 'Produk',
                      'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>'],
-                    ['route' => 'user.limbah.index', 'pattern' => 'user.limbah.*', 'label' => 'Produk Limbah',
+                    ['route' => 'user.limbah.index', 'pattern' => 'user.limbah.*', 'label' => 'Limbah',
                      'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 0015 0m-15 0a7.5 7.5 0 1115 0m-15 0H3m16.5 0H21m-1.5 0H12m-8.457 3.077l1.41-.513m14.095-5.13l1.41-.513M5.106 17.785l1.15-.964m11.49-9.642l1.149-.964M7.501 19.795l.75-1.3m7.5-12.99l.75-1.3m-6.063 16.658l.26-1.477m2.605-14.772l.26-1.477m0 17.726l-.26-1.477M10.698 4.614l-.26-1.477M16.5 19.794l-.75-1.3M7.5 4.205l-.75 1.3M5.106 6.215l-1.15.964M18.894 17.785l-1.15.964M4.543 12.923l-1.41.513M20.868 11.077l-1.41.513"/>'],
                     ['route' => 'user.edukasi.index', 'pattern' => 'user.edukasi.*', 'label' => 'Edukasi',
                      'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>'],
@@ -248,9 +238,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/>
                 </svg>
                 @if ($cartCount > 0)
-                    {{-- ← CHANGED: tambah data-cart-badge --}}
-                    <span data-cart-badge
-                          class="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 text-white text-[9px] font-bold rounded-full flex items-center justify-center tnum"
+                    <span class="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 text-white text-[9px] font-bold rounded-full flex items-center justify-center tnum"
                           style="background: var(--gradient-brand); box-shadow: 0 0 0 2px rgb(var(--surface)), 0 2px 6px rgb(var(--brand) / 0.5);">
                         {{ $cartCount > 9 ? '9+' : $cartCount }}
                     </span>
@@ -504,47 +492,6 @@
         a.addEventListener('mouseenter', () => a.style.color = 'rgb(var(--brand))');
         a.addEventListener('mouseleave', () => a.style.color = '');
     });
-
-    /* ============================================================
-       ← ADDED: GLOBAL CART BADGE
-       Dipakai oleh semua halaman (produk, limbah, home, dll)
-       supaya update badge tanpa reload
-       ============================================================ */
-    window.setCartBadge = function(count) {
-        const cartLink = document.querySelector('a[title="Keranjang"]');
-        if (!cartLink) return;
-
-        let badge = cartLink.querySelector('[data-cart-badge]');
-
-        if (count <= 0) {
-            if (badge) badge.remove();
-            return;
-        }
-
-        if (!badge) {
-            badge = document.createElement('span');
-            badge.setAttribute('data-cart-badge', '');
-            badge.className = 'absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 text-white text-[9px] font-bold rounded-full flex items-center justify-center tnum';
-            badge.style.cssText = 'background: var(--gradient-brand); box-shadow: 0 0 0 2px rgb(var(--surface)), 0 2px 6px rgb(var(--brand) / 0.5);';
-            cartLink.appendChild(badge);
-        }
-
-        badge.textContent = count > 9 ? '9+' : count;
-
-        // Animasi pop
-        badge.classList.remove('cart-badge-pop');
-        void badge.offsetWidth; // reflow biar animasi bisa restart
-        badge.classList.add('cart-badge-pop');
-    };
-
-    window.incrementCartBadge = function() {
-        const cartLink = document.querySelector('a[title="Keranjang"]');
-        if (!cartLink) return;
-
-        const badge = cartLink.querySelector('[data-cart-badge]');
-        const current = badge ? parseInt(badge.textContent.replace('+', '')) || 0 : 0;
-        window.setCartBadge(current + 1);
-    };
 </script>
 
 @stack('scripts')
