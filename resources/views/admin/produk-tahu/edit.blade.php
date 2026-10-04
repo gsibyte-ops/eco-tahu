@@ -4,7 +4,7 @@
 
 @section('content')
 
-<div class="max-w-3xl mx-auto bg-white rounded-2xl border border-gray-100 shadow-sm p-6"
+<div class="max-w-3xl mx-auto glass-card rounded-2xl border bd-soft shadow-sm p-6"
      x-data="{
          kategoriOpen: false,
          statusOpen: false,
@@ -89,10 +89,10 @@
      }"
      @keydown.escape.window="closeLightbox()">
 
-    <h2 class="text-xl font-bold text-gray-800 mb-6">Form Edit Produk Tahu</h2>
+    <h2 class="text-xl font-bold txt-primary mb-6">Form Edit Produk Tahu</h2>
 
     @if ($errors->any())
-        <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+        <div class="mb-4 bg-red-50 border border-red-200 txt-danger px-4 py-3 rounded-xl text-sm">
             <p class="font-bold mb-1">Ada beberapa kesalahan:</p>
             <ul class="list-disc list-inside space-y-1">
                 @foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach
@@ -108,47 +108,47 @@
 
             {{-- NAMA PRODUK --}}
             <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Nama Produk <span class="text-red-500">*</span>
+                <label class="block text-sm font-medium txt-primary mb-1">
+                    Nama Produk <span class="txt-danger">*</span>
                 </label>
                 <input type="text" name="nama_produk" value="{{ old('nama_produk', $produkTahu->nama_produk) }}"
                        minlength="3" maxlength="150"
                        oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')"
-                       class="w-full px-4 py-2.5 rounded-xl border @error('nama_produk') border-red-300 bg-red-50 @else border-gray-200 @enderror focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                       class="w-full px-4 py-2.5 rounded-xl border @error('nama_produk') border-red-300 bg-red-50 @else bd-default @enderror focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 @error('nama_produk')
-                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                    <p class="text-xs txt-danger mt-1">{{ $message }}</p>
                 @else
-                    <p class="text-xs text-gray-500 mt-1">Hanya huruf & spasi. Minimal 3 karakter.</p>
+                    <p class="text-xs txt-secondary mt-1">Hanya huruf & spasi. Minimal 3 karakter.</p>
                 @enderror
             </div>
 
             {{-- KATEGORI --}}
             <div class="relative" @click.away="kategoriOpen = false">
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Kategori <span class="text-red-500">*</span>
+                <label class="block text-sm font-medium txt-primary mb-1">
+                    Kategori <span class="txt-danger">*</span>
                 </label>
                 <button type="button" @click="kategoriOpen = !kategoriOpen"
-                        class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-xl border @error('kategori_id') border-red-300 bg-red-50 @else border-gray-200 bg-white @enderror hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
-                    <span class="text-gray-700" id="kategoriLabel">
+                        class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-xl border @error('kategori_id') border-red-300 bg-red-50 @else bd-default glass-card @enderror hover:bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
+                    <span class="txt-primary" id="kategoriLabel">
                         @php
                             $selectedKategori = old('kategori_id', $produkTahu->kategori_id);
                             $selectedKategoriName = $kategori->firstWhere('id', $selectedKategori)?->nama_kategori ?? '-- Pilih Kategori --';
                         @endphp
                         {{ $selectedKategoriName }}
                     </span>
-                    <svg class="w-4 h-4 text-gray-400 flex-shrink-0" :class="kategoriOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    <svg class="w-4 h-4 txt-muted flex-shrink-0" :class="kategoriOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
 
                 <div x-show="kategoriOpen" x-cloak
-                     class="absolute left-0 right-0 z-30 mt-2 bg-white rounded-xl border border-gray-100 shadow-lg max-h-64 overflow-y-auto">
+                     class="absolute left-0 right-0 z-30 mt-2 glass-card rounded-xl border bd-soft shadow-lg max-h-64 overflow-y-auto">
                     @foreach ($kategori as $k)
                         <button type="button" data-value="{{ $k->id }}" data-label="{{ $k->nama_kategori }}"
                                 onclick="selectKategori(this)"
                                 class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-left hover:bg-emerald-50 transition
-                                       {{ $selectedKategori == $k->id ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-gray-700' }}">
+                                       {{ $selectedKategori == $k->id ? 'bg-emerald-50 txt-brand-hover font-semibold' : 'txt-primary' }}">
                             <span>{{ $k->nama_kategori }}</span>
                             @if ($selectedKategori == $k->id)
-                                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                <svg class="w-4 h-4 txt-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                             @endif
                         </button>
                     @endforeach
@@ -156,66 +156,66 @@
 
                 <input type="hidden" name="kategori_id" id="inputKategori" value="{{ $selectedKategori }}">
                 @error('kategori_id')
-                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                    <p class="text-xs txt-danger mt-1">{{ $message }}</p>
                 @enderror
             </div>
 
             {{-- HARGA --}}
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Harga (Rp) <span class="text-red-500">*</span>
+                <label class="block text-sm font-medium txt-primary mb-1">
+                    Harga (Rp) <span class="txt-danger">*</span>
                 </label>
                 <input type="text" inputmode="numeric" name="harga" value="{{ old('harga', $produkTahu->harga) }}"
                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                       class="w-full px-4 py-2.5 rounded-xl border @error('harga') border-red-300 bg-red-50 @else border-gray-200 @enderror focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                       class="w-full px-4 py-2.5 rounded-xl border @error('harga') border-red-300 bg-red-50 @else bd-default @enderror focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 @error('harga')
-                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                    <p class="text-xs txt-danger mt-1">{{ $message }}</p>
                 @else
-                    <p class="text-xs text-gray-500 mt-1">Hanya angka.</p>
+                    <p class="text-xs txt-secondary mt-1">Hanya angka.</p>
                 @enderror
             </div>
 
             {{-- STOK --}}
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Stok <span class="text-red-500">*</span>
+                <label class="block text-sm font-medium txt-primary mb-1">
+                    Stok <span class="txt-danger">*</span>
                 </label>
                 <input type="text" inputmode="numeric" name="stok" value="{{ old('stok', $produkTahu->stok) }}"
                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                       class="w-full px-4 py-2.5 rounded-xl border @error('stok') border-red-300 bg-red-50 @else border-gray-200 @enderror focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                       class="w-full px-4 py-2.5 rounded-xl border @error('stok') border-red-300 bg-red-50 @else bd-default @enderror focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 @error('stok')
-                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                    <p class="text-xs txt-danger mt-1">{{ $message }}</p>
                 @else
-                    <p class="text-xs text-gray-500 mt-1">Boleh 0 kalau stok habis.</p>
+                    <p class="text-xs txt-secondary mt-1">Boleh 0 kalau stok habis.</p>
                 @enderror
             </div>
 
             {{-- STATUS --}}
             <div class="relative" @click.away="statusOpen = false">
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Status <span class="text-red-500">*</span>
+                <label class="block text-sm font-medium txt-primary mb-1">
+                    Status <span class="txt-danger">*</span>
                 </label>
                 <button type="button" @click="statusOpen = !statusOpen"
-                        class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
-                    <span class="text-gray-700" id="statusLabel">
+                        class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-xl border bd-default glass-card hover:bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
+                    <span class="txt-primary" id="statusLabel">
                         {{ old('status', $produkTahu->status) === 'nonaktif' ? 'Nonaktif' : 'Aktif' }}
                     </span>
-                    <svg class="w-4 h-4 text-gray-400" :class="statusOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    <svg class="w-4 h-4 txt-muted" :class="statusOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
 
                 <div x-show="statusOpen" x-cloak
-                     class="absolute left-0 right-0 z-30 mt-2 bg-white rounded-xl border border-gray-100 shadow-lg overflow-hidden">
+                     class="absolute left-0 right-0 z-30 mt-2 glass-card rounded-xl border bd-soft shadow-lg overflow-hidden">
                     <button type="button" data-value="aktif" data-label="Aktif" onclick="selectStatus(this)"
                             class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-left hover:bg-emerald-50 transition
-                                   {{ old('status', $produkTahu->status) == 'aktif' ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-gray-700' }}">
+                                   {{ old('status', $produkTahu->status) == 'aktif' ? 'bg-emerald-50 txt-brand-hover font-semibold' : 'txt-primary' }}">
                         <span>Aktif</span>
-                        <span class="text-xs text-gray-400">— dijual di katalog</span>
+                        <span class="text-xs txt-muted">— dijual di katalog</span>
                     </button>
                     <button type="button" data-value="nonaktif" data-label="Nonaktif" onclick="selectStatus(this)"
                             class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-left hover:bg-emerald-50 transition
-                                   {{ old('status', $produkTahu->status) == 'nonaktif' ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-gray-700' }}">
+                                   {{ old('status', $produkTahu->status) == 'nonaktif' ? 'bg-emerald-50 txt-brand-hover font-semibold' : 'txt-primary' }}">
                         <span>Nonaktif</span>
-                        <span class="text-xs text-gray-400">— disembunyikan</span>
+                        <span class="text-xs txt-muted">— disembunyikan</span>
                     </button>
                 </div>
 
@@ -225,17 +225,17 @@
 
         {{-- DESKRIPSI --}}
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+            <label class="block text-sm font-medium txt-primary mb-1">Deskripsi</label>
             <textarea name="deskripsi" rows="4" maxlength="1000"
-                      class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500">{{ old('deskripsi', $produkTahu->deskripsi) }}</textarea>
+                      class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500">{{ old('deskripsi', $produkTahu->deskripsi) }}</textarea>
         </div>
 
         {{-- GAMBAR --}}
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
+            <label class="block text-sm font-medium txt-primary mb-1">
                 Gambar Produk
-                <span class="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded font-medium">Disarankan</span>
-                <span class="text-gray-400 font-normal">(opsional)</span>
+                <span class="text-xs bg-amber-50 txt-accent px-2 py-0.5 rounded font-medium">Disarankan</span>
+                <span class="txt-muted font-normal">(opsional)</span>
             </label>
 
             {{-- GAMBAR EXISTING --}}
@@ -273,7 +273,7 @@
                             Gambar lama akan dihapus saat Anda klik <strong>Update Produk</strong>
                         </span>
                         <button type="button" @click="hapusGambarLama = false"
-                                class="text-xs text-emerald-600 hover:text-emerald-700 font-bold underline flex-shrink-0">
+                                class="text-xs txt-brand hover:txt-brand-hover font-bold underline flex-shrink-0">
                             Urungkan
                         </button>
                     </div>
@@ -294,7 +294,7 @@
                     File <strong x-text="undoFileName"></strong> dibatalkan
                 </span>
                 <button type="button" @click="undoCancel()"
-                        class="text-xs text-emerald-600 hover:text-emerald-700 font-bold underline flex-shrink-0">
+                        class="text-xs txt-brand hover:txt-brand-hover font-bold underline flex-shrink-0">
                     Urungkan
                 </button>
             </div>
@@ -330,17 +330,17 @@
             </div>
 
             {{-- File Input --}}
-            <div class="flex items-center gap-3 px-3 py-2 rounded-xl border border-gray-200 bg-white focus-within:ring-2 focus-within:ring-emerald-500 transition">
+            <div class="flex items-center gap-3 px-3 py-2 rounded-xl border bd-default glass-card focus-within:ring-2 focus-within:ring-emerald-500 transition">
                 <button type="button" @click="$refs.fileInput.click()"
-                        class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-semibold transition flex-shrink-0">
+                        class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 txt-brand-hover rounded-lg text-xs font-semibold transition flex-shrink-0">
                     {{ $produkTahu->gambar ? 'Ganti File' : 'Choose File' }}
                 </button>
                 <span class="flex-1 min-w-0 text-xs break-all"
-                      :class="fileName ? 'text-gray-800 font-medium' : 'text-gray-400'"
+                      :class="fileName ? 'txt-primary font-medium' : 'txt-muted'"
                       x-text="fileName || 'No file chosen'"></span>
             </div>
 
-            <p class="text-xs text-gray-500 mt-2">
+            <p class="text-xs txt-secondary mt-2">
                 Format: JPG, PNG, WEBP. Max 2MB.
                 @if ($produkTahu->gambar)
                     Klik tombol <strong>X</strong> di gambar untuk menghapus.
@@ -350,7 +350,7 @@
 
         <div class="flex justify-end gap-3 pt-2">
             <a href="{{ route('admin.produk-tahu.index') }}"
-               class="px-5 py-2.5 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl font-medium transition">Batal</a>
+               class="px-5 py-2.5 text-gray-600 bg-soft hover:bg-soft rounded-xl font-medium transition">Batal</a>
             <button type="submit"
                     class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-sm transition">
                 Update Produk

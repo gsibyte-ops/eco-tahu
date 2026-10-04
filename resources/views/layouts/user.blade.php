@@ -23,7 +23,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    {{-- MODEL-VIEWER (untuk 3D) --}}
+    {{-- MODEL-VIEWER --}}
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
 
     @stack('styles')
@@ -166,7 +166,7 @@
             box-shadow: 0 6px 16px rgb(var(--brand) / 0.5);
         }
 
-        /* ← ADDED: animasi pop untuk cart badge */
+        /* Animasi pop cart badge */
         @keyframes cart-badge-pop {
             0%   { transform: scale(1); }
             50%  { transform: scale(1.5); }
@@ -248,7 +248,6 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/>
                 </svg>
                 @if ($cartCount > 0)
-                    {{-- ← CHANGED: tambah data-cart-badge --}}
                     <span data-cart-badge
                           class="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 text-white text-[9px] font-bold rounded-full flex items-center justify-center tnum"
                           style="background: var(--gradient-brand); box-shadow: 0 0 0 2px rgb(var(--surface)), 0 2px 6px rgb(var(--brand) / 0.5);">
@@ -258,21 +257,22 @@
             </a>
 
             @auth
-                <div class="relative" x-data="{ open: false }" @click.away="open = false">
-                    <button @click="open = !open" class="nav-profile-btn">
+                <div class="relative" x-data="{ open: false }" @click.away="open = false" style="z-index: 100;">
+                    <button type="button" @click.prevent="open = !open" class="nav-profile-btn" :aria-expanded="open">
                         <div class="w-7 h-7 rounded-lg flex items-center justify-center text-white font-bold text-[11px] brand-gradient">
                             {{ strtoupper(substr(auth()->user()->username, 0, 1)) }}
                         </div>
                         <span class="hidden sm:block text-xs font-semibold max-w-[80px] truncate" style="color: rgb(var(--text-primary));">
                             {{ auth()->user()->username }}
                         </span>
-                        <svg class="w-3 h-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                        <svg class="w-3 h-3 opacity-60 transition-transform duration-200" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
                         </svg>
                     </button>
 
                     <div x-show="open" x-cloak x-transition.origin.top.right
-                         class="absolute right-0 mt-3 w-60 glass-overlay rounded-2xl overflow-hidden">
+                         class="absolute right-0 mt-3 w-60 glass-overlay rounded-2xl overflow-hidden"
+                         style="z-index: 200;">
                         <div class="px-4 py-3 flex items-center gap-3" style="border-bottom: 1px solid rgb(var(--border-soft));">
                             <div class="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0 brand-gradient">
                                 {{ strtoupper(substr(auth()->user()->username, 0, 1)) }}
@@ -506,9 +506,7 @@
     });
 
     /* ============================================================
-       ← ADDED: GLOBAL CART BADGE
-       Dipakai oleh semua halaman (produk, limbah, home, dll)
-       supaya update badge tanpa reload
+       GLOBAL CART BADGE
        ============================================================ */
     window.setCartBadge = function(count) {
         const cartLink = document.querySelector('a[title="Keranjang"]');
@@ -531,9 +529,8 @@
 
         badge.textContent = count > 9 ? '9+' : count;
 
-        // Animasi pop
         badge.classList.remove('cart-badge-pop');
-        void badge.offsetWidth; // reflow biar animasi bisa restart
+        void badge.offsetWidth;
         badge.classList.add('cart-badge-pop');
     };
 

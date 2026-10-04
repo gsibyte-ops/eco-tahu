@@ -33,12 +33,22 @@ class EdukasiController extends Controller
             'draft'     => Edukasi::where('status', 'draft')->count(),
         ];
 
-        return view('admin.edukasi.index', compact('edukasi', 'stats'));
+        // JSON untuk modal edit
+        $edukasiJson = $edukasi->getCollection()->map(fn ($e) => [
+            'id'           => $e->id,
+            'judul'        => $e->judul,
+            'konten'       => $e->konten,
+            'status'       => $e->status,
+            'thumbnail'    => $e->thumbnail ? asset('storage/' . $e->thumbnail) : null,
+            'scheduled_at' => $e->scheduled_at?->format('Y-m-d\TH:i'),
+        ]);
+
+        return view('admin.edukasi.index', compact('edukasi', 'stats', 'edukasiJson'));
     }
 
     public function create()
     {
-        return view('admin.edukasi.create');
+        return redirect()->route('admin.edukasi.index');
     }
 
     public function store(Request $request)
@@ -106,7 +116,7 @@ class EdukasiController extends Controller
 
     public function edit(Edukasi $edukasi)
     {
-        return view('admin.edukasi.edit', compact('edukasi'));
+        return redirect()->route('admin.edukasi.index');
     }
 
     public function update(Request $request, Edukasi $edukasi)
@@ -152,7 +162,6 @@ class EdukasiController extends Controller
 
             case 'publish':
                 $data['scheduled_at'] = null;
-                // Kalau sebelumnya sudah pernah publish, jangan reset published_at
                 $data['published_at'] = $edukasi->published_at ?? now();
                 break;
 

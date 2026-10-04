@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\PelangganController;
 use App\Http\Controllers\Admin\PesananController as AdminPesananController;
 use App\Http\Controllers\Admin\ProdukTahuController;
 use App\Http\Controllers\Admin\RefundController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\User\CartController;
@@ -24,6 +25,12 @@ use Illuminate\Support\Facades\Route;
 // PUBLIC
 // ============================
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+// ============================
+// GOOGLE OAUTH (PUBLIC — di luar middleware!)
+// ============================
+Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('auth.google');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback']);
 
 // ============================
 // USER (Pelanggan)
@@ -72,7 +79,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/{kode}/tracking', [PesananController::class, 'tracking'])->name('tracking');
     });
 
-    // REVIEW
     Route::prefix('review')->name('user.review.')->group(function () {
         Route::post('/pesanan/{pesanan}', [ReviewController::class, 'store'])->name('store');
         Route::delete('/{review}', [ReviewController::class, 'destroy'])->name('destroy');
@@ -86,42 +92,31 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Kategori
     Route::resource('kategori', KategoriController::class);
-
-    // Produk Tahu
     Route::resource('produk-tahu', ProdukTahuController::class);
-
-    // Limbah
     Route::resource('limbah', AdminLimbahController::class);
 
-    // Pesanan
     Route::get('/pesanan', [AdminPesananController::class, 'index'])->name('pesanan.index');
     Route::get('/pesanan/{pesanan}', [AdminPesananController::class, 'show'])->name('pesanan.show');
     Route::patch('/pesanan/{pesanan}/status', [AdminPesananController::class, 'updateStatus'])->name('pesanan.updateStatus');
     Route::post('/pesanan/{pesanan}/verifikasi', [AdminPesananController::class, 'verifikasiPembayaran'])->name('pesanan.verifikasi');
     Route::put('/pesanan/{pesanan}/batalkan', [AdminPesananController::class, 'batalkan'])->name('pesanan.batalkan');
 
-    // TRACK KURIR
     Route::post('/pesanan/{pesanan}/start-tracking', [AdminPesananController::class, 'startTracking'])->name('pesanan.startTracking');
     Route::post('/pesanan/{pesanan}/update-lokasi', [AdminPesananController::class, 'updateLokasi'])->name('pesanan.updateLokasi');
     Route::post('/pesanan/{pesanan}/stop-tracking', [AdminPesananController::class, 'stopTracking'])->name('pesanan.stopTracking');
 
-    // Refund
     Route::get('/refund', [RefundController::class, 'index'])->name('refund.index');
     Route::get('/refund/{refund}', [RefundController::class, 'show'])->name('refund.show');
     Route::put('/refund/{refund}', [RefundController::class, 'update'])->name('refund.update');
     Route::delete('/refund/{refund}', [RefundController::class, 'destroy'])->name('refund.destroy');
 
-    // Pelanggan
     Route::get('/pelanggan/export', [PelangganController::class, 'export'])->name('pelanggan.export');
     Route::get('/pelanggan', [PelangganController::class, 'index'])->name('pelanggan.index');
     Route::get('/pelanggan/{pelanggan}', [PelangganController::class, 'show'])->name('pelanggan.show');
 
-    // Edukasi
     Route::resource('edukasi', AdminEdukasiController::class);
 
-    // Laporan
     Route::get('/laporan/export', [LaporanController::class, 'export'])->name('laporan.export');
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
 });
