@@ -7,7 +7,7 @@
 {{-- BACK BUTTON --}}
 <div class="mb-6">
     <a href="{{ route('admin.pelanggan.index') }}"
-       class="inline-flex items-center gap-2 px-4 py-2.5 glass-card hover:border-emerald-300 hover:bg-emerald-50 txt-primary hover:txt-brand text-sm font-semibold rounded-xl shadow-sm transition group">
+       class="inline-flex items-center gap-2 px-4 py-2.5 glass-card hover:bd-strong txt-primary hover:txt-brand text-sm font-semibold rounded-xl shadow-sm transition group">
         <svg class="w-4 h-4 group-hover:-translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
         </svg>
@@ -23,7 +23,8 @@
         {{-- Profil --}}
         <div class="glass-card p-6">
             <div class="flex items-center gap-4 mb-6">
-                <div class="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center txt-brand font-bold text-2xl">
+                <div class="w-16 h-16 rounded-full flex items-center justify-center font-bold text-2xl"
+                     style="background: rgb(var(--brand-soft)); color: rgb(var(--brand));">
                     {{ strtoupper(substr($pelanggan->username, 0, 1)) }}
                 </div>
                 <div>
@@ -56,7 +57,7 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead>
-                            <tr class="text-xs font-semibold txt-muted uppercase tracking-wider border-b bd-soft">
+                            <tr class="text-xs font-bold uppercase tracking-widest" style="color: rgb(var(--text-muted)); border-bottom: 1px solid rgb(var(--border-soft));">
                                 <th class="pb-3">Kode</th>
                                 <th class="pb-3">Tanggal</th>
                                 <th class="pb-3">Total</th>
@@ -68,12 +69,12 @@
                             @foreach ($pelanggan->pesanan as $p)
                                 @php
                                     $statusStyle = [
-                                        'pending'    => 'background:#fef3c7; color:#b45309;',
-                                        'diproses'   => 'background:#dbeafe; color:#1d4ed8;',
-                                        'dikirim'    => 'background:#ede9fe; color:#6d28d9;',
-                                        'selesai'    => 'background:#d1fae5; color:#047857;',
-                                        'dibatalkan' => 'background:#fee2e2; color:#b91c1c;',
-                                    ][$p->order_status] ?? 'background:#f3f4f6; color:#374151;';
+                                        'pending'    => 'background: rgb(var(--warning-soft)); color: rgb(var(--warning));',
+                                        'diproses'   => 'background: rgb(var(--info-soft)); color: rgb(var(--info));',
+                                        'dikirim'    => 'background: rgb(var(--info-soft)); color: rgb(var(--info));',
+                                        'selesai'    => 'background: rgb(var(--success-soft)); color: rgb(var(--success));',
+                                        'dibatalkan' => 'background: rgb(var(--danger-soft)); color: rgb(var(--danger));',
+                                    ][$p->order_status] ?? 'background: rgb(var(--bg-secondary)); color: rgb(var(--text-secondary));';
 
                                     $modalData = [
                                         'kode' => $p->kode_pesanan,
@@ -111,7 +112,7 @@
                                         'route_verifikasi' => route('admin.pesanan.verifikasi', $p->id),
                                     ];
                                 @endphp
-                                <tr class="border-b bd-soft hover:bg-soft transition">
+                                <tr class="transition" style="border-bottom: 1px solid rgb(var(--border-soft));">
                                     <td class="py-3 font-semibold txt-primary">#{{ $p->kode_pesanan }}</td>
                                     <td class="py-3 txt-secondary">{{ $p->tanggal_order->format('d M Y') }}</td>
                                     <td class="py-3 font-semibold txt-primary">Rp {{ number_format($p->total_harga, 0, ',', '.') }}</td>
@@ -124,7 +125,8 @@
                                         <button type="button"
                                                 data-pesanan="{{ json_encode($modalData, JSON_HEX_APOS | JSON_HEX_QUOT) }}"
                                                 onclick="openPesananModal(JSON.parse(this.dataset.pesanan))"
-                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 txt-brand-hover rounded-lg text-xs font-semibold transition">
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+                                                style="background: rgb(var(--brand-soft)); color: rgb(var(--brand-strong));">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                             Lihat
                                         </button>
@@ -147,21 +149,25 @@
         <div class="glass-card p-6">
             <h3 class="font-bold txt-primary mb-4">Statistik Pelanggan</h3>
             <div class="space-y-3">
-                <div class="flex justify-between items-center p-3 bg-soft rounded-xl">
+                <div class="flex justify-between items-center p-3 rounded-xl"
+                     style="background: rgb(var(--bg-secondary) / 0.6);">
                     <span class="text-sm txt-secondary">Total Pesanan</span>
                     <span class="font-bold txt-primary">{{ $statistik['total_pesanan'] }}</span>
                 </div>
-                <div class="flex justify-between items-center p-3 bg-emerald-50 rounded-xl">
-                    <span class="text-sm txt-brand-hover">Total Belanja</span>
-                    <span class="font-bold txt-brand-hover">Rp {{ number_format($statistik['total_belanja'], 0, ',', '.') }}</span>
+                <div class="flex justify-between items-center p-3 rounded-xl"
+                     style="background: rgb(var(--success-soft) / 0.5);">
+                    <span class="text-sm" style="color: rgb(var(--success));">Total Belanja</span>
+                    <span class="font-bold" style="color: rgb(var(--success));">Rp {{ number_format($statistik['total_belanja'], 0, ',', '.') }}</span>
                 </div>
-                <div class="flex justify-between items-center p-3 bg-blue-50 rounded-xl">
-                    <span class="text-sm txt-info">Pesanan Selesai</span>
-                    <span class="font-bold txt-info">{{ $statistik['pesanan_selesai'] }}</span>
+                <div class="flex justify-between items-center p-3 rounded-xl"
+                     style="background: rgb(var(--info-soft) / 0.5);">
+                    <span class="text-sm" style="color: rgb(var(--info));">Pesanan Selesai</span>
+                    <span class="font-bold" style="color: rgb(var(--info));">{{ $statistik['pesanan_selesai'] }}</span>
                 </div>
-                <div class="flex justify-between items-center p-3 bg-red-50 rounded-xl">
-                    <span class="text-sm txt-danger">Pesanan Dibatalkan</span>
-                    <span class="font-bold txt-danger">{{ $statistik['pesanan_dibatalkan'] }}</span>
+                <div class="flex justify-between items-center p-3 rounded-xl"
+                     style="background: rgb(var(--danger-soft) / 0.5);">
+                    <span class="text-sm" style="color: rgb(var(--danger));">Pesanan Dibatalkan</span>
+                    <span class="font-bold" style="color: rgb(var(--danger));">{{ $statistik['pesanan_dibatalkan'] }}</span>
                 </div>
             </div>
         </div>
@@ -174,9 +180,10 @@
                 {{-- Copy Email --}}
                 <button type="button"
                         onclick="copyEmail('{{ $pelanggan->email }}')"
-                        class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-emerald-50 transition text-left">
-                    <div class="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                        <svg class="w-4 h-4 txt-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-emerald-500/10 transition text-left">
+                    <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                         style="background: rgb(var(--brand-soft));">
+                        <svg class="w-4 h-4" style="color: rgb(var(--brand));" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                         </svg>
                     </div>
@@ -190,9 +197,10 @@
                 @if ($pelanggan->no_telepon)
                     <a href="https://wa.me/{{ preg_replace('/^0/', '62', $pelanggan->no_telepon) }}"
                        target="_blank"
-                       class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-emerald-50 transition text-left">
-                        <div class="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                            <svg class="w-4 h-4 txt-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-emerald-500/10 transition text-left">
+                        <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                             style="background: rgb(var(--brand-soft));">
+                            <svg class="w-4 h-4" style="color: rgb(var(--brand));" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                             </svg>
                         </div>
@@ -206,9 +214,10 @@
                 {{-- Gmail Web --}}
                 <a href="https://mail.google.com/mail/u/0/?view=cm&fs=1&to={{ $pelanggan->email }}&su={{ urlencode('Pesan dari EcoTahu') }}"
                    target="_blank" rel="noopener"
-                   class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-emerald-50 transition text-left">
-                    <div class="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
-                        <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                   class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-emerald-500/10 transition text-left">
+                    <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                         style="background: rgb(var(--danger-soft));">
+                        <svg class="w-4 h-4" style="color: rgb(var(--danger));" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 11L2 4h20L12 11zm0 2.5l10-7v12a2 2 0 01-2 2H4a2 2 0 01-2-2v-12l10 7z"/>
                         </svg>
                     </div>
@@ -227,20 +236,20 @@
 {{-- MODAL DETAIL PESANAN --}}
 {{-- ============================================ --}}
 <div id="pesananModal" class="fixed inset-0 z-[999] hidden items-center justify-center p-4"
-     style="background-color: rgba(0, 0, 0, 0.6);">
+     style="background-color: rgba(0, 0, 0, 0.65); backdrop-filter: blur(8px);">
 
     <div style="width: 100%; max-width: 480px; max-height: 80vh;"
          class="glass-card rounded-2xl overflow-hidden flex flex-col shadow-2xl">
 
         {{-- Header --}}
-        <div class="flex items-center justify-between px-5 py-4 bg-emerald-600 text-white flex-shrink-0">
-            <div>
-                <p class="text-xs opacity-80">Pesanan</p>
-                <h3 class="text-base font-bold">#<span id="mKode"></span></h3>
-                <p class="text-xs opacity-80 mt-0.5" id="mTanggal"></p>
+        <div class="flex items-start justify-between gap-4 px-5 py-4 text-white flex-shrink-0" style="background: var(--gradient-brand);">
+            <div class="min-w-0 flex-1">
+                <p class="text-xs opacity-80 leading-tight">Pesanan</p>
+                <h3 class="text-base font-bold leading-tight mt-0.5">#<span id="mKode"></span></h3>
+                <p class="text-xs opacity-80 mt-1" id="mTanggal"></p>
             </div>
-            <div class="flex items-center gap-3">
-                <span id="mStatusBadge" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-white/20 text-white"></span>
+            <div class="flex items-center gap-2 flex-shrink-0 pt-1">
+                <span id="mStatusBadge" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-white/20 text-white whitespace-nowrap"></span>
                 <button onclick="closePesananModal()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/20 transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
@@ -251,10 +260,10 @@
         <div class="flex-1 overflow-y-auto p-4 space-y-3 text-sm">
 
             {{-- Pelanggan --}}
-            <div class="bg-soft rounded-xl p-3">
-                <p class="text-xs font-semibold txt-muted uppercase mb-2">Pelanggan</p>
+            <div class="rounded-xl p-3" style="background: rgb(var(--bg-secondary) / 0.6);">
+                <p class="text-xs font-bold uppercase mb-2" style="color: rgb(var(--text-muted));">Pelanggan</p>
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center txt-brand font-bold text-base flex-shrink-0" id="mAvatar">U</div>
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-base flex-shrink-0 text-white" style="background: var(--gradient-brand);" id="mAvatar">U</div>
                     <div class="min-w-0">
                         <p class="font-semibold txt-primary" id="mUsername"></p>
                         <p class="text-xs txt-secondary truncate" id="mEmail"></p>
@@ -264,39 +273,39 @@
             </div>
 
             {{-- Alamat --}}
-            <div class="bg-soft rounded-xl p-3">
-                <p class="text-xs font-semibold txt-muted uppercase mb-2">Alamat Pengiriman</p>
+            <div class="rounded-xl p-3" style="background: rgb(var(--bg-secondary) / 0.6);">
+                <p class="text-xs font-bold uppercase mb-2" style="color: rgb(var(--text-muted));">Alamat Pengiriman</p>
                 <p class="txt-primary" id="mAlamat"></p>
                 <p class="text-xs txt-secondary mt-1" id="mCatatan"></p>
             </div>
 
             {{-- Items --}}
             <div>
-                <p class="text-xs font-semibold txt-muted uppercase mb-2">Item Pesanan</p>
-                <div class="border bd-soft rounded-xl overflow-hidden">
+                <p class="text-xs font-bold uppercase mb-2" style="color: rgb(var(--text-muted));">Item Pesanan</p>
+                <div class="rounded-xl overflow-hidden" style="border: 1px solid rgb(var(--border-soft));">
                     <table class="w-full text-sm">
-                        <thead class="bg-soft text-xs txt-secondary uppercase">
-                            <tr>
+                        <thead style="background: rgb(var(--bg-secondary) / 0.6);">
+                            <tr class="text-xs uppercase" style="color: rgb(var(--text-muted));">
                                 <th class="px-3 py-2 text-left">Produk</th>
                                 <th class="px-3 py-2 text-center">Qty</th>
                                 <th class="px-3 py-2 text-right">Subtotal</th>
                             </tr>
                         </thead>
                         <tbody id="mItemsBody"></tbody>
-                        <tfoot class="bg-soft text-sm">
-                            <tr class="border-t bd-soft">
-                                <td colspan="2" class="px-3 py-2 text-right txt-secondary">Subtotal</td>
+                        <tfoot style="background: rgb(var(--bg-secondary) / 0.4);">
+                            <tr style="border-top: 1px solid rgb(var(--border-soft));">
+                                <td colspan="2" class="px-3 py-2 text-right text-xs" style="color: rgb(var(--text-muted));">Subtotal</td>
                                 <td class="px-3 py-2 text-right font-medium txt-primary" id="mSubtotal"></td>
                             </tr>
                             <tr>
-                                <td colspan="2" class="px-3 py-2 text-right txt-secondary">
-                                    Ongkir <span class="text-xs txt-muted" id="mJarak"></span>
+                                <td colspan="2" class="px-3 py-2 text-right text-xs" style="color: rgb(var(--text-muted));">
+                                    Ongkir <span id="mJarak"></span>
                                 </td>
                                 <td class="px-3 py-2 text-right font-medium txt-primary" id="mOngkir"></td>
                             </tr>
-                            <tr class="border-t-2 bd-soft bg-emerald-50">
+                            <tr style="border-top: 2px solid rgb(var(--border)); background: rgb(var(--brand-soft) / 0.5);">
                                 <td colspan="2" class="px-3 py-2 text-right font-bold txt-primary">Total</td>
-                                <td class="px-3 py-2 text-right font-bold txt-brand" id="mTotal"></td>
+                                <td class="px-3 py-2 text-right font-bold" style="color: rgb(var(--brand-strong));" id="mTotal"></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -304,8 +313,8 @@
             </div>
 
             {{-- Pembayaran --}}
-            <div class="bg-soft rounded-xl p-3">
-                <p class="text-xs font-semibold txt-muted uppercase mb-2">Pembayaran</p>
+            <div class="rounded-xl p-3" style="background: rgb(var(--bg-secondary) / 0.6);">
+                <p class="text-xs font-bold uppercase mb-2" style="color: rgb(var(--text-muted));">Pembayaran</p>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <p class="text-xs txt-secondary mb-0.5">Metode</p>
@@ -318,25 +327,25 @@
                 </div>
                 <div id="mBuktiWrapper" class="mt-2 hidden">
                     <p class="text-xs txt-secondary mb-1">Bukti Transfer</p>
-                    <img id="mBukti" src="" alt="Bukti" class="w-full rounded-xl border bd-default">
+                    <img id="mBukti" src="" alt="Bukti" class="w-full rounded-xl" style="border: 1px solid rgb(var(--border-soft));">
                 </div>
             </div>
 
             {{-- Refund --}}
-            <div id="mRefundBox" class="hidden bg-red-50 border border-red-200 rounded-xl p-3">
-                <p class="text-xs font-semibold text-red-500 uppercase mb-2">⚠️ Pengajuan Refund</p>
+            <div id="mRefundBox" class="hidden rounded-xl p-3" style="background: rgb(var(--danger-soft) / 0.5); border: 1px solid rgb(var(--danger) / 0.3);">
+                <p class="text-xs font-bold uppercase mb-2" style="color: rgb(var(--danger));">⚠️ Pengajuan Refund</p>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <p class="text-xs txt-danger mb-0.5">Nominal</p>
-                        <p class="font-bold text-red-800" id="mRefundNominal"></p>
+                        <p class="text-xs mb-0.5" style="color: rgb(var(--danger));">Nominal</p>
+                        <p class="font-bold" style="color: rgb(var(--danger));" id="mRefundNominal"></p>
                     </div>
                     <div>
-                        <p class="text-xs txt-danger mb-0.5">Status</p>
-                        <p class="font-bold text-red-800" id="mRefundStatus"></p>
+                        <p class="text-xs mb-0.5" style="color: rgb(var(--danger));">Status</p>
+                        <p class="font-bold" style="color: rgb(var(--danger));" id="mRefundStatus"></p>
                     </div>
                     <div class="col-span-2">
-                        <p class="text-xs txt-danger mb-0.5">Alasan</p>
-                        <p class="text-red-800" id="mRefundAlasan"></p>
+                        <p class="text-xs mb-0.5" style="color: rgb(var(--danger));">Alasan</p>
+                        <p style="color: rgb(var(--danger));" id="mRefundAlasan"></p>
                     </div>
                 </div>
             </div>
@@ -349,18 +358,18 @@
 @push('scripts')
 <script>
     const STATUS_COLORS = {
-        pending: '#f59e0b',
-        diproses: '#0ea5e9',
-        dikirim: '#8b5cf6',
-        selesai: '#10b981',
-        dibatalkan: '#f43f5e',
+        pending: 'rgb(var(--warning))',
+        diproses: 'rgb(var(--info))',
+        dikirim: 'rgb(var(--info))',
+        selesai: 'rgb(var(--success))',
+        dibatalkan: 'rgb(var(--danger))',
     };
 
     const PAYMENT_STATUS_COLORS = {
-        paid: '#10b981',
-        pending: '#f59e0b',
-        failed: '#ef4444',
-        refunded: '#6b7280',
+        paid: 'rgb(var(--success))',
+        pending: 'rgb(var(--warning))',
+        failed: 'rgb(var(--danger))',
+        refunded: 'rgb(var(--text-muted))',
     };
 
     function formatRupiah(num) {
@@ -378,8 +387,8 @@
 
         const badge = document.getElementById('mStatusBadge');
         badge.textContent = data.order_status.charAt(0).toUpperCase() + data.order_status.slice(1);
-        badge.className = 'px-2.5 py-1 rounded-lg text-xs font-bold text-white';
-        badge.style.background = STATUS_COLORS[data.order_status] || '#6b7280';
+        badge.className = 'px-2.5 py-1 rounded-lg text-xs font-bold text-white whitespace-nowrap';
+        badge.style.background = STATUS_COLORS[data.order_status] || 'rgb(var(--text-muted))';
 
         document.getElementById('mAvatar').textContent = data.user.username.charAt(0).toUpperCase();
         document.getElementById('mUsername').textContent = data.user.username;
@@ -394,7 +403,7 @@
         itemsBody.innerHTML = '';
         data.items.forEach(function(item) {
             itemsBody.innerHTML += `
-                <tr class="border-b bd-soft">
+                <tr style="border-bottom: 1px solid rgb(var(--border-soft));">
                     <td class="px-3 py-2 txt-primary">
                         ${item.nama}
                         <p class="text-xs txt-secondary">${formatRupiah(item.harga)} × ${item.qty}</p>
@@ -413,7 +422,7 @@
         document.getElementById('mPaymentMethod').textContent = data.payment_method;
         const payStatus = document.getElementById('mPaymentStatus');
         payStatus.textContent = data.payment_status.charAt(0).toUpperCase() + data.payment_status.slice(1);
-        payStatus.style.color = PAYMENT_STATUS_COLORS[data.payment_status] || '#6b7280';
+        payStatus.style.color = PAYMENT_STATUS_COLORS[data.payment_status] || 'rgb(var(--text-muted))';
 
         const buktiWrapper = document.getElementById('mBuktiWrapper');
         if (data.pembayaran && data.pembayaran.bukti) {
@@ -477,7 +486,7 @@
     }
 
     function showToast(message, type = 'success') {
-        const bg = type === 'success' ? '#10b981' : '#ef4444';
+        const bg = type === 'success' ? 'rgb(var(--success))' : 'rgb(var(--danger))';
         const toast = document.createElement('div');
         toast.style.cssText = `
             position: fixed;

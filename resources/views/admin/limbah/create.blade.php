@@ -4,7 +4,7 @@
 
 @section('content')
 
-<div class="max-w-3xl mx-auto bg-white rounded-2xl border border-gray-100 shadow-sm p-6"
+<div class="max-w-3xl mx-auto glass-card rounded-2xl p-6"
      x-data="{
          kategoriOpen: false,
          statusOpen: false,
@@ -90,10 +90,11 @@
      }"
      @keydown.escape.window="closeLightbox()">
 
-    <h2 class="text-xl font-bold text-gray-800 mb-6">Form Tambah Limbah</h2>
+    <h2 class="text-xl font-bold txt-primary mb-6">Form Tambah Limbah</h2>
 
     @if ($errors->any())
-        <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+        <div class="mb-4 px-4 py-3 rounded-xl text-sm"
+             style="background: rgb(var(--danger-soft) / 0.6); border: 1px solid rgb(var(--danger) / 0.3); color: rgb(var(--danger));">
             <p class="font-bold mb-1">Ada beberapa kesalahan:</p>
             <ul class="list-disc list-inside space-y-1">
                 @foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach
@@ -109,44 +110,45 @@
 
             {{-- NAMA LIMBAH --}}
             <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Nama Limbah <span class="text-red-500">*</span>
+                <label class="block text-sm font-medium txt-primary mb-1">
+                    Nama Limbah <span style="color: rgb(var(--danger));">*</span>
                 </label>
                 <input type="text" name="nama_limbah" value="{{ old('nama_limbah') }}"
                        minlength="3" maxlength="150"
                        oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')"
-                       class="w-full px-4 py-2.5 rounded-xl border @error('nama_limbah') border-red-300 bg-red-50 @else border-gray-200 @enderror focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                       class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 glass-input"
+                       style="color: rgb(var(--text-primary));"
                        placeholder="Contoh: Ampas Tahu Kering">
                 @error('nama_limbah')
-                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                    <p class="text-xs mt-1" style="color: rgb(var(--danger));">{{ $message }}</p>
                 @else
-                    <p class="text-xs text-gray-500 mt-1">Hanya huruf & spasi. Minimal 3 karakter.</p>
+                    <p class="text-xs txt-secondary mt-1">Hanya huruf & spasi. Minimal 3 karakter.</p>
                 @enderror
             </div>
 
             {{-- KATEGORI --}}
             <div class="relative" @click.away="kategoriOpen = false">
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Kategori <span class="text-red-500">*</span>
+                <label class="block text-sm font-medium txt-primary mb-1">
+                    Kategori <span style="color: rgb(var(--danger));">*</span>
                 </label>
                 <button type="button" @click="kategoriOpen = !kategoriOpen"
-                        class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-xl border @error('kategori_id') border-red-300 bg-red-50 @else border-gray-200 bg-white @enderror hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
-                    <span class="text-gray-700" id="kategoriLabel">
+                        class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-xl border bd-default glass-card hover:bd-strong focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
+                    <span class="txt-primary" id="kategoriLabel">
                         {{ old('kategori_id') ? $kategori->firstWhere('id', old('kategori_id'))?->nama_kategori : '-- Pilih Kategori --' }}
                     </span>
-                    <svg class="w-4 h-4 text-gray-400 flex-shrink-0" :class="kategoriOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    <svg class="w-4 h-4 txt-muted flex-shrink-0" :class="kategoriOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
 
                 <div x-show="kategoriOpen" x-cloak
-                     class="absolute left-0 right-0 z-30 mt-2 bg-white rounded-xl border border-gray-100 shadow-lg max-h-64 overflow-y-auto">
+                     class="absolute left-0 right-0 z-30 mt-2 glass-card rounded-xl border bd-soft shadow-lg max-h-64 overflow-y-auto">
                     @foreach ($kategori as $k)
                         <button type="button" data-value="{{ $k->id }}" data-label="{{ $k->nama_kategori }}"
                                 onclick="selectKategori(this)"
-                                class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-left hover:bg-emerald-50 transition
-                                       {{ old('kategori_id') == $k->id ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-gray-700' }}">
+                                class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-left hover:bg-emerald-500/10 transition
+                                       {{ old('kategori_id') == $k->id ? 'bg-emerald-500/10 txt-brand font-semibold' : 'txt-primary' }}">
                             <span>{{ $k->nama_kategori }}</span>
                             @if (old('kategori_id') == $k->id)
-                                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                <svg class="w-4 h-4 txt-brand flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                             @endif
                         </button>
                     @endforeach
@@ -154,58 +156,60 @@
 
                 <input type="hidden" name="kategori_id" id="inputKategori" value="{{ old('kategori_id') }}">
                 @error('kategori_id')
-                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                    <p class="text-xs mt-1" style="color: rgb(var(--danger));">{{ $message }}</p>
                 @enderror
             </div>
 
             {{-- HARGA --}}
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Harga (Rp) <span class="text-red-500">*</span>
+                <label class="block text-sm font-medium txt-primary mb-1">
+                    Harga (Rp) <span style="color: rgb(var(--danger));">*</span>
                 </label>
                 <input type="text" inputmode="numeric" name="harga" value="{{ old('harga') }}"
                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                       class="w-full px-4 py-2.5 rounded-xl border @error('harga') border-red-300 bg-red-50 @else border-gray-200 @enderror focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                       class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 glass-input"
+                       style="color: rgb(var(--text-primary));"
                        placeholder="5000">
                 @error('harga')
-                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                    <p class="text-xs mt-1" style="color: rgb(var(--danger));">{{ $message }}</p>
                 @else
-                    <p class="text-xs text-gray-500 mt-1">Hanya angka. Tanpa titik/koma.</p>
+                    <p class="text-xs txt-secondary mt-1">Hanya angka. Tanpa titik/koma.</p>
                 @enderror
             </div>
 
             {{-- STOK --}}
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Stok <span class="text-red-500">*</span>
+                <label class="block text-sm font-medium txt-primary mb-1">
+                    Stok <span style="color: rgb(var(--danger));">*</span>
                 </label>
                 <input type="text" inputmode="numeric" name="stok" value="{{ old('stok') }}"
                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                       class="w-full px-4 py-2.5 rounded-xl border @error('stok') border-red-300 bg-red-50 @else border-gray-200 @enderror focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                       class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 glass-input"
+                       style="color: rgb(var(--text-primary));"
                        placeholder="Contoh: 100">
                 @error('stok')
-                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                    <p class="text-xs mt-1" style="color: rgb(var(--danger));">{{ $message }}</p>
                 @else
-                    <p class="text-xs text-gray-500 mt-1">Minimal 1. Kalau stok habis, ubah lewat menu Edit.</p>
+                    <p class="text-xs txt-secondary mt-1">Minimal 1. Kalau stok habis, ubah lewat menu Edit.</p>
                 @enderror
             </div>
 
             {{-- SATUAN --}}
             <div class="relative" @click.away="satuanOpen = false">
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Satuan <span class="text-red-500">*</span>
+                <label class="block text-sm font-medium txt-primary mb-1">
+                    Satuan <span style="color: rgb(var(--danger));">*</span>
                 </label>
                 <button type="button" @click="satuanOpen = !satuanOpen"
-                        class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-xl border @error('satuan') border-red-300 bg-red-50 @else border-gray-200 bg-white @enderror hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
-                    <span class="text-gray-700" x-text="satuanValue"></span>
-                    <svg class="w-4 h-4 text-gray-400 flex-shrink-0" :class="satuanOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-xl border bd-default glass-card hover:bd-strong focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
+                    <span class="txt-primary" x-text="satuanValue"></span>
+                    <svg class="w-4 h-4 txt-muted flex-shrink-0" :class="satuanOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
 
                 <div x-show="satuanOpen" x-cloak
-                     class="absolute left-0 right-0 z-30 mt-2 bg-white rounded-xl border border-gray-100 shadow-lg overflow-hidden">
+                     class="absolute left-0 right-0 z-30 mt-2 glass-card rounded-xl border bd-soft shadow-lg overflow-hidden">
                     @foreach (['kg', 'gram', 'ikat', 'karung', 'karung kecil'] as $sat)
                         <button type="button" @click="satuanValue = '{{ $sat }}'; document.getElementById('inputSatuan').value = '{{ $sat }}'; satuanOpen = false"
-                                class="w-full px-4 py-2.5 text-sm text-left hover:bg-emerald-50 transition text-gray-700">
+                                class="w-full px-4 py-2.5 text-sm text-left hover:bg-emerald-500/10 transition txt-primary">
                             {{ $sat }}
                         </button>
                     @endforeach
@@ -213,38 +217,38 @@
 
                 <input type="hidden" name="satuan" id="inputSatuan" :value="satuanValue" value="{{ old('satuan', 'kg') }}">
                 @error('satuan')
-                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                    <p class="text-xs mt-1" style="color: rgb(var(--danger));">{{ $message }}</p>
                 @else
-                    <p class="text-xs text-gray-500 mt-1">Contoh: kg, ikat, karung.</p>
+                    <p class="text-xs txt-secondary mt-1">Contoh: kg, ikat, karung.</p>
                 @enderror
             </div>
 
             {{-- STATUS --}}
             <div class="relative" @click.away="statusOpen = false">
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Status <span class="text-red-500">*</span>
+                <label class="block text-sm font-medium txt-primary mb-1">
+                    Status <span style="color: rgb(var(--danger));">*</span>
                 </label>
                 <button type="button" @click="statusOpen = !statusOpen"
-                        class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
-                    <span class="text-gray-700" id="statusLabel">
+                        class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-xl border bd-default glass-card hover:bd-strong focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
+                    <span class="txt-primary" id="statusLabel">
                         {{ old('status') === 'nonaktif' ? 'Nonaktif' : 'Aktif' }}
                     </span>
-                    <svg class="w-4 h-4 text-gray-400 flex-shrink-0" :class="statusOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    <svg class="w-4 h-4 txt-muted flex-shrink-0" :class="statusOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
 
                 <div x-show="statusOpen" x-cloak
-                     class="absolute left-0 right-0 z-30 mt-2 bg-white rounded-xl border border-gray-100 shadow-lg overflow-hidden">
+                     class="absolute left-0 right-0 z-30 mt-2 glass-card rounded-xl border bd-soft shadow-lg overflow-hidden">
                     <button type="button" data-value="aktif" data-label="Aktif" onclick="selectStatus(this)"
-                            class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-left hover:bg-emerald-50 transition
-                                   {{ old('status', 'aktif') == 'aktif' ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-gray-700' }}">
+                            class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-left hover:bg-emerald-500/10 transition
+                                   {{ old('status', 'aktif') == 'aktif' ? 'bg-emerald-500/10 txt-brand font-semibold' : 'txt-primary' }}">
                         <span>Aktif</span>
-                        <span class="text-xs text-gray-400">— dijual di katalog</span>
+                        <span class="text-xs txt-muted">— dijual di katalog</span>
                     </button>
                     <button type="button" data-value="nonaktif" data-label="Nonaktif" onclick="selectStatus(this)"
-                            class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-left hover:bg-emerald-50 transition
-                                   {{ old('status') == 'nonaktif' ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-gray-700' }}">
+                            class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-left hover:bg-emerald-500/10 transition
+                                   {{ old('status') == 'nonaktif' ? 'bg-emerald-500/10 txt-brand font-semibold' : 'txt-primary' }}">
                         <span>Nonaktif</span>
-                        <span class="text-xs text-gray-400">— disembunyikan</span>
+                        <span class="text-xs txt-muted">— disembunyikan</span>
                     </button>
                 </div>
 
@@ -254,18 +258,19 @@
 
         {{-- DESKRIPSI --}}
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+            <label class="block text-sm font-medium txt-primary mb-1">Deskripsi</label>
             <textarea name="deskripsi" rows="4" maxlength="1000"
-                      class="w-full px-4 py-2.5 rounded-xl border @error('deskripsi') border-red-300 bg-red-50 @else border-gray-200 @enderror focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 glass-input"
+                      style="color: rgb(var(--text-primary));"
                       placeholder="Deskripsi limbah...">{{ old('deskripsi') }}</textarea>
         </div>
 
         {{-- GAMBAR --}}
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">
+            <label class="block text-sm font-medium txt-primary mb-1">
                 Gambar Limbah
-                <span class="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded font-medium">Disarankan</span>
-                <span class="text-gray-400 font-normal">(opsional)</span>
+                <span class="text-xs px-2 py-0.5 rounded font-medium" style="background: rgb(var(--warning-soft)); color: rgb(var(--warning));">Disarankan</span>
+                <span class="txt-muted font-normal">(opsional)</span>
             </label>
 
             <input type="file" name="gambar" accept="image/jpeg,image/jpg,image/png,image/webp" x-ref="fileInput"
@@ -274,23 +279,24 @@
 
             {{-- Undo banner --}}
             <div x-show="showUndo" x-cloak
-                 class="mb-3 flex items-center gap-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl">
-                <svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                <span class="flex-1 text-xs text-amber-800 truncate">
+                 class="mb-3 flex items-center gap-3 px-3 py-2 rounded-xl"
+                 style="background: rgb(var(--warning-soft) / 0.5); border: 1px solid rgb(var(--warning) / 0.3);">
+                <svg class="w-4 h-4 flex-shrink-0" style="color: rgb(var(--warning));" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <span class="flex-1 text-xs truncate" style="color: rgb(var(--warning));">
                     File <strong x-text="undoFileName"></strong> dibatalkan
                 </span>
                 <button type="button" @click="undoCancel()"
-                        class="text-xs text-emerald-600 hover:text-emerald-700 font-bold underline flex-shrink-0">
+                        class="text-xs font-bold underline flex-shrink-0" style="color: rgb(var(--brand));">
                     Urungkan
                 </button>
             </div>
 
             {{-- Preview --}}
             <div x-show="previewUrl" x-cloak
-                 style="display: flex; align-items: flex-start; gap: 16px; padding: 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; margin-bottom: 12px;">
+                 style="display: flex; align-items: flex-start; gap: 16px; padding: 16px; background: rgb(var(--brand-soft) / 0.3); border: 1px solid rgb(var(--brand) / 0.3); border-radius: 12px; margin-bottom: 12px;">
                 <div style="position: relative; flex-shrink: 0;">
                     <div @click="openLightbox(previewUrl)"
-                         style="position: relative; width: 160px; height: 160px; border-radius: 12px; overflow: hidden; cursor: zoom-in; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.08);"
+                         style="position: relative; width: 160px; height: 160px; border-radius: 12px; overflow: hidden; cursor: zoom-in; border: 2px solid rgb(var(--border)); box-shadow: 0 2px 8px rgba(0,0,0,0.08);"
                          onmouseover="this.querySelector('.zoom-overlay').style.opacity='1'"
                          onmouseout="this.querySelector('.zoom-overlay').style.opacity='0'">
                         <img :src="previewUrl" alt="Preview"
@@ -310,31 +316,32 @@
                     </button>
                 </div>
                 <div style="flex: 1; min-width: 0; padding-top: 8px;">
-                    <p style="font-size: 11px; color: #059669; font-weight: 700; text-transform: uppercase; margin: 0 0 4px 0;">Preview</p>
-                    <p class="break-all" style="font-size: 14px; color: #1f2937; font-weight: 500; margin: 0 0 4px 0; line-height: 1.4;" x-text="fileName"></p>
-                    <p style="font-size: 12px; color: #6b7280; margin: 0;">Klik gambar untuk memperbesar.</p>
+                    <p style="font-size: 11px; font-weight: 700; text-transform: uppercase; margin: 0 0 4px 0; color: rgb(var(--brand));">Preview</p>
+                    <p class="break-all" style="font-size: 14px; font-weight: 500; margin: 0 0 4px 0; line-height: 1.4; color: rgb(var(--text-primary));" x-text="fileName"></p>
+                    <p style="font-size: 12px; margin: 0; color: rgb(var(--text-muted));">Klik gambar untuk memperbesar.</p>
                 </div>
             </div>
 
             {{-- File Input --}}
-            <div class="flex items-center gap-3 px-3 py-2 rounded-xl border border-gray-200 bg-white focus-within:ring-2 focus-within:ring-emerald-500 transition">
+            <div class="flex items-center gap-3 px-3 py-2 rounded-xl border bd-default glass-card focus-within:ring-2 focus-within:ring-emerald-500 transition">
                 <button type="button" @click="$refs.fileInput.click()"
-                        class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-semibold transition flex-shrink-0">
+                        class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex-shrink-0"
+                        style="background: rgb(var(--brand-soft)); color: rgb(var(--brand-strong));">
                     Choose File
                 </button>
                 <span class="flex-1 min-w-0 text-xs break-all"
-                      :class="fileName ? 'text-gray-800 font-medium' : 'text-gray-400'"
+                      :class="fileName ? 'txt-primary font-medium' : 'txt-muted'"
                       x-text="fileName || 'No file chosen'"></span>
             </div>
 
-            <p class="text-xs text-gray-500 mt-2">Format: JPG, PNG, WEBP. Max 2MB.</p>
+            <p class="text-xs txt-secondary mt-2">Format: JPG, PNG, WEBP. Max 2MB.</p>
         </div>
 
         <div class="flex justify-end gap-3 pt-2">
             <a href="{{ route('admin.limbah.index') }}"
-               class="px-5 py-2.5 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl font-medium transition">Batal</a>
+               class="glass-btn !py-2.5 !px-5">Batal</a>
             <button type="submit"
-                    class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-sm transition">
+                    class="btn-primary">
                 Simpan Limbah
             </button>
         </div>

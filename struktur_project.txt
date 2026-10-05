@@ -1,0 +1,261 @@
+=== Struktur Project: D:\laragon\www\eco-tahu ===
+├── app
+│   ├── Console
+│   │   └── Commands
+│   │       └── PublishScheduledEdukasi.php
+│   ├── Helpers
+│   │   └── Haversine.php
+│   ├── Http
+│   │   ├── Controllers
+│   │   │   ├── Admin
+│   │   │   │   ├── DashboardController.php
+│   │   │   │   ├── EdukasiController.php
+│   │   │   │   ├── KategoriController.php
+│   │   │   │   ├── LaporanController.php
+│   │   │   │   ├── LimbahController.php
+│   │   │   │   ├── PelangganController.php
+│   │   │   │   ├── PesananController.php
+│   │   │   │   ├── ProdukTahuController.php
+│   │   │   │   └── RefundController.php
+│   │   │   ├── Auth
+│   │   │   │   ├── AuthenticatedSessionController.php
+│   │   │   │   ├── ConfirmablePasswordController.php
+│   │   │   │   ├── EmailVerificationNotificationController.php
+│   │   │   │   ├── EmailVerificationPromptController.php
+│   │   │   │   ├── GoogleAuthController.php
+│   │   │   │   ├── NewPasswordController.php
+│   │   │   │   ├── PasswordController.php
+│   │   │   │   ├── PasswordResetLinkController.php
+│   │   │   │   ├── RegisteredUserController.php
+│   │   │   │   └── VerifyEmailController.php
+│   │   │   ├── User
+│   │   │   │   ├── CartController.php
+│   │   │   │   ├── CheckoutController.php
+│   │   │   │   ├── EdukasiController.php
+│   │   │   │   ├── LimbahController.php
+│   │   │   │   ├── PesananController.php
+│   │   │   │   ├── ProdukController.php
+│   │   │   │   └── ReviewController.php
+│   │   │   ├── Controller.php
+│   │   │   ├── HomeController.php
+│   │   │   └── ProfileController.php
+│   │   ├── Middleware
+│   │   │   └── IsAdmin.php
+│   │   └── Requests
+│   │       ├── Auth
+│   │       │   └── LoginRequest.php
+│   │       └── ProfileUpdateRequest.php
+│   ├── Models
+│   │   ├── DetailPesanan.php
+│   │   ├── Edukasi.php
+│   │   ├── Kategori.php
+│   │   ├── Limbah.php
+│   │   ├── Pembayaran.php
+│   │   ├── Pesanan.php
+│   │   ├── ProdukTahu.php
+│   │   ├── Refund.php
+│   │   ├── Review.php
+│   │   ├── Role.php
+│   │   └── User.php
+│   ├── Providers
+│   │   └── AppServiceProvider.php
+│   └── View
+│       └── Components
+│           ├── AppLayout.php
+│           └── GuestLayout.php
+├── bootstrap
+│   ├── cache
+│   │   ├── packages.php
+│   │   └── services.php
+│   ├── app.php
+│   └── providers.php
+├── config
+│   ├── app.php
+│   ├── auth.php
+│   ├── cache.php
+│   ├── database.php
+│   ├── filesystems.php
+│   ├── logging.php
+│   ├── mail.php
+│   ├── queue.php
+│   ├── services.php
+│   ├── session.php
+│   └── toko.php
+├── database
+│   ├── factories
+│   │   └── UserFactory.php
+│   ├── migrations
+│   │   ├── 0001_01_01_000001_create_cache_table.php
+│   │   ├── 2026_10_04_065146_add_kecamatan_to_pesanan_table.php
+│   │   ├── 2026_10_04_063120_add_lokasi_to_pesanan_table.php
+│   │   ├── 2026_10_04_060755_create_reviews_table.php
+│   │   ├── 2026_09_26_082348_add_unique_nama_kategori_to_kategori_table.php
+│   │   ├── 2026_09_26_030230_add_unique_nama_limbah_to_limbah_table.php
+│   │   ├── 2026_09_25_145822_add_unique_nama_produk_to_produk_tahu_table.php
+│   │   ├── 2026_09_22_055434_create_edukasi_table.php
+│   │   ├── 2026_09_22_055430_create_refund_table.php
+│   │   ├── 2026_10_04_071948_add_lokasi_kurir_to_pesanan_table.php
+│   │   ├── 2026_09_22_055429_create_pembayaran_table.php
+│   │   ├── 2026_09_22_055427_create_pesanan_table.php
+│   │   ├── 2026_09_22_055426_create_limbah_table.php
+│   │   ├── 2026_09_22_055425_create_produk_tahu_table.php
+│   │   ├── 2026_09_22_055424_create_kategori_table.php
+│   │   ├── 2026_09_22_055422_create_sessions_table.php
+│   │   ├── 2026_09_22_055421_create_users_table.php
+│   │   ├── 2026_09_22_055420_create_roles_table.php
+│   │   ├── 0001_01_01_000002_create_jobs_table.php
+│   │   ├── 2026_09_22_055428_create_detail_pesanan_table.php
+│   │   └── 2026_10_04_142414_add_google_id_to_users_table.php
+│   ├── seeders
+│   │   ├── DatabaseSeeder.php
+│   │   ├── EdukasiSeeder.php
+│   │   ├── KategoriSeeder.php
+│   │   ├── LimbahSeeder.php
+│   │   ├── PesananSeeder.php
+│   │   ├── ProdukSeeder.php
+│   │   ├── RoleSeeder.php
+│   │   └── UserSeeder.php
+│   └── database.sqlite
+├── public
+│   ├── build
+│   │   ├── assets
+│   │   │   ├── admin-REC1rdGl.js
+│   │   │   ├── app-BiaHAgof.js
+│   │   │   ├── app-CWk7Nsuh.css
+│   │   │   ├── auth-CJE1PVD7.js
+│   │   │   └── module.esm-CHZQYZeV.js
+│   │   └── manifest.json
+│   ├── models
+│   │   └── tofu.glb
+│   ├── favicon.ico
+│   ├── hot
+│   ├── index.php
+│   └── robots.txt
+├── resources
+│   ├── css
+│   │   ├── app.css
+│   │   └── app.css.bak
+│   ├── js
+│   │   ├── admin.js
+│   │   ├── app.js
+│   │   └── auth.js
+│   └── views
+│       ├── admin
+│       │   ├── edukasi
+│       │   │   ├── create.blade.php
+│       │   │   ├── edit.blade.php
+│       │   │   └── index.blade.php
+│       │   ├── kategori
+│       │   │   ├── create.blade.php
+│       │   │   ├── edit.blade.php
+│       │   │   └── index.blade.php
+│       │   ├── laporan
+│       │   │   └── index.blade.php
+│       │   ├── limbah
+│       │   │   ├── create.blade.php
+│       │   │   ├── edit.blade.php
+│       │   │   └── index.blade.php
+│       │   ├── pelanggan
+│       │   │   ├── index.blade.php
+│       │   │   └── show.blade.php
+│       │   ├── pesanan
+│       │   │   ├── index.blade.php
+│       │   │   └── show.blade.php
+│       │   ├── produk-tahu
+│       │   │   ├── create.blade.php
+│       │   │   ├── edit.blade.php
+│       │   │   └── index.blade.php
+│       │   ├── refund
+│       │   │   ├── index.blade.php
+│       │   │   └── show.blade.php
+│       │   └── dashboard.blade.php
+│       ├── auth
+│       │   ├── confirm-password.blade.php
+│       │   ├── forgot-password.blade.php
+│       │   ├── login.blade.php
+│       │   ├── register.blade.php
+│       │   ├── reset-password.blade.php
+│       │   └── verify-email.blade.php
+│       ├── components
+│       │   ├── application-logo.blade.php
+│       │   ├── auth-session-status.blade.php
+│       │   ├── danger-button.blade.php
+│       │   ├── dropdown-link.blade.php
+│       │   ├── dropdown.blade.php
+│       │   ├── input-error.blade.php
+│       │   ├── input-label.blade.php
+│       │   ├── modal.blade.php
+│       │   ├── nav-link.blade.php
+│       │   ├── primary-button.blade.php
+│       │   ├── responsive-nav-link.blade.php
+│       │   ├── secondary-button.blade.php
+│       │   └── text-input.blade.php
+│       ├── layouts
+│       │   ├── admin.blade.php
+│       │   ├── app.blade.php
+│       │   ├── auth.blade.php
+│       │   ├── guest.blade.php
+│       │   ├── navigation.blade.php
+│       │   └── user.blade.php
+│       ├── profile
+│       │   ├── partials
+│       │   │   ├── delete-user-form.blade.php
+│       │   │   ├── update-password-form.blade.php
+│       │   │   └── update-profile-information-form.blade.php
+│       │   └── edit.blade.php
+│       ├── user
+│       │   ├── cart
+│       │   │   └── index.blade.php
+│       │   ├── checkout
+│       │   │   ├── index.blade.php
+│       │   │   └── success.blade.php
+│       │   ├── edukasi
+│       │   │   ├── index.blade.php
+│       │   │   └── show.blade.php
+│       │   ├── limbah
+│       │   │   ├── index.blade.php
+│       │   │   └── show.blade.php
+│       │   ├── partials
+│       │   │   └── review-section.blade.php
+│       │   ├── pesanan
+│       │   │   ├── index.blade.php
+│       │   │   └── show.blade.php
+│       │   ├── produk
+│       │   │   ├── index.blade.php
+│       │   │   └── show.blade.php
+│       │   └── home.blade.php
+│       ├── dashboard.blade.php
+│       └── welcome.blade.php
+├── routes
+│   ├── auth.php
+│   ├── console.php
+│   └── web.php
+├── tests
+│   ├── Feature
+│   │   ├── Auth
+│   │   │   ├── AuthenticationTest.php
+│   │   │   ├── EmailVerificationTest.php
+│   │   │   ├── PasswordConfirmationTest.php
+│   │   │   ├── PasswordResetTest.php
+│   │   │   ├── PasswordUpdateTest.php
+│   │   │   └── RegistrationTest.php
+│   │   ├── ExampleTest.php
+│   │   ├── ProfileTest.php
+│   │   └── PublicCatalogPagesTest.php
+│   ├── Unit
+│   │   └── ExampleTest.php
+│   └── TestCase.php
+├── struktur_project.txt
+├── README.md
+├── postcss.config.js
+├── phpunit.xml
+├── package.json
+├── CLAUDE.md
+├── composer.lock
+├── composer.json
+├── tailwind.config.js
+├── artisan
+├── AGENTS.md
+├── package-lock.json
+└── vite.config.js
+=== Selesai ===

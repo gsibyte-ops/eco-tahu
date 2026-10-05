@@ -5,13 +5,15 @@
 @section('content')
 
 @if (session('success'))
-    <div class="mb-4 bg-emerald-50 border border-emerald-200 txt-brand-hover px-4 py-3 rounded-xl text-sm">
+    <div class="mb-4 px-4 py-3 rounded-xl text-sm"
+         style="background: rgb(var(--success-soft) / 0.6); border: 1px solid rgb(var(--success) / 0.3); color: rgb(var(--success));">
         {{ session('success') }}
     </div>
 @endif
 
 @if (session('error'))
-    <div class="mb-4 bg-red-50 border border-red-200 txt-danger px-4 py-3 rounded-xl text-sm">
+    <div class="mb-4 px-4 py-3 rounded-xl text-sm"
+         style="background: rgb(var(--danger-soft) / 0.6); border: 1px solid rgb(var(--danger) / 0.3); color: rgb(var(--danger));">
         {{ session('error') }}
     </div>
 @endif
@@ -22,72 +24,77 @@
         <p class="text-sm txt-secondary">Kelola semua produk tahu di sini.</p>
     </div>
     <button type="button" onclick="openCreateModal()"
-            class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
+            class="btn-primary">
         + Tambah Produk
     </button>
 </div>
 
-<div class="glass-card rounded-2xl border bd-soft shadow-sm overflow-hidden">
-    <table class="w-full text-left">
-        <thead>
-            <tr class="text-xs font-semibold txt-muted uppercase tracking-wider bg-soft/60 border-b bd-soft">
-                <th class="px-6 py-3">Gambar</th>
-                <th class="px-6 py-3">Nama Produk</th>
-                <th class="px-6 py-3">Kategori</th>
-                <th class="px-6 py-3">Harga</th>
-                <th class="px-6 py-3">Stok</th>
-                <th class="px-6 py-3">Status</th>
-                <th class="px-6 py-3 text-right">Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($produk as $p)
-                <tr class="border-b border-gray-50 hover:bg-soft/60 transition">
-                    <td class="px-6 py-4">
-                        @if ($p->gambar)
-                            <img src="{{ asset('storage/' . $p->gambar) }}" alt="{{ $p->nama_produk }}"
-                                 class="w-14 h-14 rounded-xl object-cover border bd-soft">
-                        @else
-                            <div class="w-14 h-14 rounded-xl bg-amber-50 border border-dashed border-amber-200 flex items-center justify-center">
-                                <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                            </div>
-                        @endif
-                    </td>
-                    <td class="px-6 py-4">
-                        <p class="text-sm font-semibold txt-primary">{{ $p->nama_produk }}</p>
-                        <p class="text-xs txt-secondary">{{ Str::limit($p->deskripsi, 50) }}</p>
-                    </td>
-                    <td class="px-6 py-4 text-sm text-gray-600">{{ $p->kategori->nama_kategori ?? '-' }}</td>
-                    <td class="px-6 py-4 text-sm font-semibold txt-primary">Rp {{ number_format($p->harga, 0, ',', '.') }}</td>
-                    <td class="px-6 py-4 text-sm text-gray-600">{{ $p->stok }}</td>
-                    <td class="px-6 py-4">
-                        @if ($p->status === 'aktif')
-                            <span class="px-2.5 py-1 bg-emerald-50 txt-brand-hover rounded-lg text-xs font-bold">Aktif</span>
-                        @else
-                            <span class="px-2.5 py-1 bg-red-50 txt-danger rounded-lg text-xs font-bold">Nonaktif</span>
-                        @endif
-                    </td>
-                    <td class="px-6 py-4 text-right space-x-2">
-                        <button type="button" onclick="openEditModal({{ $p->id }})"
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 txt-info rounded-lg text-xs font-semibold transition">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                            Edit
-                        </button>
-                        <form action="{{ route('admin.produk-tahu.destroy', $p->id) }}" method="POST" class="inline"
-                              onsubmit="return confirm('Yakin hapus produk ini?')">
-                            @csrf @method('DELETE')
-                            <button class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 txt-danger rounded-lg text-xs font-semibold transition">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                Hapus
-                            </button>
-                        </form>
-                    </td>
+<div class="glass-card overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="text-xs font-bold uppercase tracking-widest" style="color: rgb(var(--text-muted)); border-bottom: 1px solid rgb(var(--border-soft));">
+                    <th class="px-6 py-3">Gambar</th>
+                    <th class="px-6 py-3">Nama Produk</th>
+                    <th class="px-6 py-3">Kategori</th>
+                    <th class="px-6 py-3">Harga</th>
+                    <th class="px-6 py-3">Stok</th>
+                    <th class="px-6 py-3">Status</th>
+                    <th class="px-6 py-3 text-right">Aksi</th>
                 </tr>
-            @empty
-                <tr><td colspan="7" class="px-6 py-10 text-center txt-muted">Belum ada produk</td></tr>
-            @endforelse
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @forelse ($produk as $p)
+                    <tr class="transition" style="border-bottom: 1px solid rgb(var(--border-soft));">
+                        <td class="px-6 py-4">
+                            @if ($p->gambar)
+                                <img src="{{ asset('storage/' . $p->gambar) }}" alt="{{ $p->nama_produk }}"
+                                     class="w-14 h-14 rounded-xl object-cover" style="border: 1px solid rgb(var(--border-soft));">
+                            @else
+                                <div class="w-14 h-14 rounded-xl flex items-center justify-center"
+                                     style="background: rgb(var(--warning-soft)); border: 1px dashed rgb(var(--warning) / 0.5);">
+                                    <svg class="w-5 h-5" style="color: rgb(var(--warning));" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                </div>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4">
+                            <p class="text-sm font-semibold txt-primary">{{ $p->nama_produk }}</p>
+                            <p class="text-xs txt-secondary">{{ Str::limit($p->deskripsi, 50) }}</p>
+                        </td>
+                        <td class="px-6 py-4 text-sm txt-secondary">{{ $p->kategori->nama_kategori ?? '-' }}</td>
+                        <td class="px-6 py-4 text-sm font-semibold txt-primary">Rp {{ number_format($p->harga, 0, ',', '.') }}</td>
+                        <td class="px-6 py-4 text-sm txt-secondary">{{ $p->stok }}</td>
+                        <td class="px-6 py-4">
+                            @if ($p->status === 'aktif')
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-bold" style="background: rgb(var(--success-soft)); color: rgb(var(--success));">Aktif</span>
+                            @else
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-bold" style="background: rgb(var(--danger-soft)); color: rgb(var(--danger));">Nonaktif</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 text-right space-x-2">
+                            <button type="button" onclick="openEditModal({{ $p->id }})"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+                                    style="background: rgb(var(--info-soft)); color: rgb(var(--info));">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                Edit
+                            </button>
+                            <form action="{{ route('admin.produk-tahu.destroy', $p->id) }}" method="POST" class="inline"
+                                  onsubmit="return confirm('Yakin hapus produk ini?')">
+                                @csrf @method('DELETE')
+                                <button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+                                        style="background: rgb(var(--danger-soft)); color: rgb(var(--danger));">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    Hapus
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                @empty
+                    <tr><td colspan="7" class="px-6 py-10 text-center txt-muted">Belum ada produk</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <div class="mt-4">{{ $produk->links() }}</div>
@@ -96,23 +103,24 @@
 {{-- MODAL: CREATE --}}
 {{-- ============================================ --}}
 <div id="createModal" class="fixed inset-0 z-[999] hidden items-center justify-center p-4"
-     style="background-color: rgba(0, 0, 0, 0.6);">
+     style="background-color: rgba(0, 0, 0, 0.65); backdrop-filter: blur(8px);">
 
     <div style="width: 100%; max-width: 720px; max-height: 92vh;"
          class="glass-card rounded-2xl overflow-hidden flex flex-col shadow-2xl">
 
-        <div class="flex items-center justify-between px-6 py-4 bg-emerald-600 text-white flex-shrink-0">
+        <div class="flex items-center justify-between px-6 py-4 text-white flex-shrink-0" style="background: var(--gradient-brand);">
             <div>
                 <p class="text-xs opacity-80">Form</p>
                 <h3 class="text-base font-bold">Tambah Produk Tahu</h3>
             </div>
-            <button onclick="closeCreateModal()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:glass-card/20 transition">
+            <button onclick="closeCreateModal()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/20 transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
 
         @if (session('open_modal') === 'create' && $errors->any())
-            <div class="mx-6 mt-4 bg-red-50 border border-red-200 txt-danger px-4 py-3 rounded-xl text-sm">
+            <div class="mx-6 mt-4 px-4 py-3 rounded-xl text-sm"
+                 style="background: rgb(var(--danger-soft) / 0.6); border: 1px solid rgb(var(--danger) / 0.3); color: rgb(var(--danger));">
                 <p class="font-bold mb-1">Ada beberapa kesalahan:</p>
                 <ul class="list-disc list-inside space-y-1">
                     @foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach
@@ -128,19 +136,20 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                     <div class="md:col-span-2">
-                        <label class="block text-sm font-medium txt-primary mb-1">Nama Produk <span class="txt-danger">*</span></label>
+                        <label class="block text-sm font-medium txt-primary mb-1">Nama Produk <span style="color: rgb(var(--danger));">*</span></label>
                         <input type="text" name="nama_produk" value="{{ old('nama_produk') }}"
                                minlength="3" maxlength="150"
                                oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')"
-                               class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                               class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 glass-input"
+                               style="color: rgb(var(--text-primary));"
                                placeholder="Contoh: Tahu Putih Premium">
                         <p class="text-xs txt-secondary mt-1">Hanya huruf & spasi. Minimal 3 karakter.</p>
                     </div>
 
                     <div class="relative" @click.away="kategoriOpen = false">
-                        <label class="block text-sm font-medium txt-primary mb-1">Kategori <span class="txt-danger">*</span></label>
+                        <label class="block text-sm font-medium txt-primary mb-1">Kategori <span style="color: rgb(var(--danger));">*</span></label>
                         <button type="button" @click="kategoriOpen = !kategoriOpen"
-                                class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-xl border bd-default glass-card hover:bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
+                                class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-xl border bd-default glass-card hover:bd-strong focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
                             <span class="txt-primary" x-text="kategoriLabel"></span>
                             <svg class="w-4 h-4 txt-muted" :class="kategoriOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>
@@ -150,7 +159,7 @@
                                 <button type="button"
                                         data-value="{{ $k->id }}" data-label="{{ $k->nama_kategori }}"
                                         @click="selectKategori($event.currentTarget)"
-                                        class="w-full px-4 py-2.5 text-sm text-left hover:bg-emerald-50 transition txt-primary">
+                                        class="w-full px-4 py-2.5 text-sm text-left hover:bg-emerald-500/10 transition txt-primary">
                                     {{ $k->nama_kategori }}
                                 </button>
                             @endforeach
@@ -159,35 +168,37 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium txt-primary mb-1">Harga (Rp) <span class="txt-danger">*</span></label>
+                        <label class="block text-sm font-medium txt-primary mb-1">Harga (Rp) <span style="color: rgb(var(--danger));">*</span></label>
                         <input type="text" inputmode="numeric" name="harga" value="{{ old('harga') }}"
                                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                               class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                               class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 glass-input"
+                               style="color: rgb(var(--text-primary));"
                                placeholder="12500">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium txt-primary mb-1">Stok <span class="txt-danger">*</span></label>
+                        <label class="block text-sm font-medium txt-primary mb-1">Stok <span style="color: rgb(var(--danger));">*</span></label>
                         <input type="text" inputmode="numeric" name="stok" value="{{ old('stok') }}"
                                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                               class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                               class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 glass-input"
+                               style="color: rgb(var(--text-primary));"
                                placeholder="Contoh: 100">
                         <p class="text-xs txt-secondary mt-1">Minimal 1.</p>
                     </div>
 
                     <div class="relative" @click.away="statusOpen = false">
-                        <label class="block text-sm font-medium txt-primary mb-1">Status <span class="txt-danger">*</span></label>
+                        <label class="block text-sm font-medium txt-primary mb-1">Status <span style="color: rgb(var(--danger));">*</span></label>
                         <button type="button" @click="statusOpen = !statusOpen"
-                                class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-xl border bd-default glass-card hover:bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
+                                class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-xl border bd-default glass-card hover:bd-strong focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
                             <span class="txt-primary" x-text="statusLabel"></span>
                             <svg class="w-4 h-4 txt-muted" :class="statusOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>
                         <div x-show="statusOpen" x-cloak
                              class="absolute left-0 right-0 z-30 mt-2 glass-card rounded-xl border bd-soft shadow-lg overflow-hidden">
                             <button type="button" @click="selectStatus('aktif', 'Aktif')"
-                                    class="w-full px-4 py-2.5 text-sm text-left hover:bg-emerald-50 transition txt-primary">Aktif</button>
+                                    class="w-full px-4 py-2.5 text-sm text-left hover:bg-emerald-500/10 transition txt-primary">Aktif</button>
                             <button type="button" @click="selectStatus('nonaktif', 'Nonaktif')"
-                                    class="w-full px-4 py-2.5 text-sm text-left hover:bg-emerald-50 transition txt-primary">Nonaktif</button>
+                                    class="w-full px-4 py-2.5 text-sm text-left hover:bg-emerald-500/10 transition txt-primary">Nonaktif</button>
                         </div>
                         <input type="hidden" name="status" :value="statusValue">
                     </div>
@@ -196,7 +207,8 @@
                 <div>
                     <label class="block text-sm font-medium txt-primary mb-1">Deskripsi</label>
                     <textarea name="deskripsi" rows="3" maxlength="1000"
-                              class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                              class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none glass-input"
+                              style="color: rgb(var(--text-primary));"
                               placeholder="Deskripsi produk...">{{ old('deskripsi') }}</textarea>
                 </div>
 
@@ -204,7 +216,7 @@
                 <div>
                     <label class="block text-sm font-medium txt-primary mb-1">
                         Gambar Produk
-                        <span class="text-xs bg-amber-50 txt-accent px-2 py-0.5 rounded font-medium">Disarankan</span>
+                        <span class="text-xs px-2 py-0.5 rounded font-medium" style="background: rgb(var(--warning-soft)); color: rgb(var(--warning));">Disarankan</span>
                     </label>
 
                     <input type="file" name="gambar" accept="image/jpeg,image/jpg,image/png,image/webp"
@@ -212,23 +224,24 @@
 
                     {{-- Undo Banner --}}
                     <div x-show="showUndo" x-cloak
-                         class="mb-3 flex items-center gap-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl">
-                        <svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                        <span class="flex-1 text-xs text-amber-800 truncate">
+                         class="mb-3 flex items-center gap-3 px-3 py-2 rounded-xl"
+                         style="background: rgb(var(--warning-soft) / 0.5); border: 1px solid rgb(var(--warning) / 0.3);">
+                        <svg class="w-4 h-4 flex-shrink-0" style="color: rgb(var(--warning));" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        <span class="flex-1 text-xs text-amber-800 truncate" style="color: rgb(var(--warning));">
                             File <strong x-text="undoFileName"></strong> dibatalkan
                         </span>
                         <button type="button" @click="undoCancel()"
-                                class="text-xs txt-brand hover:txt-brand-hover font-bold underline flex-shrink-0">
+                                class="text-xs font-bold underline flex-shrink-0" style="color: rgb(var(--brand));">
                             Urungkan
                         </button>
                     </div>
 
                     {{-- Preview --}}
                     <div x-show="previewUrl" x-cloak
-                         style="display: flex; align-items: flex-start; gap: 16px; padding: 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; margin-bottom: 12px;">
+                         style="display: flex; align-items: flex-start; gap: 16px; padding: 16px; background: rgb(var(--brand-soft) / 0.3); border: 1px solid rgb(var(--brand) / 0.3); border-radius: 12px; margin-bottom: 12px;">
                         <div style="position: relative; flex-shrink: 0;">
                             <div @click="openLightbox(previewUrl)"
-                                 style="position: relative; width: 160px; height: 160px; border-radius: 12px; overflow: hidden; cursor: zoom-in; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.08);"
+                                 style="position: relative; width: 160px; height: 160px; border-radius: 12px; overflow: hidden; cursor: zoom-in; border: 2px solid rgb(var(--border)); box-shadow: 0 2px 8px rgba(0,0,0,0.08);"
                                  onmouseover="this.querySelector('.zoom-overlay').style.opacity='1'"
                                  onmouseout="this.querySelector('.zoom-overlay').style.opacity='0'">
                                 <img :src="previewUrl" alt="Preview"
@@ -248,15 +261,16 @@
                             </button>
                         </div>
                         <div style="flex: 1; min-width: 0; padding-top: 8px;">
-                            <p style="font-size: 11px; color: #059669; font-weight: 700; text-transform: uppercase; margin: 0 0 4px 0;">Preview</p>
-                            <p class="break-all" style="font-size: 14px; color: #1f2937; font-weight: 500; margin: 0 0 4px 0; line-height: 1.4;" x-text="fileName"></p>
-                            <p style="font-size: 12px; color: #6b7280; margin: 0;">Klik gambar untuk memperbesar.</p>
+                            <p style="font-size: 11px; font-weight: 700; text-transform: uppercase; margin: 0 0 4px 0; color: rgb(var(--brand));">Preview</p>
+                            <p class="break-all" style="font-size: 14px; font-weight: 500; margin: 0 0 4px 0; line-height: 1.4; color: rgb(var(--text-primary));" x-text="fileName"></p>
+                            <p style="font-size: 12px; margin: 0; color: rgb(var(--text-muted));">Klik gambar untuk memperbesar.</p>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-3 px-3 py-2 rounded-xl border bd-default glass-card focus-within:ring-2 focus-within:ring-emerald-500 transition">
                         <button type="button" @click="$refs.fileInput.click()"
-                                class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 txt-brand-hover rounded-lg text-xs font-semibold transition flex-shrink-0">
+                                class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex-shrink-0"
+                                style="background: rgb(var(--brand-soft)); color: rgb(var(--brand-strong));">
                             Choose File
                         </button>
                         <span class="flex-1 min-w-0 text-xs break-all"
@@ -268,11 +282,11 @@
             </div>
         </form>
 
-        <div class="flex justify-end gap-2 px-6 py-4 border-t bd-soft bg-soft flex-shrink-0">
+        <div class="flex justify-end gap-2 px-6 py-4 flex-shrink-0" style="border-top: 1px solid rgb(var(--border-soft)); background: rgb(var(--bg-secondary) / 0.5);">
             <button type="button" onclick="closeCreateModal()"
-                    class="px-5 py-2.5 bg-soft hover:bg-soft txt-primary text-sm font-medium rounded-xl transition">Batal</button>
+                    class="glass-btn">Batal</button>
             <button type="submit" form="createForm"
-                    class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
+                    class="btn-primary">
                 Simpan Produk
             </button>
         </div>
@@ -283,23 +297,24 @@
 {{-- MODAL: EDIT --}}
 {{-- ============================================ --}}
 <div id="editModal" class="fixed inset-0 z-[999] hidden items-center justify-center p-4"
-     style="background-color: rgba(0, 0, 0, 0.6);">
+     style="background-color: rgba(0, 0, 0, 0.65); backdrop-filter: blur(8px);">
 
     <div style="width: 100%; max-width: 720px; max-height: 92vh;"
          class="glass-card rounded-2xl overflow-hidden flex flex-col shadow-2xl">
 
-        <div class="flex items-center justify-between px-6 py-4 bg-emerald-600 text-white flex-shrink-0">
+        <div class="flex items-center justify-between px-6 py-4 text-white flex-shrink-0" style="background: var(--gradient-brand);">
             <div>
                 <p class="text-xs opacity-80">Form</p>
                 <h3 class="text-base font-bold">Edit Produk Tahu</h3>
             </div>
-            <button onclick="closeEditModal()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:glass-card/20 transition">
+            <button onclick="closeEditModal()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/20 transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
 
         @if (session('open_modal') === 'edit' && $errors->any())
-            <div class="mx-6 mt-4 bg-red-50 border border-red-200 txt-danger px-4 py-3 rounded-xl text-sm">
+            <div class="mx-6 mt-4 px-4 py-3 rounded-xl text-sm"
+                 style="background: rgb(var(--danger-soft) / 0.6); border: 1px solid rgb(var(--danger) / 0.3); color: rgb(var(--danger));">
                 <p class="font-bold mb-1">Ada beberapa kesalahan:</p>
                 <ul class="list-disc list-inside space-y-1">
                     @foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach
@@ -316,18 +331,19 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                     <div class="md:col-span-2">
-                        <label class="block text-sm font-medium txt-primary mb-1">Nama Produk <span class="txt-danger">*</span></label>
+                        <label class="block text-sm font-medium txt-primary mb-1">Nama Produk <span style="color: rgb(var(--danger));">*</span></label>
                         <input type="text" name="nama_produk"
                                value="{{ session('open_modal') === 'edit' ? old('nama_produk') : '' }}"
                                minlength="3" maxlength="150"
                                oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')"
-                               class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                               class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 glass-input"
+                               style="color: rgb(var(--text-primary));">
                     </div>
 
                     <div class="relative" @click.away="kategoriOpen = false">
-                        <label class="block text-sm font-medium txt-primary mb-1">Kategori <span class="txt-danger">*</span></label>
+                        <label class="block text-sm font-medium txt-primary mb-1">Kategori <span style="color: rgb(var(--danger));">*</span></label>
                         <button type="button" @click="kategoriOpen = !kategoriOpen"
-                                class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-xl border bd-default glass-card hover:bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
+                                class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-xl border bd-default glass-card hover:bd-strong focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
                             <span class="txt-primary" id="editKategoriLabel" x-text="kategoriLabel">-- Pilih Kategori --</span>
                             <svg class="w-4 h-4 txt-muted" :class="kategoriOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>
@@ -337,7 +353,7 @@
                                 <button type="button"
                                         data-value="{{ $k->id }}" data-label="{{ $k->nama_kategori }}"
                                         @click="selectKategori($event.currentTarget)"
-                                        class="w-full px-4 py-2.5 text-sm text-left hover:bg-emerald-50 transition txt-primary">
+                                        class="w-full px-4 py-2.5 text-sm text-left hover:bg-emerald-500/10 transition txt-primary">
                                     {{ $k->nama_kategori }}
                                 </button>
                             @endforeach
@@ -346,35 +362,37 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium txt-primary mb-1">Harga (Rp) <span class="txt-danger">*</span></label>
+                        <label class="block text-sm font-medium txt-primary mb-1">Harga (Rp) <span style="color: rgb(var(--danger));">*</span></label>
                         <input type="text" inputmode="numeric" name="harga"
                                value="{{ session('open_modal') === 'edit' ? old('harga') : '' }}"
                                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                               class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                               class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 glass-input"
+                               style="color: rgb(var(--text-primary));">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium txt-primary mb-1">Stok <span class="txt-danger">*</span></label>
+                        <label class="block text-sm font-medium txt-primary mb-1">Stok <span style="color: rgb(var(--danger));">*</span></label>
                         <input type="text" inputmode="numeric" name="stok"
                                value="{{ session('open_modal') === 'edit' ? old('stok') : '' }}"
                                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                               class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                               class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 glass-input"
+                               style="color: rgb(var(--text-primary));">
                         <p class="text-xs txt-secondary mt-1">Boleh 0 kalau stok habis.</p>
                     </div>
 
                     <div class="relative" @click.away="statusOpen = false">
-                        <label class="block text-sm font-medium txt-primary mb-1">Status <span class="txt-danger">*</span></label>
+                        <label class="block text-sm font-medium txt-primary mb-1">Status <span style="color: rgb(var(--danger));">*</span></label>
                         <button type="button" @click="statusOpen = !statusOpen"
-                                class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-xl border bd-default glass-card hover:bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
+                                class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm rounded-xl border bd-default glass-card hover:bd-strong focus:outline-none focus:ring-2 focus:ring-emerald-500 transition text-left">
                             <span class="txt-primary" id="editStatusLabel" x-text="statusLabel">Aktif</span>
                             <svg class="w-4 h-4 txt-muted" :class="statusOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>
                         <div x-show="statusOpen" x-cloak
                              class="absolute left-0 right-0 z-30 mt-2 glass-card rounded-xl border bd-soft shadow-lg overflow-hidden">
                             <button type="button" @click="selectStatus('aktif', 'Aktif')"
-                                    class="w-full px-4 py-2.5 text-sm text-left hover:bg-emerald-50 transition txt-primary">Aktif</button>
+                                    class="w-full px-4 py-2.5 text-sm text-left hover:bg-emerald-500/10 transition txt-primary">Aktif</button>
                             <button type="button" @click="selectStatus('nonaktif', 'Nonaktif')"
-                                    class="w-full px-4 py-2.5 text-sm text-left hover:bg-emerald-50 transition txt-primary">Nonaktif</button>
+                                    class="w-full px-4 py-2.5 text-sm text-left hover:bg-emerald-500/10 transition txt-primary">Nonaktif</button>
                         </div>
                         <input type="hidden" name="status" id="editStatusHidden" :value="statusValue">
                     </div>
@@ -383,25 +401,26 @@
                 <div>
                     <label class="block text-sm font-medium txt-primary mb-1">Deskripsi</label>
                     <textarea name="deskripsi" rows="3" maxlength="1000"
-                              class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none">{{ session('open_modal') === 'edit' ? old('deskripsi') : '' }}</textarea>
+                              class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none glass-input"
+                              style="color: rgb(var(--text-primary));">{{ session('open_modal') === 'edit' ? old('deskripsi') : '' }}</textarea>
                 </div>
 
                 {{-- FILE INPUT --}}
                 <div>
                     <label class="block text-sm font-medium txt-primary mb-1">
                         Gambar Produk
-                        <span class="text-xs bg-amber-50 txt-accent px-2 py-0.5 rounded font-medium">Disarankan</span>
+                        <span class="text-xs px-2 py-0.5 rounded font-medium" style="background: rgb(var(--warning-soft)); color: rgb(var(--warning));">Disarankan</span>
                     </label>
 
                     <input type="file" name="gambar" accept="image/jpeg,image/jpg,image/png,image/webp"
                            x-ref="fileInput" @change="handleFileChange($event)" class="hidden">
                     <input type="hidden" name="hapus_gambar" :value="hapusGambarLama ? 1 : 0">
 
-                    {{-- Existing Image (dengan hover zoom + klik lightbox) --}}
+                    {{-- Existing Image --}}
                     <div x-show="existingImage && !hapusGambarLama && !previewUrl" x-cloak class="mb-3">
                         <div style="position: relative; display: inline-block;">
                             <div @click="openLightbox(existingImage)"
-                                 style="position: relative; width: 120px; height: 120px; border-radius: 12px; overflow: hidden; cursor: zoom-in; border: 1px solid #e5e7eb;"
+                                 style="position: relative; width: 120px; height: 120px; border-radius: 12px; overflow: hidden; cursor: zoom-in; border: 1px solid rgb(var(--border));"
                                  onmouseover="this.querySelector('.zoom-overlay').style.opacity='1'"
                                  onmouseout="this.querySelector('.zoom-overlay').style.opacity='0'">
                                 <img :src="existingImage" alt="Existing"
@@ -417,35 +436,37 @@
                                 <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </div>
-                        <p style="font-size: 11px; color: #9ca3af; margin-top: 6px;">Gambar saat ini · Klik untuk zoom</p>
+                        <p style="font-size: 11px; margin-top: 6px; color: rgb(var(--text-muted));">Gambar saat ini · Klik untuk zoom</p>
                     </div>
 
                     {{-- Banner hapus gambar lama --}}
                     <div x-show="hapusGambarLama" x-cloak
-                         class="mb-3 flex items-center gap-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl">
-                        <svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                        <span class="flex-1 text-xs text-amber-800">Gambar lama akan dihapus saat disimpan.</span>
+                         class="mb-3 flex items-center gap-3 px-3 py-2 rounded-xl"
+                         style="background: rgb(var(--warning-soft) / 0.5); border: 1px solid rgb(var(--warning) / 0.3);">
+                        <svg class="w-4 h-4 flex-shrink-0" style="color: rgb(var(--warning));" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        <span class="flex-1 text-xs" style="color: rgb(var(--warning));">Gambar lama akan dihapus saat disimpan.</span>
                         <button type="button" @click="hapusGambarLama = false"
-                                class="text-xs txt-brand hover:txt-brand-hover font-bold underline">Urungkan</button>
+                                class="text-xs font-bold underline" style="color: rgb(var(--brand));">Urungkan</button>
                     </div>
 
                     {{-- Undo banner --}}
                     <div x-show="showUndo" x-cloak
-                         class="mb-3 flex items-center gap-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl">
-                        <svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                        <span class="flex-1 text-xs text-amber-800 truncate">
+                         class="mb-3 flex items-center gap-3 px-3 py-2 rounded-xl"
+                         style="background: rgb(var(--warning-soft) / 0.5); border: 1px solid rgb(var(--warning) / 0.3);">
+                        <svg class="w-4 h-4 flex-shrink-0" style="color: rgb(var(--warning));" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        <span class="flex-1 text-xs truncate" style="color: rgb(var(--warning));">
                             File <strong x-text="undoFileName"></strong> dibatalkan
                         </span>
                         <button type="button" @click="undoCancel()"
-                                class="text-xs txt-brand hover:txt-brand-hover font-bold underline flex-shrink-0">Urungkan</button>
+                                class="text-xs font-bold underline flex-shrink-0" style="color: rgb(var(--brand));">Urungkan</button>
                     </div>
 
                     {{-- Preview gambar baru --}}
                     <div x-show="previewUrl" x-cloak
-                         style="display: flex; align-items: flex-start; gap: 16px; padding: 12px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; margin-bottom: 12px;">
+                         style="display: flex; align-items: flex-start; gap: 16px; padding: 12px; background: rgb(var(--brand-soft) / 0.3); border: 1px solid rgb(var(--brand) / 0.3); border-radius: 12px; margin-bottom: 12px;">
                         <div style="position: relative; flex-shrink: 0;">
                             <div @click="openLightbox(previewUrl)"
-                                 style="position: relative; width: 120px; height: 120px; border-radius: 12px; overflow: hidden; cursor: zoom-in; border: 2px solid white;"
+                                 style="position: relative; width: 120px; height: 120px; border-radius: 12px; overflow: hidden; cursor: zoom-in; border: 2px solid rgb(var(--border));"
                                  onmouseover="this.querySelector('.zoom-overlay2').style.opacity='1'"
                                  onmouseout="this.querySelector('.zoom-overlay2').style.opacity='0'">
                                 <img :src="previewUrl" alt="Preview"
@@ -462,14 +483,15 @@
                             </button>
                         </div>
                         <div style="flex: 1; min-width: 0; padding-top: 4px;">
-                            <p style="font-size: 11px; color: #059669; font-weight: 700; text-transform: uppercase; margin: 0 0 4px 0;">Preview Baru</p>
-                            <p class="break-all" style="font-size: 12px; color: #1f2937; font-weight: 500; margin: 0; line-height: 1.4;" x-text="fileName"></p>
+                            <p style="font-size: 11px; font-weight: 700; text-transform: uppercase; margin: 0 0 4px 0; color: rgb(var(--brand));">Preview Baru</p>
+                            <p class="break-all" style="font-size: 12px; font-weight: 500; margin: 0; line-height: 1.4; color: rgb(var(--text-primary));" x-text="fileName"></p>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-3 px-3 py-2 rounded-xl border bd-default glass-card focus-within:ring-2 focus-within:ring-emerald-500 transition">
                         <button type="button" @click="$refs.fileInput.click()"
-                                class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 txt-brand-hover rounded-lg text-xs font-semibold transition flex-shrink-0">
+                                class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex-shrink-0"
+                                style="background: rgb(var(--brand-soft)); color: rgb(var(--brand-strong));">
                             <span x-text="existingImage ? 'Ganti File' : 'Choose File'"></span>
                         </button>
                         <span class="flex-1 min-w-0 text-xs break-all"
@@ -481,11 +503,11 @@
             </div>
         </form>
 
-        <div class="flex justify-end gap-2 px-6 py-4 border-t bd-soft bg-soft flex-shrink-0">
+        <div class="flex justify-end gap-2 px-6 py-4 flex-shrink-0" style="border-top: 1px solid rgb(var(--border-soft)); background: rgb(var(--bg-secondary) / 0.5);">
             <button type="button" onclick="closeEditModal()"
-                    class="px-5 py-2.5 bg-soft hover:bg-soft txt-primary text-sm font-medium rounded-xl transition">Batal</button>
+                    class="glass-btn">Batal</button>
             <button type="submit" form="editForm"
-                    class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
+                    class="btn-primary">
                 Update Produk
             </button>
         </div>

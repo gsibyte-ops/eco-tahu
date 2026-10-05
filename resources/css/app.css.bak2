@@ -2,10 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ============================================================
-   1. DESIGN TOKENS — Light & Dark
-   ============================================================ */
 @layer base {
+    /* ============================================================
+       DESIGN TOKENS — Light Mode
+       ============================================================ */
     :root {
         --bg-primary: 255 255 255;
         --bg-secondary: 248 250 252;
@@ -63,6 +63,9 @@
         --radius-2xl: 1.5rem;
     }
 
+    /* ============================================================
+       DESIGN TOKENS — Dark Mode
+       ============================================================ */
     [data-theme="dark"] {
         --bg-primary: 2 6 23;
         --bg-secondary: 15 23 42;
@@ -169,6 +172,7 @@
         font-feature-settings: 'ss01', 'cv11';
     }
 
+    /* ← CHANGED: line-height 1.15 → 1.25 (kasih ruang ascender) */
     h1 { font-weight: 800; letter-spacing: -0.05em; line-height: 1.25; }
     h2 { font-weight: 700; letter-spacing: -0.04em; line-height: 1.22; }
     h3 { font-weight: 700; letter-spacing: -0.025em; line-height: 1.30; }
@@ -200,9 +204,6 @@
     }
 }
 
-/* ============================================================
-   2. COMPONENTS
-   ============================================================ */
 @layer components {
     /* SURFACE */
     .surface {
@@ -293,6 +294,7 @@
         -webkit-backdrop-filter: blur(28px) saturate(180%);
         border: 1px solid rgb(var(--border-soft));
         box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9), inset 0 -1px 0 rgb(255 255 255 / 0.3), var(--shadow-sm);
+        
     }
     .floating-nav::before {
         content: '';
@@ -532,9 +534,12 @@
 }
 
 /* ============================================================
-   3. LEVEL C ANIMATIONS
+   LEVEL C ANIMATIONS
    ============================================================ */
+
+/* ---- MARQUEE ---- */
 .marquee-section {
+    
     padding: 1.75rem 0;
     border-top: 1px solid rgb(var(--border-soft));
     border-bottom: 1px solid rgb(var(--border-soft));
@@ -566,6 +571,10 @@
 }
 @keyframes marquee-scroll { to { transform: translateX(-50%); } }
 
+/* ============================================================
+   CARD SPOTLIGHT + HOVER LIFT                          ← ADDED
+   Kartu "menonjol" saat hover + gradient hijau ngikut cursor
+   ============================================================ */
 .product-card,
 .limbah-card,
 .edukasi-card,
@@ -575,9 +584,12 @@
     isolation: isolate;
     transform-style: preserve-3d;
     will-change: transform;
+    /* transition khusus border+shadow (transform dipegang GSAP) */
     transition: box-shadow 0.45s cubic-bezier(0.22, 1, 0.36, 1),
                 border-color 0.35s ease;
 }
+
+/* Spot hijau yang ngikutin cursor */
 .product-card::before,
 .edukasi-card::before,
 .category-card::before,
@@ -598,6 +610,7 @@
         transparent 60%
     );
 }
+/* Limbah: spotlight amber biar match accent-nya */
 .limbah-card::before {
     background: radial-gradient(
         420px circle at var(--mx, 50%) var(--my, 50%),
@@ -613,6 +626,8 @@
 .limbah-card:hover::before {
     opacity: 1;
 }
+
+/* Pastikan content selalu di atas spotlight */
 .product-card > *,
 .limbah-card > *,
 .edukasi-card > *,
@@ -621,6 +636,8 @@
     position: relative;
     z-index: 1;
 }
+
+/* Hover state: border lebih tegas + shadow lebih dalam (transform via GSAP) */
 .product-card:hover,
 .edukasi-card:hover,
 .category-card:hover,
@@ -636,12 +653,16 @@
         0 0 0 1px rgb(var(--accent) / 0.55) !important;
     border-color: rgb(var(--accent) / 0.75) !important;
 }
+
+/* ---- MAGNETIC ---- */
 .btn-primary,
 .btn-ghost,
 .glass-btn-amber,
 .btn-daftar-gradient {
     will-change: transform;
 }
+
+/* ---- REDUCED MOTION ---- */
 @media (prefers-reduced-motion: reduce) {
     .marquee-track { animation: none; }
     .product-card::before,
@@ -652,7 +673,7 @@
 }
 
 /* ============================================================
-   4. ADMIN UTILITIES
+   ADMIN UTILITY CLASSES — konsisten dengan halaman user
    ============================================================ */
 @layer utilities {
     .txt-primary   { color: rgb(var(--text-primary)); }
@@ -674,13 +695,72 @@
     .bd-default { border-color: rgb(var(--border)); }
     .bd-strong  { border-color: rgb(var(--border-strong)); }
 
+    /* Hover text variant (dipanggil dari Blade lewat pattern `hover:txt-*`) */
     [class~="hover:txt-primary"]:hover   { color: rgb(var(--text-primary)); }
     [class~="hover:txt-secondary"]:hover { color: rgb(var(--text-secondary)); }
     [class~="hover:txt-brand"]:hover     { color: rgb(var(--brand)); }
 }
+/* ============================================================
+   ADMIN GLASS CONSISTENCY
+   Biar card di admin punya "cahaya" yg sama dgn user side
+   ============================================================ */
+body.admin-shell .glass-card {
+    position: relative;
+    overflow: hidden;
+    background: rgb(var(--surface) / 0.72);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgb(var(--border-soft));
+    box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 0.5),
+        0 12px 32px -12px rgb(0 0 0 / 0.12);
+}
+
+[data-theme="dark"] body.admin-shell .glass-card {
+    background: rgb(var(--surface) / 0.55);
+    border-color: rgb(var(--border));
+    box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 0.05),
+        0 12px 32px -12px rgb(0 0 0 / 0.5);
+}
+
+/* Glow halus di atas setiap card */
+body.admin-shell .glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgb(var(--brand) / 0.6),
+        transparent
+    );
+    pointer-events: none;
+}
+
+/* Tabel di dalam glass-card — header auto theme */
+body.admin-shell .glass-card table thead tr {
+    background: rgb(var(--bg-secondary) / 0.5) !important;
+    border-bottom: 1px solid rgb(var(--border-soft));
+}
+body.admin-shell .glass-card table tbody tr {
+    border-bottom: 1px solid rgb(var(--border-soft));
+    transition: background 0.15s ease;
+}
+body.admin-shell .glass-card table tbody tr:hover {
+    background: rgb(var(--brand) / 0.05);
+}
+
+/* Chip / badge — subtle glow */
+body.admin-shell .glass-card span[style*="border-radius"] {
+    box-shadow: 0 2px 8px -2px currentColor;
+}
 
 /* ============================================================
-   5. ADMIN SHELL — Sidebar, Topbar, Card
+   ADMIN SHELL OVERHAUL
    ============================================================ */
 body.admin-shell::before {
     content: '';
@@ -736,6 +816,7 @@ body.admin-shell .admin-topbar {
         0 12px 32px -16px rgb(0 0 0 / 0.5);
 }
 
+/* Card glass di admin */
 body.admin-shell .glass-card {
     position: relative;
     overflow: hidden;
@@ -755,6 +836,7 @@ body.admin-shell .glass-card {
         0 12px 32px -14px rgb(0 0 0 / 0.55) !important;
 }
 
+/* Glow line atas card */
 body.admin-shell .glass-card::before {
     content: '';
     position: absolute;
@@ -766,6 +848,7 @@ body.admin-shell .glass-card::before {
     pointer-events: none;
 }
 
+/* Table di glass-card */
 body.admin-shell .glass-card table thead tr {
     background: rgb(var(--bg-secondary) / 0.5) !important;
     border-bottom: 1px solid rgb(var(--border-soft));
@@ -778,6 +861,17 @@ body.admin-shell .glass-card table tbody tr:hover {
     background: rgb(var(--brand) / 0.05);
 }
 
+/* Neuter gradient chips admin (pesanan/refund stats) */
+body.admin-shell .chip-status {
+    background: rgb(var(--surface) / 0.6) !important;
+    border: 1px solid currentColor;
+    color: inherit;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.4);
+}
+
+/* Nav item active glow */
 body.admin-shell .admin-nav-item.is-active {
     position: relative;
 }
@@ -792,13 +886,22 @@ body.admin-shell .admin-nav-item.is-active::after {
     z-index: -1;
 }
 
-/* ============================================================
-   6. FLATPICKR — Light & Dark
-   ============================================================ */
-.flatpickr-calendar {
-    z-index: 99999 !important;
+/* Flatpickr */
+body.admin-shell .flatpickr-calendar {
+    background: rgb(var(--surface) / 0.95) !important;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgb(var(--border));
+    box-shadow: var(--shadow-lg);
+    color: rgb(var(--text-primary));
+}
+body.admin-shell .flatpickr-day { color: rgb(var(--text-primary)); }
+body.admin-shell .flatpickr-day.selected {
+    background: rgb(var(--brand)); border-color: rgb(var(--brand)); color: white;
 }
 
+/* ============================================================
+   FLATPICKR DARK MODE — FULL OVERRIDE
+   ============================================================ */
 [data-theme="dark"] .flatpickr-calendar {
     background: rgb(var(--surface)) !important;
     border: 1px solid rgb(var(--border)) !important;
@@ -853,6 +956,14 @@ body.admin-shell .admin-nav-item.is-active::after {
     color: rgb(var(--text-faint)) !important;
 }
 
+/* Biar dropdown flatpickr ga ketutup elemen lain */
+.flatpickr-calendar {
+    z-index: 99999 !important;
+}
+
+/* ============================================================
+   FLATPICKR — YEAR SPINNER ARROWS (DARK MODE)
+   ============================================================ */
 [data-theme="dark"] .flatpickr-current-month .numInputWrapper span.arrowUp::after {
     border-bottom-color: rgb(var(--text-primary)) !important;
 }
@@ -865,6 +976,8 @@ body.admin-shell .admin-nav-item.is-active::after {
 [data-theme="dark"] .flatpickr-current-month .numInputWrapper span:hover {
     background: rgb(var(--surface-hover)) !important;
 }
+
+/* Supaya angka tahun di input-nya juga kelihatan */
 [data-theme="dark"] .flatpickr-current-month input.cur-year {
     color: rgb(var(--text-primary)) !important;
     background: transparent !important;
@@ -879,101 +992,136 @@ body.admin-shell .admin-nav-item.is-active::after {
 }
 
 /* ============================================================
-   7. FIX: Container filter card — boleh overflow (dropdown keluar)
+   FIX: Container filter pesanan ga boleh overflow hidden
+   Biar dropdown bisa keluar dari card
    ============================================================ */
 body.admin-shell .glass-card.filter-card {
     overflow: visible !important;
 }
 
 /* ============================================================
-   8. MODAL POLISH — Fix "tempelan" di LIGHT MODE + Dark Mode
-   Selector pakai [id$="Modal"] biar kena semua modal
+   MODAL POLISH — Fix "tempelan putih di atas putih" di LIGHT MODE
+   Works untuk semua modal via selector [id$="Modal"]
    ============================================================ */
 
-/* ---------- LIGHT MODE ---------- */
-html:not([data-theme="dark"]) [id$="Modal"] .glass-card.rounded-2xl,
-html:not([data-theme="dark"]) [id$="Modal"] > div > .glass-card.rounded-2xl {
-    background: #ffffff !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    border: 1px solid #cbd5e1 !important;
+/* ---- 1. Modal container — border tegas + shadow berlapis ---- */
+[id$="Modal"] .glass-card.rounded-2xl,
+[id$="Modal"] > div > .glass-card.rounded-2xl {
+    border: 1px solid rgb(var(--border));
     box-shadow:
-        0 0 0 1px rgba(203, 213, 225, 0.5),
-        0 25px 50px -12px rgba(15, 23, 42, 0.25),
-        0 12px 20px -8px rgba(15, 23, 42, 0.10) !important;
+        0 0 0 1px rgb(var(--border-soft)),
+        0 24px 48px -12px rgb(15 23 42 / 0.22),
+        0 8px 20px -8px rgb(15 23 42 / 0.10);
 }
 
-html:not([data-theme="dark"]) [id$="Modal"] .glass-card.rounded-2xl::before {
-    display: none !important;
+[data-theme="dark"] [id$="Modal"] .glass-card.rounded-2xl,
+[data-theme="dark"] [id$="Modal"] > div > .glass-card.rounded-2xl {
+    box-shadow:
+        0 24px 48px -12px rgb(0 0 0 / 0.7),
+        0 8px 20px -8px rgb(0 0 0 / 0.4);
 }
 
-/* Input field — putih dengan border tegas */
-html:not([data-theme="dark"]) [id$="Modal"] input:not([type="file"]):not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),
-html:not([data-theme="dark"]) [id$="Modal"] textarea,
-html:not([data-theme="dark"]) [id$="Modal"] select {
-    background: #ffffff !important;
-    border: 1.5px solid #cbd5e1 !important;
-    color: #0f172a !important;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-}
-html:not([data-theme="dark"]) [id$="Modal"] input:focus,
-html:not([data-theme="dark"]) [id$="Modal"] textarea:focus,
-html:not([data-theme="dark"]) [id$="Modal"] select:focus {
-    border-color: #059669 !important;
-    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15) !important;
-    outline: none !important;
-}
-html:not([data-theme="dark"]) [id$="Modal"] input::placeholder,
-html:not([data-theme="dark"]) [id$="Modal"] textarea::placeholder {
-    color: #94a3b8 !important;
+/* ---- 2. Input field di dalam modal — border tegas di light mode ---- */
+[id$="Modal"] input:not([type="file"]):not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+[id$="Modal"] textarea,
+[id$="Modal"] select,
+[id$="Modal"] button.glass-input {
+    background: #ffffff;
+    border: 1.5px solid rgb(var(--border)) !important;
+    color: rgb(var(--text-primary)) !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Section card (Pelanggan, Alamat, Item, Info, dll) — slate-100 dengan border slate-300 */
-html:not([data-theme="dark"]) [id$="Modal"] [style*="rgb(var(--bg-secondary)"] {
-    background: #f1f5f9 !important;
-    border: 1px solid #cbd5e1 !important;
+[id$="Modal"] input:not([type="file"]):not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):focus,
+[id$="Modal"] textarea:focus,
+[id$="Modal"] select:focus {
+    border-color: rgb(var(--brand)) !important;
+    box-shadow: 0 0 0 3px rgb(var(--brand) / 0.15) !important;
+    outline: none;
 }
 
-/* Nested card putih di dalam modal */
-html:not([data-theme="dark"]) [id$="Modal"] [style*="rgb(var(--surface)"][style*="border"] {
-    background: #ffffff !important;
-    border: 1px solid #cbd5e1 !important;
+[id$="Modal"] input::placeholder,
+[id$="Modal"] textarea::placeholder {
+    color: rgb(var(--text-muted));
 }
 
-/* Table thead dalam modal */
-html:not([data-theme="dark"]) [id$="Modal"] thead[style*="rgb(var(--bg-secondary)"] {
-    background: #e2e8f0 !important;
-    border-bottom: 1px solid #cbd5e1 !important;
-}
-html:not([data-theme="dark"]) [id$="Modal"] tfoot[style*="rgb(var(--bg-secondary)"] {
-    background: #f8fafc !important;
-}
-
-/* Border divider di dalam modal */
-html:not([data-theme="dark"]) [id$="Modal"] [style*="border-bottom: 1px solid rgb(var(--border-soft))"] {
-    border-bottom-color: #cbd5e1 !important;
-}
-html:not([data-theme="dark"]) [id$="Modal"] [style*="border-bottom: 1px solid rgb(var(--border))"] {
-    border-bottom-color: #cbd5e1 !important;
-}
-
-/* Footer modal */
-html:not([data-theme="dark"]) [id$="Modal"] [style*="border-top: 1px solid rgb(var(--border-soft))"] {
-    background: #f8fafc !important;
-    border-top: 1px solid #cbd5e1 !important;
-}
-
-/* Button "Choose File" / brand-soft */
-html:not([data-theme="dark"]) [id$="Modal"] button[style*="rgb(var(--brand-soft)"] {
-    background: #ecfdf5 !important;
-    color: #047857 !important;
-    border: 1px solid #a7f3d0 !important;
-}
-
-/* ---------- DARK MODE (kalau perlu tuning) ---------- */
-[data-theme="dark"] [id$="Modal"] .glass-card.rounded-2xl {
+/* Dark mode: balik ke style semula */
+[data-theme="dark"] [id$="Modal"] input:not([type="file"]):not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+[data-theme="dark"] [id$="Modal"] textarea,
+[data-theme="dark"] [id$="Modal"] select,
+[data-theme="dark"] [id$="Modal"] button.glass-input {
+    background: rgb(var(--surface) / 0.6);
+    border-width: 1px;
     border-color: rgb(var(--border)) !important;
-    box-shadow:
-        0 25px 50px -12px rgba(0, 0, 0, 0.75),
-        0 12px 20px -8px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-theme="dark"] [id$="Modal"] input:focus,
+[data-theme="dark"] [id$="Modal"] textarea:focus,
+[data-theme="dark"] [id$="Modal"] select:focus {
+    background: rgb(var(--surface) / 0.8);
+}
+
+/* ---- 3. Section card di dalam modal (Info Refund, Pelanggan, Item, dll) ---- */
+[id$="Modal"] [style*="background: rgb(var(--bg-secondary)"] {
+    background: rgb(var(--bg-secondary)) !important;
+    border: 1px solid rgb(var(--border)) !important;
+}
+
+[data-theme="dark"] [id$="Modal"] [style*="background: rgb(var(--bg-secondary)"] {
+    background: rgb(var(--bg-secondary) / 0.6) !important;
+    border-color: rgb(var(--border-soft)) !important;
+}
+
+/* ---- 4. Nested card (kotak putih) di dalam modal ---- */
+[id$="Modal"] [style*="background: rgb(var(--surface))"][style*="border: 1px solid rgb(var(--border-soft))"] {
+    background: #ffffff !important;
+    border-color: rgb(var(--border)) !important;
+}
+
+/* ---- 5. Modal footer — border atas lebih tegas ---- */
+[id$="Modal"] [style*="border-top: 1px solid rgb(var(--border-soft))"] {
+    background: rgb(var(--bg-secondary)) !important;
+    border-top-color: rgb(var(--border)) !important;
+}
+
+[data-theme="dark"] [id$="Modal"] [style*="border-top: 1px solid rgb(var(--border-soft))"] {
+    background: rgb(var(--bg-secondary) / 0.5) !important;
+    border-top-color: rgb(var(--border-soft)) !important;
+}
+
+/* ---- 6. Divider horizontal di dalam modal ---- */
+[id$="Modal"] [style*="border-bottom: 1px solid rgb(var(--border-soft))"] {
+    border-bottom-color: rgb(var(--border)) !important;
+}
+
+[data-theme="dark"] [id$="Modal"] [style*="border-bottom: 1px solid rgb(var(--border-soft))"] {
+    border-bottom-color: rgb(var(--border-soft)) !important;
+}
+
+/* ---- 7. Table header & footer di dalam modal ---- */
+[id$="Modal"] thead[style*="background: rgb(var(--bg-secondary)"] {
+    background: rgb(var(--bg-secondary)) !important;
+    border-bottom: 1px solid rgb(var(--border)) !important;
+}
+
+[data-theme="dark"] [id$="Modal"] thead[style*="background: rgb(var(--bg-secondary)"] {
+    background: rgb(var(--bg-secondary) / 0.6) !important;
+    border-bottom-color: rgb(var(--border-soft)) !important;
+}
+
+/* ---- 8. Tombol "Choose File" di dalam modal ---- */
+[id$="Modal"] button[style*="background: rgb(var(--brand-soft))"] {
+    border: 1px solid rgb(var(--brand) / 0.3);
+}
+
+/* ---- 9. Modal header — gradient biar tetap smooth ---- */
+[id$="Modal"] [style*="var(--gradient-brand)"] {
+    position: relative;
+}
+[id$="Modal"] [style*="var(--gradient-brand)"]::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.08) 0%, transparent 50%);
 }

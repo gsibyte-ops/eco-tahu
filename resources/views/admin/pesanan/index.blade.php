@@ -39,11 +39,11 @@
 </div>
 
 {{-- Filter — 2 baris rapi --}}
-<div class="glass-card p-5 mb-6" x-data="{ statusOpen: false, metodeOpen: false }">
-    <form method="GET">
+<div class="glass-card filter-card p-6 mb-6 relative z-40" x-data="{ statusOpen: false, metodeOpen: false }">
+    <form method="GET" id="filterForm">
 
         {{-- Baris 1: Search --}}
-        <div class="mb-4">
+        <div class="mb-5">
             <label class="block text-xs font-bold uppercase tracking-widest mb-2" style="color: rgb(var(--text-muted));">Cari Pesanan</label>
             <div class="auth-input-wrap" style="position: relative;">
                 <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" style="color: rgb(var(--text-muted));" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -56,7 +56,7 @@
         </div>
 
         {{-- Baris 2: Filters --}}
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 items-end">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
             <div>
                 <label class="block text-xs font-bold uppercase tracking-widest mb-2" style="color: rgb(var(--text-muted));">Dari</label>
                 <input type="text" name="dari" id="dari" value="{{ request('dari') }}" readonly
@@ -85,7 +85,7 @@
                     </span>
                     <svg class="w-4 h-4 flex-shrink-0" style="color: rgb(var(--text-muted));" :class="statusOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                 </button>
-                <div x-show="statusOpen" x-cloak class="absolute left-0 right-0 z-30 mt-2 rounded-xl overflow-hidden" style="background: rgb(var(--surface)); border: 1px solid rgb(var(--border)); box-shadow: var(--shadow-lg);">
+                <div x-show="statusOpen" x-cloak class="absolute left-0 right-0 z-50 mt-2 rounded-xl overflow-hidden" style="background: rgb(var(--surface)); border: 1px solid rgb(var(--border)); box-shadow: var(--shadow-lg);">
                     @foreach (['' => 'Semua Status', 'pending' => 'Pending', 'diproses' => 'Diproses', 'dikirim' => 'Dikirim', 'selesai' => 'Selesai', 'dibatalkan' => 'Dibatalkan'] as $val => $label)
                         <button type="button" data-value="{{ $val }}" data-label="{{ $label }}" onclick="selectStatusFilter(this)"
                                 class="w-full text-left px-4 py-2.5 text-sm transition hover:bg-emerald-500/10"
@@ -105,7 +105,7 @@
                     <span class="truncate" id="metodeLabel">{{ request('payment_method') ?: 'Semua Metode' }}</span>
                     <svg class="w-4 h-4 flex-shrink-0" style="color: rgb(var(--text-muted));" :class="metodeOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                 </button>
-                <div x-show="metodeOpen" x-cloak class="absolute left-0 right-0 z-30 mt-2 rounded-xl overflow-hidden" style="background: rgb(var(--surface)); border: 1px solid rgb(var(--border)); box-shadow: var(--shadow-lg);">
+                <div x-show="metodeOpen" x-cloak class="absolute left-0 right-0 z-50 mt-2 rounded-xl overflow-hidden" style="background: rgb(var(--surface)); border: 1px solid rgb(var(--border)); box-shadow: var(--shadow-lg);">
                     @foreach (['' => 'Semua Metode', 'COD' => 'COD', 'Transfer' => 'Transfer'] as $val => $label)
                         <button type="button" data-value="{{ $val }}" data-label="{{ $label }}" onclick="selectMetodeFilter(this)"
                                 class="w-full text-left px-4 py-2.5 text-sm transition hover:bg-emerald-500/10"
@@ -119,7 +119,7 @@
         </div>
 
         {{-- Baris 3: Actions --}}
-        <div class="flex flex-wrap gap-2 mt-4">
+        <div class="flex flex-wrap gap-3 mt-5">
             <button type="submit" class="btn-primary !py-2.5 !px-6">Terapkan Filter</button>
             @if (request()->hasAny(['q', 'status', 'payment_method', 'dari', 'sampai']))
                 <a href="{{ route('admin.pesanan.index') }}" class="glass-btn !py-2.5 !px-5">
@@ -132,7 +132,7 @@
 </div>
 
 {{-- Tabel --}}
-<div class="glass-card overflow-hidden">
+<div class="glass-card overflow-hidden relative z-0">
     <div class="overflow-x-auto">
         <table class="w-full text-left">
             <thead>
@@ -279,14 +279,14 @@
      style="background-color: rgba(0, 0, 0, 0.65); backdrop-filter: blur(8px);">
     <div style="width: 100%; max-width: 480px; max-height: 85vh;"
          class="glass-card rounded-2xl overflow-hidden flex flex-col shadow-2xl">
-        <div class="flex items-center justify-between px-5 py-4 text-white flex-shrink-0" style="background: var(--gradient-brand);">
-            <div>
-                <p class="text-xs opacity-80">Pesanan</p>
-                <h3 class="text-base font-bold">#<span id="mKode"></span></h3>
-                <p class="text-xs opacity-80 mt-0.5" id="mTanggal"></p>
+        <div class="flex items-start justify-between gap-4 px-5 py-4 text-white flex-shrink-0" style="background: var(--gradient-brand);">
+            <div class="min-w-0 flex-1">
+                <p class="text-xs opacity-80 leading-tight">Pesanan</p>
+                <h3 class="text-base font-bold leading-tight mt-0.5">#<span id="mKode"></span></h3>
+                <p class="text-xs opacity-80 mt-1" id="mTanggal"></p>
             </div>
-            <div class="flex items-center gap-3">
-                <span id="mStatusBadge" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-white/20 text-white"></span>
+            <div class="flex items-center gap-2 flex-shrink-0 pt-1">
+                <span id="mStatusBadge" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-white/20 text-white whitespace-nowrap"></span>
                 <button onclick="closePesananModal()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/20 transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
@@ -455,6 +455,52 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
     // ============================================================
+    // GLOBAL GUARD: INPUT TAHUN FLATPICKR CUMA BOLEH ANGKA 0-9
+    // ============================================================
+    (function yearInputGuard() {
+        const ALLOWED_KEYS = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End', 'Enter'];
+
+        document.addEventListener('keydown', function (e) {
+            if (!e.target?.classList?.contains('cur-year')) return;
+            if (ALLOWED_KEYS.includes(e.key)) return;
+            if ((e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x'].includes(e.key.toLowerCase())) return;
+            if (!/^[0-9]$/.test(e.key)) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+            }
+        }, true);
+
+        document.addEventListener('paste', function (e) {
+            if (!e.target?.classList?.contains('cur-year')) return;
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            const pasted = ((e.clipboardData || window.clipboardData).getData('text') || '').replace(/\D/g, '').slice(0, 4);
+            if (pasted) {
+                e.target.value = pasted;
+                e.target.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }, true);
+
+        document.addEventListener('input', function (e) {
+            if (!e.target?.classList?.contains('cur-year')) return;
+            const cleaned = e.target.value.replace(/\D/g, '').slice(0, 4);
+            if (e.target.value !== cleaned) {
+                e.target.value = cleaned;
+            }
+        }, true);
+
+        new MutationObserver(function () {
+            document.querySelectorAll('.flatpickr-calendar .cur-year').forEach(function (input) {
+                if (input.type !== 'text') {
+                    input.type = 'text';
+                    input.setAttribute('inputmode', 'numeric');
+                    input.setAttribute('pattern', '[0-9]*');
+                }
+            });
+        }).observe(document.body, { childList: true, subtree: true });
+    })();
+
+    // ============================================================
     // STATE
     // ============================================================
     let currentTrackingPesanan = null;
@@ -518,11 +564,38 @@
     }
 
     // ============================================================
-    // FLATPICKR
+    // FLATPICKR — VERSI FINAL: MICROTASK + CLEAR(FALSE)
     // ============================================================
     const today = new Date();
     today.setHours(23, 59, 59, 999);
     let dariPicker, sampaiPicker;
+
+    // Clear picker tanpa fire onChange — dan paksa altInput/input jadi kosong
+    function clearPickerSilent(picker) {
+        if (!picker) return;
+        try { picker.clear(false); } catch (e) { picker.setDate([], false); }
+        if (picker.altInput) picker.altInput.value = '';
+        if (picker._input) picker._input.value = '';
+        picker.selectedDates = [];
+    }
+
+    // Cek konflik & clear field yang lama (bukan yang baru di-pick)
+    function resolveConflict(lastTouched) {
+        if (!dariPicker || !sampaiPicker) return;
+        const d = dariPicker.selectedDates[0];
+        const s = sampaiPicker.selectedDates[0];
+        if (!d || !s) return;
+        if (d.getTime() <= s.getTime()) return;
+
+        // Konflik: d > s
+        if (lastTouched === 'dari') {
+            // User baru aja pick DARI → clear SAMPAI (yang lama)
+            clearPickerSilent(sampaiPicker);
+        } else {
+            // User baru aja pick SAMPAI → clear DARI (yang lama)
+            clearPickerSilent(dariPicker);
+        }
+    }
 
     dariPicker = flatpickr("#dari", {
         dateFormat: "Y-m-d", altInput: true, altFormat: "d M Y",
@@ -531,8 +604,14 @@
             fp.altInput.classList.add('glass-input');
             fp.altInput.style.color = 'rgb(var(--text-primary))';
         },
-        onChange: function(d) { if (d[0] && sampaiPicker) sampaiPicker.set('minDate', d[0]); }
+        onChange: function() {
+            // Defer ke microtask biar flatpickr selesai update state internal
+            Promise.resolve().then(function() {
+                resolveConflict('dari');
+            });
+        }
     });
+
     sampaiPicker = flatpickr("#sampai", {
         dateFormat: "Y-m-d", altInput: true, altFormat: "d M Y",
         allowInput: false, monthSelectorType: "static", maxDate: today,
@@ -540,7 +619,35 @@
             fp.altInput.classList.add('glass-input');
             fp.altInput.style.color = 'rgb(var(--text-primary))';
         },
-        onChange: function(d) { if (d[0] && dariPicker) dariPicker.set('maxDate', d[0]); }
+        onChange: function() {
+            Promise.resolve().then(function() {
+                resolveConflict('sampai');
+            });
+        }
+    });
+
+    // Validasi saat initial load (handle URL params yang konflik)
+    setTimeout(function() {
+        const d = dariPicker?.selectedDates[0];
+        const s = sampaiPicker?.selectedDates[0];
+        if (d && s && d > s) {
+            // Default: clear SAMPAI (asumsi: dari lebih "fundamental")
+            clearPickerSilent(sampaiPicker);
+        }
+    }, 150);
+
+    // ============================================================
+    // SAFETY NET: Validasi sebelum form submit
+    // ============================================================
+    document.getElementById('filterForm')?.addEventListener('submit', function(e) {
+        const d = dariPicker?.selectedDates[0];
+        const s = sampaiPicker?.selectedDates[0];
+
+        if (d && s && d > s) {
+            e.preventDefault();
+            alert('⚠️ Tanggal "Dari" tidak boleh lebih besar dari "Sampai".');
+            return false;
+        }
     });
 
     // ============================================================

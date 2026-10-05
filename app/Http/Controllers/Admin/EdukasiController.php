@@ -7,6 +7,7 @@ use App\Models\Edukasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -48,12 +49,13 @@ class EdukasiController extends Controller
 
     public function create()
     {
+        // Fallback: kalau ada yang akses URL langsung, redirect ke index
         return redirect()->route('admin.edukasi.index');
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'judul' => [
                 'required', 'string', 'min:5', 'max:200',
                 'regex:/^[a-zA-Z0-9\s.,:!?\-]+$/',
@@ -65,7 +67,7 @@ class EdukasiController extends Controller
             'scheduled_at' => 'nullable|required_if:status,scheduled|date|after:+5 minutes',
         ], [
             'judul.required' => 'Judul artikel wajib diisi.',
-            'judul.regex' => 'Judul artikel hanya boleh huruf, angka, spasi, dan tanda baca umum (titik, koma, titik dua, tanda tanya, tanda seru, tanda hubung).',
+            'judul.regex' => 'Judul artikel hanya boleh huruf, angka, spasi, dan tanda baca umum.',
             'judul.unique' => 'Judul artikel ini sudah ada. Gunakan judul lain.',
             'judul.min' => 'Judul artikel minimal 5 karakter.',
             'judul.max' => 'Judul artikel maksimal 200 karakter.',
@@ -81,6 +83,13 @@ class EdukasiController extends Controller
             'scheduled_at.after' => 'Jadwal minimal 5 menit dari sekarang.',
             'scheduled_at.date' => 'Format tanggal jadwal tidak valid.',
         ]);
+
+        if ($validator->fails()) {
+            return redirect()->route('admin.edukasi.index')
+                ->withErrors($validator)
+                ->withInput()
+                ->with('open_modal', 'create');
+        }
 
         $data = $request->only(['judul', 'konten', 'status']);
         $data['user_id'] = Auth::id();
@@ -116,12 +125,13 @@ class EdukasiController extends Controller
 
     public function edit(Edukasi $edukasi)
     {
+        // Fallback: redirect ke index
         return redirect()->route('admin.edukasi.index');
     }
 
     public function update(Request $request, Edukasi $edukasi)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'judul' => [
                 'required', 'string', 'min:5', 'max:200',
                 'regex:/^[a-zA-Z0-9\s.,:!?\-]+$/',
@@ -150,6 +160,14 @@ class EdukasiController extends Controller
             'scheduled_at.after' => 'Jadwal minimal 5 menit dari sekarang.',
             'scheduled_at.date' => 'Format tanggal jadwal tidak valid.',
         ]);
+
+        if ($validator->fails()) {
+            return redirect()->route('admin.edukasi.index')
+                ->withErrors($validator)
+                ->withInput()
+                ->with('open_modal', 'edit')
+                ->with('edit_id', $edukasi->id);
+        }
 
         $data = $request->only(['judul', 'konten', 'status']);
         $data['slug'] = Str::slug($request->judul) . '-' . time();

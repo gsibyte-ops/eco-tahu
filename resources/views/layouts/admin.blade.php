@@ -58,10 +58,13 @@
 
             <a href="{{ route('admin.pesanan.index') }}" class="admin-nav-item {{ request()->routeIs('admin.pesanan.*') ? 'is-active' : '' }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                Pesanan
+                <span class="flex-1 text-left">Pesanan</span>
+                @if (($globalPesananPending ?? 0) > 0)
+                    <span class="text-[10px] font-bold px-1.5 py-0.5 bg-red-500 text-white rounded-full">{{ $globalPesananPending > 9 ? '9+' : $globalPesananPending }}</span>
+                @endif
             </a>
 
-            <a href="{{ route('admin.refund.index') }}" class="admin-nav-item {{ request()->routeIs('admin.refund.*') ? 'is-active' : '' }} relative">
+            <a href="{{ route('admin.refund.index') }}" class="admin-nav-item {{ request()->routeIs('admin.refund.*') ? 'is-active' : '' }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
                 <span class="flex-1 text-left">Refund</span>
                 @if (($globalRefundPending ?? 0) > 0)
@@ -120,8 +123,9 @@
     {{-- MAIN --}}
     <div class="flex-1 lg:ml-[17rem] flex flex-col min-w-0 relative z-10">
 
-        <div class="px-4 lg:px-6 pt-4">
-            <header class="admin-topbar h-16 flex items-center justify-between px-4 lg:px-6 rounded-2xl">
+        {{-- WRAPPER HEADER — ditambah relative z-40 biar dropdown bisa keluar --}}
+        <div class="px-4 lg:px-6 pt-4 relative z-40">
+            <header class="admin-topbar h-16 flex items-center justify-between px-4 lg:px-6 rounded-2xl relative">
                 <div class="flex items-center gap-3 min-w-0">
                     <button type="button" onclick="toggleSidebar()" class="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center transition" style="background: rgb(var(--surface-hover)); color: rgb(var(--text-secondary));">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -140,18 +144,95 @@
                         <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style="color: rgb(var(--text-muted));" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </form>
 
+                    {{-- THEME TOGGLE --}}
                     <button type="button" onclick="toggleTheme()" class="w-10 h-10 rounded-xl flex items-center justify-center transition" style="background: rgb(var(--surface-hover)); color: rgb(var(--text-secondary));" title="Ganti Tema">
                         <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/></svg>
                         <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>
                     </button>
 
-                    <a href="{{ route('admin.refund.index') }}" class="w-10 h-10 rounded-xl flex items-center justify-center transition relative" style="background: rgb(var(--surface-hover)); color: rgb(var(--text-secondary));">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                        @if (($globalRefundPending ?? 0) > 0)
-                            <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center" style="box-shadow: 0 0 0 2px rgb(var(--surface));">{{ $globalRefundPending > 9 ? '9+' : $globalRefundPending }}</span>
-                        @endif
-                    </a>
+                    {{-- NOTIFIKASI DROPDOWN --}}
+                    <div class="relative" x-data="{ notifOpen: false }" @click.away="notifOpen = false">
+                        <button type="button" @click="notifOpen = !notifOpen"
+                                class="w-10 h-10 rounded-xl flex items-center justify-center transition relative"
+                                style="background: rgb(var(--surface-hover)); color: rgb(var(--text-secondary));"
+                                title="Notifikasi">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                            @if (($globalNotifTotal ?? 0) > 0)
+                                <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
+                                      style="box-shadow: 0 0 0 2px rgb(var(--surface));">
+                                    {{ $globalNotifTotal > 9 ? '9+' : $globalNotifTotal }}
+                                </span>
+                            @endif
+                        </button>
 
+                        {{-- DROPDOWN — naikin z-index ke 9999 biar ga ketutupan --}}
+                        <div x-show="notifOpen" x-cloak
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 -translate-y-1"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-150"
+                             x-transition:leave-start="opacity-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 -translate-y-1"
+                             class="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-2xl overflow-hidden"
+                             style="background: rgb(var(--surface)); border: 1px solid rgb(var(--border)); box-shadow: var(--shadow-xl); z-index: 9999;">
+
+                            {{-- Header dropdown --}}
+                            <div class="px-4 py-3 flex items-center justify-between"
+                                 style="border-bottom: 1px solid rgb(var(--border-soft));">
+                                <div>
+                                    <p class="font-bold text-sm" style="color: rgb(var(--text-primary));">Notifikasi</p>
+                                    <p class="text-xs" style="color: rgb(var(--text-muted));">
+                                        @if (($globalNotifTotal ?? 0) > 0)
+                                            {{ $globalNotifTotal }} menunggu tindakan
+                                        @else
+                                            Semua sudah beres
+                                        @endif
+                                    </p>
+                                </div>
+                                @if (($globalNotifTotal ?? 0) > 0)
+                                    <span class="text-[10px] font-bold px-2 py-0.5 bg-red-500 text-white rounded-full">
+                                        {{ $globalNotifTotal }}
+                                    </span>
+                                @endif
+                            </div>
+
+                            {{-- List notif --}}
+                            <div class="max-h-80 overflow-y-auto">
+                                @forelse (($globalNotifs ?? []) as $n)
+                                    <a href="{{ $n['url'] }}"
+                                       class="flex items-start gap-3 px-4 py-3 transition hover:bg-emerald-500/5"
+                                       style="border-bottom: 1px solid rgb(var(--border-soft));">
+                                        <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                                             style="background: rgb(var(--{{ $n['icon'] === 'cart' ? 'info' : 'warning' }}-soft)); color: rgb(var(--{{ $n['icon'] === 'cart' ? 'info' : 'warning' }}));">
+                                            @if ($n['icon'] === 'cart')
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                                            @else
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                            @endif
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold" style="color: rgb(var(--text-primary));">{{ $n['title'] }}</p>
+                                            <p class="text-xs truncate" style="color: rgb(var(--text-secondary));">{{ $n['subtitle'] }}</p>
+                                            <div class="flex justify-between items-center mt-1 gap-2">
+                                                <span class="text-xs font-bold" style="color: rgb(var(--brand));">{{ $n['amount'] }}</span>
+                                                <span class="text-[10px] flex-shrink-0" style="color: rgb(var(--text-muted));">{{ $n['time'] }}</span>
+                                            </div>
+                                        </div>
+                                    </a>
+                                @empty
+                                    <div class="px-4 py-10 text-center">
+                                        <svg class="w-10 h-10 mx-auto mb-2" style="color: rgb(var(--text-faint));" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                        </svg>
+                                        <p class="text-sm" style="color: rgb(var(--text-muted));">Tidak ada notifikasi baru 🎉</p>
+                                    </div>
+                                @endforelse
+                            </div>
+
+                        </div>
+                    </div>
+
+                    {{-- PROFIL --}}
                     <div class="flex items-center gap-3 pl-3 ml-1" style="border-left: 1px solid rgb(var(--border-soft));">
                         <div class="text-right hidden sm:block">
                             <p class="text-sm font-semibold leading-tight" style="color: rgb(var(--text-primary));">{{ auth()->user()->username ?? 'Admin' }}</p>
@@ -165,7 +246,8 @@
             </header>
         </div>
 
-        <main class="flex-1 p-4 lg:p-6">
+        {{-- MAIN CONTENT — ditambah relative z-0 biar ga ganggu dropdown --}}
+        <main class="flex-1 p-4 lg:p-6 relative z-0">
             @yield('content')
         </main>
     </div>
@@ -199,7 +281,6 @@
         document.querySelectorAll('input[name="scheduled_at"]').forEach(input => {
             if (input._flatpickr) return;
             if (input.type === 'datetime-local') {
-                // Convert datetime-local ke text biar flatpickr bisa
                 input.type = 'text';
             }
             flatpickr(input, {
