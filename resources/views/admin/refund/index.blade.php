@@ -61,12 +61,12 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div>
-                <label class="block text-xs font-bold uppercase tracking-widest mb-2" style="color: rgb(var(--text-muted));">Dari</label>
+                <label class="block text-xs font-bold uppercase tracking-widest mb-2" style="color: rgb(var(--text-muted));">Dari Tanggal</label>
                 <input type="text" name="dari" id="dari" value="{{ request('dari') }}" readonly
                        class="datepicker glass-input w-full py-3 text-sm cursor-pointer" style="color: rgb(var(--text-primary));">
             </div>
             <div>
-                <label class="block text-xs font-bold uppercase tracking-widest mb-2" style="color: rgb(var(--text-muted));">Sampai</label>
+                <label class="block text-xs font-bold uppercase tracking-widest mb-2" style="color: rgb(var(--text-muted));">Sampai Tanggal</label>
                 <input type="text" name="sampai" id="sampai" value="{{ request('sampai') }}" readonly
                        class="datepicker glass-input w-full py-3 text-sm cursor-pointer" style="color: rgb(var(--text-primary));">
             </div>
@@ -474,51 +474,80 @@
     }
 
     // ============================================================
-    // FLATPICKR — LOGIKA: FIELD YANG LAMA DI-CLEAR SAAT KONFLIK
+    // FLATPICKR — KENDALI RENTANG TANGGAL (MIN/MAX DINAMIS)
     // ============================================================
-    const today = new Date(); today.setHours(23, 59, 59, 999);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
     let dariPicker, sampaiPicker;
-    let isClearing = false;
+    let isSyncingDates = false;
+
+    function clearPickerSilent(picker) {
+        if (!picker) return;
+        const prev = isSyncingDates;
+        isSyncingDates = true;
+        try {
+            try { picker.clear(false); } catch (e) { picker.setDate([], false); }
+            if (picker.altInput) picker.altInput.value = '';
+            if (picker._input) picker._input.value = '';
+            picker.selectedDates = [];
+        } finally {
+            isSyncingDates = prev;
+        }
+    }
+
+    function syncDateConstraints(source) {
+        if (!dariPicker || !sampaiPicker || isSyncingDates) return;
+        isSyncingDates = true;
+        try {
+            const d = dariPicker.selectedDates[0] || null;
+            const s = sampaiPicker.selectedDates[0] || null;
+
+            if (d && s && d.getTime() > s.getTime()) {
+                if (source === 'dari') {
+                    clearPickerSilent(sampaiPicker);
+                } else if (source === 'sampai') {
+                    clearPickerSilent(dariPicker);
+                } else {
+                    clearPickerSilent(sampaiPicker);
+                }
+            }
+
+            const d2 = dariPicker.selectedDates[0] || null;
+            const s2 = sampaiPicker.selectedDates[0] || null;
+
+            sampaiPicker.set('minDate', d2);
+            sampaiPicker.set('maxDate', today);
+            dariPicker.set('maxDate', (s2 && s2.getTime() < today.getTime()) ? s2 : today);
+        } finally {
+            isSyncingDates = false;
+        }
+    }
 
     dariPicker = flatpickr("#dari", {
         dateFormat: "Y-m-d", altInput: true, altFormat: "d M Y",
         allowInput: false, monthSelectorType: "static", maxDate: today,
-        onReady: (_, __, fp) => { fp.altInput.classList.add('glass-input'); fp.altInput.style.color = 'rgb(var(--text-primary))'; },
-        onChange: function(selectedDates) {
-            if (isClearing) return;
-            const d = selectedDates[0];
-            if (!d || !sampaiPicker) return;
-
-            const s = sampaiPicker.selectedDates[0];
-            if (s && d > s) {
-                // Konflik: dari (baru) > sampai (lama). Clear SAMPAI (yang lama).
-                isClearing = true;
-                sampaiPicker.clear();
-                if (sampaiPicker.altInput) sampaiPicker.altInput.value = '';
-                isClearing = false;
-            }
+        onReady: (_, __, fp) => {
+            fp.altInput.classList.add('glass-input');
+            fp.altInput.style.color = 'rgb(var(--text-primary))';
+        },
+        onChange: function() {
+            if (!isSyncingDates) syncDateConstraints('dari');
         }
     });
 
     sampaiPicker = flatpickr("#sampai", {
         dateFormat: "Y-m-d", altInput: true, altFormat: "d M Y",
         allowInput: false, monthSelectorType: "static", maxDate: today,
-        onReady: (_, __, fp) => { fp.altInput.classList.add('glass-input'); fp.altInput.style.color = 'rgb(var(--text-primary))'; },
-        onChange: function(selectedDates) {
-            if (isClearing) return;
-            const s = selectedDates[0];
-            if (!s || !dariPicker) return;
-
-            const d = dariPicker.selectedDates[0];
-            if (d && d > s) {
-                // Konflik: sampai (baru) < dari (lama). Clear DARI (yang lama).
-                isClearing = true;
-                dariPicker.clear();
-                if (dariPicker.altInput) dariPicker.altInput.value = '';
-                isClearing = false;
-            }
+        onReady: (_, __, fp) => {
+            fp.altInput.classList.add('glass-input');
+            fp.altInput.style.color = 'rgb(var(--text-primary))';
+        },
+        onChange: function() {
+            if (!isSyncingDates) syncDateConstraints('sampai');
         }
     });
+
+    setTimeout(function() { syncDateConstraints(); }, 100);
 
     // ============================================================
     // SAFETY NET: Validasi sebelum form submit
@@ -527,7 +556,7 @@
         const d = dariPicker?.selectedDates[0];
         const s = sampaiPicker?.selectedDates[0];
 
-        if (d && s && d > s) {
+        if (d && s && d.getTime() > s.getTime()) {
             e.preventDefault();
             alert('⚠️ Tanggal "Dari" tidak boleh lebih besar dari "Sampai".');
             return false;

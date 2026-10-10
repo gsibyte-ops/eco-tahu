@@ -10,7 +10,7 @@
 
 {{-- Filter Tanggal --}}
 <div class="glass-card filter-card p-4 mb-6 relative z-30">
-    <form method="GET" class="flex flex-wrap gap-3 items-end">
+    <form method="GET" id="filterForm" class="flex flex-wrap gap-3 items-end">
         <div>
             <label class="block text-xs font-bold uppercase tracking-widest mb-2" style="color: rgb(var(--text-muted));">Dari Tanggal</label>
             <input type="text" name="dari" id="dari" value="{{ $dari }}" readonly
@@ -423,32 +423,52 @@
     const SEMUA_PRODUK = @json($semuaProdukJson);
     const SEMUA_LIMBAH = @json($semuaLimbahJson);
 
-    // ==== FLATPICKR — VALIDASI TANGGAL ====
+    // ==== FLATPICKR — KENDALI RENTANG TANGGAL (MIN/MAX DINAMIS) ====
     const today = new Date();
     today.setHours(23, 59, 59, 999);
 
     let dariPicker, sampaiPicker;
-    let isClearing = false;
+    let isSyncingDates = false;
 
     function clearPickerSilent(picker) {
         if (!picker) return;
-        try { picker.clear(false); } catch (e) { picker.setDate([], false); }
-        if (picker.altInput) picker.altInput.value = '';
-        if (picker._input) picker._input.value = '';
-        picker.selectedDates = [];
+        const prev = isSyncingDates;
+        isSyncingDates = true;
+        try {
+            try { picker.clear(false); } catch (e) { picker.setDate([], false); }
+            if (picker.altInput) picker.altInput.value = '';
+            if (picker._input) picker._input.value = '';
+            picker.selectedDates = [];
+        } finally {
+            isSyncingDates = prev;
+        }
     }
 
-    function resolveConflict(lastTouched) {
-        if (!dariPicker || !sampaiPicker) return;
-        const d = dariPicker.selectedDates[0];
-        const s = sampaiPicker.selectedDates[0];
-        if (!d || !s) return;
-        if (d.getTime() <= s.getTime()) return;
+    function syncDateConstraints(source) {
+        if (!dariPicker || !sampaiPicker || isSyncingDates) return;
+        isSyncingDates = true;
+        try {
+            const d = dariPicker.selectedDates[0] || null;
+            const s = sampaiPicker.selectedDates[0] || null;
 
-        if (lastTouched === 'dari') {
-            clearPickerSilent(sampaiPicker);
-        } else {
-            clearPickerSilent(dariPicker);
+            if (d && s && d.getTime() > s.getTime()) {
+                if (source === 'dari') {
+                    clearPickerSilent(sampaiPicker);
+                } else if (source === 'sampai') {
+                    clearPickerSilent(dariPicker);
+                } else {
+                    clearPickerSilent(sampaiPicker);
+                }
+            }
+
+            const d2 = dariPicker.selectedDates[0] || null;
+            const s2 = sampaiPicker.selectedDates[0] || null;
+
+            sampaiPicker.set('minDate', d2);
+            sampaiPicker.set('maxDate', today);
+            dariPicker.set('maxDate', (s2 && s2.getTime() < today.getTime()) ? s2 : today);
+        } finally {
+            isSyncingDates = false;
         }
     }
 
@@ -490,12 +510,10 @@
                     });
                 }
             },
-            onChange: function(selectedDates) {
-                if (isClearing) return;
+            onChange: function() {
+                if (isSyncingDates) return;
                 const isDari = this.input.id === 'dari';
-                Promise.resolve().then(function() {
-                    resolveConflict(isDari ? 'dari' : 'sampai');
-                });
+                syncDateConstraints(isDari ? 'dari' : 'sampai');
             }
         }, extra || {});
     }
@@ -503,18 +521,14 @@
     dariPicker = flatpickr("#dari", makeFlatpickrConfig({}));
     sampaiPicker = flatpickr("#sampai", makeFlatpickrConfig({}));
 
-    // Initial validation
-    setTimeout(function() {
-        const d = dariPicker?.selectedDates[0];
-        const s = sampaiPicker?.selectedDates[0];
-        if (d && s && d > s) clearPickerSilent(sampaiPicker);
-    }, 150);
+    // Sync awal
+    setTimeout(function() { syncDateConstraints(); }, 100);
 
-    // Safety net form submit
-    document.querySelector('#filterForm')?.addEventListener('submit', function(e) {
+    // SAFETY NET: Validasi sebelum submit
+    document.getElementById('filterForm')?.addEventListener('submit', function(e) {
         const d = dariPicker?.selectedDates[0];
         const s = sampaiPicker?.selectedDates[0];
-        if (d && s && d > s) {
+        if (d && s && d.getTime() > s.getTime()) {
             e.preventDefault();
             alert('⚠️ Tanggal "Dari" tidak boleh lebih besar dari "Sampai".');
             return false;
