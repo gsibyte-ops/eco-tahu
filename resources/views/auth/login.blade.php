@@ -19,31 +19,6 @@
 </style>
 @endpush
 
-@section('brand-extra')
-<div class="brand-stats mt-8 flex flex-wrap gap-x-8 gap-y-4">
-    <div class="flex items-center gap-3">
-        <div class="w-11 h-11 rounded-xl flex items-center justify-center text-xl" style="background: rgb(var(--brand) / 0.12); border: 1px solid rgb(var(--brand) / 0.3);">🥛</div>
-        <div>
-            <p class="text-2xl font-extrabold tracking-tight" style="color: rgb(var(--text-primary));">9+</p>
-            <p class="text-xs" style="color: rgb(var(--text-muted));">Varian Produk</p>
-        </div>
-    </div>
-    <div class="flex items-center gap-3">
-        <div class="w-11 h-11 rounded-xl flex items-center justify-center text-xl" style="background: rgb(var(--accent) / 0.12); border: 1px solid rgb(var(--accent) / 0.3);">♻️</div>
-        <div>
-            <p class="text-2xl font-extrabold tracking-tight" style="color: rgb(var(--text-primary));">100%</p>
-            <p class="text-xs" style="color: rgb(var(--text-muted));">Organik</p>
-        </div>
-    </div>
-    <div class="flex items-center gap-3">
-        <div class="w-11 h-11 rounded-xl flex items-center justify-center text-xl" style="background: rgb(var(--info) / 0.12); border: 1px solid rgb(var(--info) / 0.3);">🌿</div>
-        <div>
-            <p class="text-2xl font-extrabold tracking-tight" style="color: rgb(var(--text-primary));">Zero</p>
-            <p class="text-xs" style="color: rgb(var(--text-muted));">Waste</p>
-        </div>
-    </div>
-</div>
-@endsection
 
 @section('form')
 <div class="login-card auth-form-glass">
@@ -54,7 +29,7 @@
     </div>
 
     <div class="mb-6">
-        <h2 class="text-3xl font-extrabold tracking-tight mb-2" style="color: rgb(var(--text-primary));">Selamat Datang! 👋</h2>
+        <h2 class="text-3xl font-extrabold tracking-tight mb-2" style="color: rgb(var(--text-primary));">Selamat Datang!</h2>
         <p class="text-sm auth-hint">Masuk untuk lanjut belanja tahu segar.</p>
     </div>
 
@@ -84,7 +59,8 @@
         <div class="flex-1 h-px" style="background: linear-gradient(to right, transparent, rgb(var(--border)), transparent);"></div>
     </div>
 
-    <form method="POST" action="{{ route('login') }}" class="space-y-4">
+    {{-- TAMBAHAN NOVALIDATE --}}
+    <form method="POST" action="{{ route('login') }}" class="space-y-4" novalidate>
         @csrf
 
         <div>
@@ -147,11 +123,11 @@
     </div>
 
     <div class="flex items-center justify-center gap-4 mt-5 text-xs auth-muted">
-        <a href="#" class="transition hover:opacity-80">Bantuan</a>
+        <a href="{{ route('halaman.bantuan') }}" class="transition hover:opacity-80">Bantuan</a>
         <span>·</span>
-        <a href="#" class="transition hover:opacity-80">S&K</a>
+        <a href="{{ route('halaman.snk') }}" class="transition hover:opacity-80">S&K</a>
         <span>·</span>
-        <a href="#" class="transition hover:opacity-80">Privasi</a>
+        <a href="{{ route('halaman.privasi') }}" class="transition hover:opacity-80">Privasi</a>
     </div>
 </div>
 @endsection

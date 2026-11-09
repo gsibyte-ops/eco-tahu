@@ -1,0 +1,504 @@
+eco-tahu/ (terbaru)
+├── .editorconfig
+├── .env
+├── .env.example
+├── .npmrc
+├── .phpunit.result.cache
+├── AGENTS.md
+├── CLAUDE.md
+├── IDEA.md
+├── README.md
+├── app
+│   ├── Console
+│   │   └── Commands
+│   │       └── PublishScheduledEdukasi.php
+│   ├── Helpers
+│   │   └── Haversine.php
+│   ├── Http
+│   │   ├── Controllers
+│   │   │   ├── Admin
+│   │   │   │   ├── DashboardController.php
+│   │   │   │   ├── EdukasiController.php
+│   │   │   │   ├── KategoriController.php
+│   │   │   │   ├── LaporanController.php
+│   │   │   │   ├── LimbahController.php
+│   │   │   │   ├── PelangganController.php
+│   │   │   │   ├── PesananController.php
+│   │   │   │   ├── ProdukTahuController.php
+│   │   │   │   └── RefundController.php
+│   │   │   ├── Api
+│   │   │   │   ├── AuthController.php
+│   │   │   │   └── ProdukTahuController.php
+│   │   │   ├── Auth
+│   │   │   │   ├── AuthenticatedSessionController.php
+│   │   │   │   ├── ConfirmablePasswordController.php
+│   │   │   │   ├── EmailVerificationNotificationController.php
+│   │   │   │   ├── EmailVerificationPromptController.php
+│   │   │   │   ├── GoogleAuthController.php
+│   │   │   │   ├── NewPasswordController.php
+│   │   │   │   ├── PasswordController.php
+│   │   │   │   ├── PasswordResetLinkController.php
+│   │   │   │   ├── RegisteredUserController.php
+│   │   │   │   └── VerifyEmailController.php
+│   │   │   ├── Controller.php
+│   │   │   ├── HomeController.php
+│   │   │   ├── ProfileController.php
+│   │   │   └── User
+│   │   │       ├── CartController.php
+│   │   │       ├── CheckoutController.php
+│   │   │       ├── EdukasiController.php
+│   │   │       ├── LimbahController.php
+│   │   │       ├── PesananController.php
+│   │   │       ├── ProdukController.php
+│   │   │       └── ReviewController.php
+│   │   ├── Middleware
+│   │   │   └── IsAdmin.php
+│   │   └── Requests
+│   │       ├── Auth
+│   │       │   └── LoginRequest.php
+│   │       └── ProfileUpdateRequest.php
+│   ├── Models
+│   │   ├── DetailPesanan.php
+│   │   ├── Edukasi.php
+│   │   ├── Kategori.php
+│   │   ├── Limbah.php
+│   │   ├── Pembayaran.php
+│   │   ├── Pesanan.php
+│   │   ├── ProdukTahu.php
+│   │   ├── Refund.php
+│   │   ├── Review.php
+│   │   ├── Role.php
+│   │   └── User.php
+│   ├── Providers
+│   │   └── AppServiceProvider.php
+│   └── View
+│       └── Components
+│           ├── AppLayout.php
+│           └── GuestLayout.php
+├── artisan
+├── backup_20261004_163216
+│   └── resources
+│       ├── css
+│       │   └── app.css
+│       ├── js
+│       │   └── app.js
+│       └── views
+│           └── layouts
+│               ├── admin.blade.php
+│               └── user.blade.php
+├── backup_admin_20261004_180514
+│   └── resources
+│       └── views
+│           └── admin
+│               ├── dashboard.blade.php
+│               ├── edukasi
+│               │   ├── create.blade.php
+│               │   ├── edit.blade.php
+│               │   └── index.blade.php
+│               ├── kategori
+│               │   ├── create.blade.php
+│               │   ├── edit.blade.php
+│               │   └── index.blade.php
+│               ├── laporan
+│               │   └── index.blade.php
+│               ├── limbah
+│               │   ├── create.blade.php
+│               │   ├── edit.blade.php
+│               │   └── index.blade.php
+│               ├── pelanggan
+│               │   ├── index.blade.php
+│               │   └── show.blade.php
+│               ├── pesanan
+│               │   ├── index.blade.php
+│               │   └── show.blade.php
+│               ├── produk-tahu
+│               │   ├── create.blade.php
+│               │   ├── edit.blade.php
+│               │   └── index.blade.php
+│               └── refund
+│                   ├── index.blade.php
+│                   └── show.blade.php
+├── backup_admin_full_20261004_181506
+│   ├── admin
+│   │   ├── dashboard.blade.php
+│   │   ├── edukasi
+│   │   │   ├── create.blade.php
+│   │   │   ├── edit.blade.php
+│   │   │   └── index.blade.php
+│   │   ├── kategori
+│   │   │   ├── create.blade.php
+│   │   │   ├── edit.blade.php
+│   │   │   └── index.blade.php
+│   │   ├── laporan
+│   │   │   └── index.blade.php
+│   │   ├── limbah
+│   │   │   ├── create.blade.php
+│   │   │   ├── edit.blade.php
+│   │   │   └── index.blade.php
+│   │   ├── pelanggan
+│   │   │   ├── index.blade.php
+│   │   │   └── show.blade.php
+│   │   ├── pesanan
+│   │   │   ├── index.blade.php
+│   │   │   └── show.blade.php
+│   │   ├── produk-tahu
+│   │   │   ├── create.blade.php
+│   │   │   ├── edit.blade.php
+│   │   │   └── index.blade.php
+│   │   └── refund
+│   │       ├── index.blade.php
+│   │       └── show.blade.php
+│   ├── admin_layout.blade.php
+│   ├── app.css
+│   ├── js
+│   │   ├── admin.js
+│   │   └── app.js
+│   └── vite.config.js
+├── backup_adminv2_20261004_222606
+│   ├── admin
+│   │   ├── dashboard.blade.php
+│   │   ├── edukasi
+│   │   │   └── index.blade.php
+│   │   ├── kategori
+│   │   │   ├── create.blade.php
+│   │   │   ├── edit.blade.php
+│   │   │   └── index.blade.php
+│   │   ├── laporan
+│   │   │   └── index.blade.php
+│   │   ├── limbah
+│   │   │   ├── create.blade.php
+│   │   │   ├── edit.blade.php
+│   │   │   └── index.blade.php
+│   │   ├── pelanggan
+│   │   │   ├── index.blade.php
+│   │   │   └── show.blade.php
+│   │   ├── pesanan
+│   │   │   ├── index.blade.php
+│   │   │   └── show.blade.php
+│   │   ├── produk-tahu
+│   │   │   ├── create.blade.php
+│   │   │   ├── edit.blade.php
+│   │   │   └── index.blade.php
+│   │   └── refund
+│   │       ├── index.blade.php
+│   │       └── show.blade.php
+│   ├── admin_layout.blade.php
+│   ├── app.css
+│   └── js
+│       ├── admin.js
+│       ├── app.js
+│       └── auth.js
+├── backup_auth_20261004_182154
+│   ├── EdukasiController.php
+│   ├── auth
+│   │   ├── confirm-password.blade.php
+│   │   ├── forgot-password.blade.php
+│   │   ├── login.blade.php
+│   │   ├── register.blade.php
+│   │   ├── reset-password.blade.php
+│   │   └── verify-email.blade.php
+│   ├── js
+│   │   ├── admin.js
+│   │   └── app.js
+│   └── vite.config.js
+├── backup_webphp_20261004_214545
+│   └── web.php
+├── bootstrap
+│   ├── app.php
+│   ├── cache
+│   │   ├── .gitignore
+│   │   ├── packages.php
+│   │   └── services.php
+│   └── providers.php
+├── composer.json
+├── composer.lock
+├── config
+│   ├── app.php
+│   ├── auth.php
+│   ├── cache.php
+│   ├── database.php
+│   ├── filesystems.php
+│   ├── logging.php
+│   ├── mail.php
+│   ├── queue.php
+│   ├── sanctum.php
+│   ├── services.php
+│   ├── session.php
+│   └── toko.php
+├── database
+│   ├── .gitignore
+│   ├── database.sqlite
+│   ├── factories
+│   │   └── UserFactory.php
+│   ├── migrations
+│   │   ├── 0001_01_01_000001_create_cache_table.php
+│   │   ├── 0001_01_01_000002_create_jobs_table.php
+│   │   ├── 2026_09_22_055420_create_roles_table.php
+│   │   ├── 2026_09_22_055421_create_users_table.php
+│   │   ├── 2026_09_22_055422_create_sessions_table.php
+│   │   ├── 2026_09_22_055424_create_kategori_table.php
+│   │   ├── 2026_09_22_055425_create_produk_tahu_table.php
+│   │   ├── 2026_09_22_055426_create_limbah_table.php
+│   │   ├── 2026_09_22_055427_create_pesanan_table.php
+│   │   ├── 2026_09_22_055428_create_detail_pesanan_table.php
+│   │   ├── 2026_09_22_055429_create_pembayaran_table.php
+│   │   ├── 2026_09_22_055430_create_refund_table.php
+│   │   ├── 2026_09_22_055434_create_edukasi_table.php
+│   │   ├── 2026_09_25_145822_add_unique_nama_produk_to_produk_tahu_table.php
+│   │   ├── 2026_09_26_030230_add_unique_nama_limbah_to_limbah_table.php
+│   │   ├── 2026_09_26_082348_add_unique_nama_kategori_to_kategori_table.php
+│   │   ├── 2026_10_04_060755_create_reviews_table.php
+│   │   ├── 2026_10_04_063120_add_lokasi_to_pesanan_table.php
+│   │   ├── 2026_10_04_065146_add_kecamatan_to_pesanan_table.php
+│   │   ├── 2026_10_04_071948_add_lokasi_kurir_to_pesanan_table.php
+│   │   ├── 2026_10_04_142414_add_google_id_to_users_table.php
+│   │   ├── 2026_10_10_075009_create_personal_access_tokens_table.php
+│   │   └── 2026_10_23_010636_create_password_reset_tokens_table.php
+│   └── seeders
+│       ├── DatabaseSeeder.php
+│       ├── EdukasiSeeder.php
+│       ├── KategoriSeeder.php
+│       ├── LimbahSeeder.php
+│       ├── PesananSeeder.php
+│       ├── ProdukSeeder.php
+│       ├── RoleSeeder.php
+│       └── UserSeeder.php
+├── dump_kode.txt
+├── lang
+│   ├── en
+│   │   ├── auth.php
+│   │   ├── pagination.php
+│   │   ├── passwords.php
+│   │   └── validation.php
+│   └── id
+│       ├── auth.php
+│       └── validation.php
+├── laporan_audit_backend.md
+├── laporan_impeccable.md
+├── laporan_qa_guest.md
+├── laporan_qa_user.md
+├── laporan_security.md
+├── package-lock.json
+├── package.json
+├── phpunit.xml
+├── postcss.config.js
+├── public
+│   ├── .htaccess
+│   ├── build
+│   │   ├── assets
+│   │   │   ├── admin-CvsXimrP.js
+│   │   │   ├── app-BiaHAgof.js
+│   │   │   ├── app-Cc1hUw9q.css
+│   │   │   ├── auth-CJE1PVD7.js
+│   │   │   └── module.esm-CHZQYZeV.js
+│   │   └── manifest.json
+│   ├── favicon.ico
+│   ├── images
+│   │   ├── hero
+│   │   │   ├── bg-dark.jpg
+│   │   │   ├── bg-light.jpg
+│   │   │   ├── biji-kedelai.png
+│   │   │   ├── daun-kedelai.png
+│   │   │   ├── p.jpg
+│   │   │   ├── splash-susu.png
+│   │   │   └── tahu-utama.png
+│   │   ├── logo_dark.png
+│   │   ├── logo_light.png
+│   │   └── tes.md
+│   ├── index.php
+│   ├── models
+│   │   └── tofu.glb
+│   ├── robots.txt
+│   └── storage
+│       ├── .gitignore
+│       ├── bukti-transfer
+│       │   ├── TeKpmdQRLqylFGssq3bAka6Pj5MpxWt3lqMqR3wj.png
+│       │   ├── YGVQ7MXtYmoOG1nnF1I2N5nDKPK1rqgXzasHWCD6.png
+│       │   ├── cIInCw9tJeLHqApkffMlnCdg54z5bqWg6LK56x1K.png
+│       │   ├── ge2dLUbifGvkF6APUxs82C3zJLAGjj8FKDgwezQL.png
+│       │   ├── krf96qgRgQySR96ceaxhEznpZDTqlwe9WHAFPPWD.png
+│       │   ├── nK7qTXh2HThKbOD86Jfk5oSHZNHrNTzM74TQdr2z.png
+│       │   └── rEzW5nVqzo3skoB0HLzjkAZ4FN6R2LBnmEJVYQEC.png
+│       ├── edukasi
+│       │   ├── AKGOcdhCgK5iJhK5RLGhIytJiMto0JgMg9pD4bGJ.jpg
+│       │   └── DvXFDY3aWjF45Bbk71cWMrliRmmBmNVi4N4j8ek4.jpg
+│       ├── limbah
+│       │   ├── RINaoyjTEghhRHTlG4QMRVBYO3lnOa9DId9Qo6a5.png
+│       │   ├── Z4UzMSuLsR8uO1ezIihsrozXo8Kw8c4mIP4OluF4.png
+│       │   └── naHdjNBwXmehEFRurkQq9h7arlCKZTBPqrQWbSHY.jpg
+│       └── produk-tahu
+│           ├── BDg2Ljeva9MZMCdog1WIcN0bLo2PedfxPz8R5cxZ.png
+│           ├── GfhvuagkzrIP5nEr0nknowhd1oIRFqVsCMgAopxX.png
+│           ├── KGf6PtOnoLXfOtLVf0NzeWMhwBhUcE7IXfRudkdj.png
+│           ├── RYpVRVm5wo8OCuOxUfkiONLLcRDm2h75eyc7JDIu.png
+│           ├── TdW2T18GzHfy7GOoM9W5tkaFDUR6iSP88KN45rKa.png
+│           ├── ZhX723URf7sgOdizxUMA6VZxDZ5dwH7a9VPZKIkI.png
+│           ├── gbJ1Z4fFAomfoJPYUI6fV6KMNc2kpI3eBNUg3ac4.png
+│           └── kj9UDZ0TMZZ78znlfcPQ6bZJVVYlWQ5keWlMEN5L.jpg
+├── qa-reports
+│   └── shots
+├── resources
+│   ├── css
+│   │   ├── app.css
+│   │   ├── app.css.bak
+│   │   └── app.css.bak2
+│   ├── js
+│   │   ├── admin.js
+│   │   ├── app.js
+│   │   └── auth.js
+│   └── views
+│       ├── admin
+│       │   ├── dashboard.blade.php
+│       │   ├── edukasi
+│       │   │   ├── create.blade.php
+│       │   │   ├── edit.blade.php
+│       │   │   └── index.blade.php
+│       │   ├── kategori
+│       │   │   ├── create.blade.php
+│       │   │   ├── edit.blade.php
+│       │   │   └── index.blade.php
+│       │   ├── laporan
+│       │   │   └── index.blade.php
+│       │   ├── limbah
+│       │   │   ├── create.blade.php
+│       │   │   ├── edit.blade.php
+│       │   │   └── index.blade.php
+│       │   ├── pelanggan
+│       │   │   ├── index.blade.php
+│       │   │   └── show.blade.php
+│       │   ├── pesanan
+│       │   │   ├── index.blade.php
+│       │   │   └── show.blade.php
+│       │   ├── produk-tahu
+│       │   │   ├── create.blade.php
+│       │   │   ├── edit.blade.php
+│       │   │   └── index.blade.php
+│       │   └── refund
+│       │       ├── index.blade.php
+│       │       └── show.blade.php
+│       ├── auth
+│       │   ├── confirm-password.blade.php
+│       │   ├── forgot-password.blade.php
+│       │   ├── login.blade.php
+│       │   ├── register.blade.php
+│       │   ├── reset-password.blade.php
+│       │   └── verify-email.blade.php
+│       ├── components
+│       │   ├── application-logo.blade.php
+│       │   ├── auth-session-status.blade.php
+│       │   ├── danger-button.blade.php
+│       │   ├── dropdown-link.blade.php
+│       │   ├── dropdown.blade.php
+│       │   ├── input-error.blade.php
+│       │   ├── input-label.blade.php
+│       │   ├── loader.blade.php
+│       │   ├── modal.blade.php
+│       │   ├── nav-link.blade.php
+│       │   ├── primary-button.blade.php
+│       │   ├── responsive-nav-link.blade.php
+│       │   ├── secondary-button.blade.php
+│       │   └── text-input.blade.php
+│       ├── dashboard.blade.php
+│       ├── layouts
+│       │   ├── admin.blade.php
+│       │   ├── app.blade.php
+│       │   ├── auth.blade.php
+│       │   ├── guest.blade.php
+│       │   ├── navigation.blade.php
+│       │   └── user.blade.php
+│       ├── pages
+│       │   ├── bantuan.blade.php
+│       │   ├── cara-pesan.blade.php
+│       │   ├── faq.blade.php
+│       │   ├── pengiriman.blade.php
+│       │   ├── privasi.blade.php
+│       │   ├── refund.blade.php
+│       │   ├── sitemap.blade.php
+│       │   └── snk.blade.php
+│       ├── profile
+│       │   ├── edit.blade.php
+│       │   └── partials
+│       │       ├── delete-user-form.blade.php
+│       │       ├── update-password-form.blade.php
+│       │       └── update-profile-information-form.blade.php
+│       ├── user
+│       │   ├── cart
+│       │   │   └── index.blade.php
+│       │   ├── checkout
+│       │   │   ├── index.blade.php
+│       │   │   └── success.blade.php
+│       │   ├── edukasi
+│       │   │   ├── index.blade.php
+│       │   │   └── show.blade.php
+│       │   ├── home.blade.php
+│       │   ├── limbah
+│       │   │   ├── index.blade.php
+│       │   │   └── show.blade.php
+│       │   ├── partials
+│       │   │   └── review-section.blade.php
+│       │   ├── pesanan
+│       │   │   ├── index.blade.php
+│       │   │   └── show.blade.php
+│       │   └── produk
+│       │       ├── index.blade.php
+│       │       └── show.blade.php
+│       └── welcome.blade.php
+├── routes
+│   ├── api.php
+│   ├── auth.php
+│   ├── console.php
+│   └── web.php
+├── storage
+│   ├── app
+│   │   ├── .gitignore
+│   │   ├── private
+│   │   │   └── .gitignore
+│   │   └── public
+│   │       ├── .gitignore
+│   │       ├── bukti-transfer
+│   │       │   ├── TeKpmdQRLqylFGssq3bAka6Pj5MpxWt3lqMqR3wj.png
+│   │       │   ├── YGVQ7MXtYmoOG1nnF1I2N5nDKPK1rqgXzasHWCD6.png
+│   │       │   ├── cIInCw9tJeLHqApkffMlnCdg54z5bqWg6LK56x1K.png
+│   │       │   ├── ge2dLUbifGvkF6APUxs82C3zJLAGjj8FKDgwezQL.png
+│   │       │   ├── krf96qgRgQySR96ceaxhEznpZDTqlwe9WHAFPPWD.png
+│   │       │   ├── nK7qTXh2HThKbOD86Jfk5oSHZNHrNTzM74TQdr2z.png
+│   │       │   └── rEzW5nVqzo3skoB0HLzjkAZ4FN6R2LBnmEJVYQEC.png
+│   │       ├── edukasi
+│   │       │   ├── AKGOcdhCgK5iJhK5RLGhIytJiMto0JgMg9pD4bGJ.jpg
+│   │       │   └── DvXFDY3aWjF45Bbk71cWMrliRmmBmNVi4N4j8ek4.jpg
+│   │       ├── limbah
+│   │       │   ├── RINaoyjTEghhRHTlG4QMRVBYO3lnOa9DId9Qo6a5.png
+│   │       │   ├── Z4UzMSuLsR8uO1ezIihsrozXo8Kw8c4mIP4OluF4.png
+│   │       │   └── naHdjNBwXmehEFRurkQq9h7arlCKZTBPqrQWbSHY.jpg
+│   │       └── produk-tahu
+│   │           ├── BDg2Ljeva9MZMCdog1WIcN0bLo2PedfxPz8R5cxZ.png
+│   │           ├── GfhvuagkzrIP5nEr0nknowhd1oIRFqVsCMgAopxX.png
+│   │           ├── KGf6PtOnoLXfOtLVf0NzeWMhwBhUcE7IXfRudkdj.png
+│   │           ├── RYpVRVm5wo8OCuOxUfkiONLLcRDm2h75eyc7JDIu.png
+│   │           ├── TdW2T18GzHfy7GOoM9W5tkaFDUR6iSP88KN45rKa.png
+│   │           ├── ZhX723URf7sgOdizxUMA6VZxDZ5dwH7a9VPZKIkI.png
+│   │           ├── gbJ1Z4fFAomfoJPYUI6fV6KMNc2kpI3eBNUg3ac4.png
+│   │           └── kj9UDZ0TMZZ78znlfcPQ6bZJVVYlWQ5keWlMEN5L.jpg
+│   └── framework
+│       ├── .gitignore
+│       └── testing
+│           └── .gitignore
+├── struktur_eco_tahu.txt
+├── struktur_folder.txt
+├── tailwind.config.js
+├── tests
+│   ├── Feature
+│   │   ├── Auth
+│   │   │   ├── AuthenticationTest.php
+│   │   │   ├── EmailVerificationTest.php
+│   │   │   ├── PasswordConfirmationTest.php
+│   │   │   ├── PasswordResetTest.php
+│   │   │   ├── PasswordUpdateTest.php
+│   │   │   └── RegistrationTest.php
+│   │   ├── ExampleTest.php
+│   │   ├── ProfileTest.php
+│   │   └── PublicCatalogPagesTest.php
+│   ├── TestCase.php
+│   └── Unit
+│       └── ExampleTest.php
+└── vite.config.js

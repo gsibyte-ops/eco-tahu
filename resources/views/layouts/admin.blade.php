@@ -38,12 +38,13 @@
            class="admin-sidebar w-64 flex flex-col fixed h-[calc(100vh-2rem)] top-4 left-4 z-30 rounded-3xl transition-transform duration-300 -translate-x-[120%] lg:translate-x-0">
 
         <div class="h-16 flex items-center px-5 flex-shrink-0" style="border-bottom: 1px solid rgb(var(--border-soft));">
-            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center text-white font-extrabold text-sm"
-                     style="background: var(--gradient-brand); box-shadow: 0 4px 14px rgb(var(--brand) / 0.5);">E</div>
-                <div class="flex flex-col">
-                    <span class="text-base font-extrabold tracking-tight leading-none" style="color: rgb(var(--text-primary));">EcoTahu</span>
-                    <span class="text-[10px] font-semibold tracking-widest uppercase" style="color: rgb(var(--text-muted));">Admin Panel</span>
+            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 w-full overflow-hidden">
+                {{-- LOGO DUAL MODE --}}
+                <img src="{{ asset('images/logo_light.png') }}" alt="EcoTahu Logo" class="h-8 w-auto object-contain block dark:hidden shrink-0">
+                <img src="{{ asset('images/logo_dark.png') }}" alt="EcoTahu Logo" class="h-8 w-auto object-contain hidden dark:block shrink-0">
+                
+                <div class="flex flex-col min-w-0">
+                    <span class="text-[10px] font-bold tracking-widest uppercase truncate" style="color: rgb(var(--text-muted));">Admin Panel</span>
                 </div>
             </a>
         </div>
@@ -123,8 +124,8 @@
     {{-- MAIN --}}
     <div class="flex-1 lg:ml-[17rem] flex flex-col min-w-0 relative z-10">
 
-        {{-- WRAPPER HEADER — ditambah relative z-40 biar dropdown bisa keluar --}}
-        <div class="px-4 lg:px-6 pt-4 relative z-40">
+        {{-- WRAPPER HEADER — STICKY --}}
+        <div class="sticky top-0 z-40 px-4 lg:px-6 pt-4 pb-2 lg:pb-4 bg-gradient-to-b from-[rgb(var(--bg-primary))] via-[rgb(var(--bg-primary))]/90 to-transparent lg:from-transparent lg:via-transparent lg:to-transparent transition-all duration-300">
             <header class="admin-topbar h-16 flex items-center justify-between px-4 lg:px-6 rounded-2xl relative">
                 <div class="flex items-center gap-3 min-w-0">
                     <button type="button" onclick="toggleSidebar()" class="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center transition" style="background: rgb(var(--surface-hover)); color: rgb(var(--text-secondary));">
@@ -135,11 +136,18 @@
                     </h1>
                 </div>
 
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 lg:gap-3">
+                    
+                    {{-- JAM REAL-TIME --}}
+                    <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold tabular-nums" style="background: rgb(var(--surface-hover)); color: rgb(var(--text-secondary));">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span id="realtime-clock">00:00:00</span>
+                    </div>
+
                     <form method="GET" action="{{ route('admin.pesanan.index') }}" class="relative hidden md:block">
                         <input type="text" name="q" placeholder="Cari pesanan..." maxlength="50"
                                oninput="this.value = this.value.replace(/[^a-zA-Z0-9\s#\-\.]/g, '')"
-                               class="w-56 lg:w-64 pl-9 pr-4 py-2 text-sm rounded-xl focus:outline-none transition"
+                               class="w-48 lg:w-56 pl-9 pr-4 py-2 text-sm rounded-xl focus:outline-none transition"
                                style="background: rgb(var(--bg-secondary) / 0.6); border: 1px solid rgb(var(--border)); color: rgb(var(--text-primary));">
                         <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style="color: rgb(var(--text-muted));" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </form>
@@ -165,7 +173,7 @@
                             @endif
                         </button>
 
-                        {{-- DROPDOWN — naikin z-index ke 9999 biar ga ketutupan --}}
+                        {{-- DROPDOWN --}}
                         <div x-show="notifOpen" x-cloak
                              x-transition:enter="transition ease-out duration-200"
                              x-transition:enter-start="opacity-0 -translate-y-1"
@@ -175,35 +183,18 @@
                              x-transition:leave-end="opacity-0 -translate-y-1"
                              class="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-2xl overflow-hidden"
                              style="background: rgb(var(--surface)); border: 1px solid rgb(var(--border)); box-shadow: var(--shadow-xl); z-index: 9999;">
-
-                            {{-- Header dropdown --}}
-                            <div class="px-4 py-3 flex items-center justify-between"
-                                 style="border-bottom: 1px solid rgb(var(--border-soft));">
+                            <div class="px-4 py-3 flex items-center justify-between" style="border-bottom: 1px solid rgb(var(--border-soft));">
                                 <div>
                                     <p class="font-bold text-sm" style="color: rgb(var(--text-primary));">Notifikasi</p>
                                     <p class="text-xs" style="color: rgb(var(--text-muted));">
-                                        @if (($globalNotifTotal ?? 0) > 0)
-                                            {{ $globalNotifTotal }} menunggu tindakan
-                                        @else
-                                            Semua sudah beres
-                                        @endif
+                                        @if (($globalNotifTotal ?? 0) > 0) {{ $globalNotifTotal }} menunggu tindakan @else Semua sudah beres @endif
                                     </p>
                                 </div>
-                                @if (($globalNotifTotal ?? 0) > 0)
-                                    <span class="text-[10px] font-bold px-2 py-0.5 bg-red-500 text-white rounded-full">
-                                        {{ $globalNotifTotal }}
-                                    </span>
-                                @endif
                             </div>
-
-                            {{-- List notif --}}
                             <div class="max-h-80 overflow-y-auto">
                                 @forelse (($globalNotifs ?? []) as $n)
-                                    <a href="{{ $n['url'] }}"
-                                       class="flex items-start gap-3 px-4 py-3 transition hover:bg-emerald-500/5"
-                                       style="border-bottom: 1px solid rgb(var(--border-soft));">
-                                        <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                                             style="background: rgb(var(--{{ $n['icon'] === 'cart' ? 'info' : 'warning' }}-soft)); color: rgb(var(--{{ $n['icon'] === 'cart' ? 'info' : 'warning' }}));">
+                                    <a href="{{ $n['url'] }}" class="flex items-start gap-3 px-4 py-3 transition hover:bg-emerald-500/5" style="border-bottom: 1px solid rgb(var(--border-soft));">
+                                        <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgb(var(--{{ $n['icon'] === 'cart' ? 'info' : 'warning' }}-soft)); color: rgb(var(--{{ $n['icon'] === 'cart' ? 'info' : 'warning' }}));">
                                             @if ($n['icon'] === 'cart')
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                                             @else
@@ -221,14 +212,10 @@
                                     </a>
                                 @empty
                                     <div class="px-4 py-10 text-center">
-                                        <svg class="w-10 h-10 mx-auto mb-2" style="color: rgb(var(--text-faint));" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                                        </svg>
                                         <p class="text-sm" style="color: rgb(var(--text-muted));">Tidak ada notifikasi baru 🎉</p>
                                     </div>
                                 @endforelse
                             </div>
-
                         </div>
                     </div>
 
@@ -246,7 +233,7 @@
             </header>
         </div>
 
-        {{-- MAIN CONTENT — ditambah relative z-0 biar ga ganggu dropdown --}}
+        {{-- MAIN CONTENT --}}
         <main class="flex-1 p-4 lg:p-6 relative z-0">
             @yield('content')
         </main>
@@ -255,7 +242,19 @@
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-    // Auto-init flatpickr untuk semua input .datepicker
+    // Real-time Clock
+    function updateClock() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('id-ID', { hour12: false });
+        const clockElement = document.getElementById('realtime-clock');
+        if (clockElement) {
+            clockElement.textContent = timeString;
+        }
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Auto-init flatpickr
     document.addEventListener('DOMContentLoaded', function() {
         const today = new Date();
         today.setHours(23, 59, 59, 999);
@@ -264,56 +263,26 @@
         document.querySelectorAll('input.datepicker').forEach(input => {
             if (input._flatpickr) return;
             flatpickr(input, {
-                dateFormat: 'Y-m-d',
-                altInput: true,
-                altFormat: 'd M Y',
-                allowInput: false,
-                monthSelectorType: 'static',
-                maxDate: today,
-                onReady: function(_, __, fp) {
-                    fp.altInput.classList.add('glass-input');
-                    fp.altInput.style.color = 'rgb(var(--text-primary))';
-                }
+                dateFormat: 'Y-m-d', altInput: true, altFormat: 'd M Y', allowInput: false, monthSelectorType: 'static', maxDate: today,
+                onReady: function(_, __, fp) { fp.altInput.classList.add('glass-input'); fp.altInput.style.color = 'rgb(var(--text-primary))'; }
             });
         });
 
-        // Flatpickr untuk input datetime schedule (edukasi)
         document.querySelectorAll('input[name="scheduled_at"]').forEach(input => {
             if (input._flatpickr) return;
-            if (input.type === 'datetime-local') {
-                input.type = 'text';
-            }
+            if (input.type === 'datetime-local') { input.type = 'text'; }
             flatpickr(input, {
-                enableTime: true,
-                dateFormat: 'Y-m-d H:i',
-                altInput: true,
-                altFormat: 'd M Y · H:i',
-                minDate: new Date(Date.now() + 5 * 60 * 1000),
-                time_24hr: true,
-                monthSelectorType: 'static',
-                onReady: function(_, __, fp) {
-                    fp.altInput.classList.add('glass-input');
-                    fp.altInput.style.color = 'rgb(var(--text-primary))';
-                }
+                enableTime: true, dateFormat: 'Y-m-d H:i', altInput: true, altFormat: 'd M Y · H:i', minDate: new Date(Date.now() + 5 * 60 * 1000), time_24hr: true, monthSelectorType: 'static',
+                onReady: function(_, __, fp) { fp.altInput.classList.add('glass-input'); fp.altInput.style.color = 'rgb(var(--text-primary))'; }
             });
         });
 
-        // Re-init saat modal edukasi dibuka
         const observer = new MutationObserver(() => {
             document.querySelectorAll('input[name="scheduled_at"]').forEach(input => {
                 if (input._flatpickr) return;
                 flatpickr(input, {
-                    enableTime: true,
-                    dateFormat: 'Y-m-d H:i',
-                    altInput: true,
-                    altFormat: 'd M Y · H:i',
-                    minDate: new Date(Date.now() + 5 * 60 * 1000),
-                    time_24hr: true,
-                    monthSelectorType: 'static',
-                    onReady: function(_, __, fp) {
-                        fp.altInput.classList.add('glass-input');
-                        fp.altInput.style.color = 'rgb(var(--text-primary))';
-                    }
+                    enableTime: true, dateFormat: 'Y-m-d H:i', altInput: true, altFormat: 'd M Y · H:i', minDate: new Date(Date.now() + 5 * 60 * 1000), time24hr: true, monthSelectorType: 'static',
+                    onReady: function(_, __, fp) { fp.altInput.classList.add('glass-input'); fp.altInput.style.color = 'rgb(var(--text-primary))'; }
                 });
             });
         });

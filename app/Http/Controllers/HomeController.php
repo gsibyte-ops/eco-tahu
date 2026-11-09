@@ -13,14 +13,22 @@ class HomeController extends Controller
 {
     public function index()
     {
-        // Produk pilihan (tahu) - 4 terbaru
+        // Produk pilihan (tahu) - Urutkan berdasarkan yang paling banyak di-review
         $produkPilihan = ProdukTahu::where('status', 'aktif')
+            ->withCount('reviews')
+            ->withAvg('reviews', 'rating')
+            ->orderByDesc('reviews_count')
+            ->orderByDesc('reviews_avg_rating')
             ->orderByDesc('id')
             ->limit(4)
             ->get();
 
-        // Limbah pilihan - 4 terbaru
+        // Limbah pilihan - Sama, urutkan berdasarkan review terbanyak
         $limbahPilihan = Limbah::where('status', 'aktif')
+            ->withCount('reviews')
+            ->withAvg('reviews', 'rating')
+            ->orderByDesc('reviews_count')
+            ->orderByDesc('reviews_avg_rating')
             ->orderByDesc('id')
             ->limit(4)
             ->get();
@@ -31,15 +39,13 @@ class HomeController extends Controller
             ->limit(4)
             ->get();
 
-        // Artikel edukasi terbaru (pakai scope biar scheduled yang udah waktunya masuk)
+        // Artikel edukasi terbaru
         $edukasi = Edukasi::visibleToUser()
             ->orderByDesc('published_at')
             ->limit(3)
             ->get();
 
-        // ============================================================
         // STATS REAL untuk hero
-        // ============================================================
         $stats = [
             'total_pesanan_selesai' => Pesanan::where('order_status', 'selesai')->count(),
             'total_review'          => Review::count(),
@@ -48,9 +54,7 @@ class HomeController extends Controller
                                      + Limbah::where('status', 'aktif')->count(),
         ];
 
-        // ============================================================
         // TESTIMONI REAL dari review (rating >= 4)
-        // ============================================================
         $testimoniReal = Review::with('user')
             ->where('rating', '>=', 4)
             ->whereNotNull('komentar')

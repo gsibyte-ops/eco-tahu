@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use Notifiable;
+    use HasApiTokens, Notifiable;
 
     protected $fillable = [
         'role_id', 'username', 'email', 'password', 'alamat', 'no_telepon',
@@ -23,7 +24,6 @@ class User extends Authenticatable
         ];
     }
 
-    // Relasi
     public function role()
     {
         return $this->belongsTo(Role::class);
@@ -39,13 +39,13 @@ class User extends Authenticatable
         return $this->hasMany(Edukasi::class);
     }
 
-    // REVIEWS
+    //reviews
     public function reviews()
     {
         return $this->hasMany(Review::class);
     }
 
-    // Helper
+    //helper
     public function isAdmin(): bool
     {
         return $this->role?->nama_role === 'admin';

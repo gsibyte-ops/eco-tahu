@@ -30,9 +30,11 @@
         </div>
     @endif
 
+    {{-- TAMBAHAN NOVALIDATE DI SINI --}}
     <form method="POST"
           action="{{ route('user.checkout.store') }}"
           x-data="checkoutForm()"
+          novalidate
           data-subtotal="{{ $subtotal }}"
           data-ongkir-per-km="{{ $toko['ongkir_per_km'] }}"
           data-ongkir-minimal="{{ $toko['ongkir_minimal'] }}"
@@ -171,7 +173,7 @@
                     </h3>
 
                     <div class="glass-amber rounded-xl p-3 mb-4 text-sm" style="color: rgb(var(--accent));">
-                        📍 Pilih <strong>kecamatan</strong> wajib. Kalau mau lebih presisi, boleh pin lokasi di peta (opsional) — kecamatan otomatis ikut berubah.
+                        Wajib pilih kecamatan. Kalau mau lebih presisi, boleh pin lokasi di peta (opsional) kecamatan otomatis ikut berubah.
                     </div>
 
                     <div x-show="butuhOngkir && subtotal < minimalDelivery" x-cloak
@@ -195,7 +197,7 @@
                                     @click="open = !open"
                                     class="custom-select-trigger"
                                     :class="open ? 'is-open' : ''">
-                                <span x-text="kecamatan || '-- Pilih Kecamatan --'"
+                                <span x-text="kecamatan || 'Pilih Kecamatan'"
                                       :style="kecamatan ? 'color: rgb(var(--text-primary)); font-weight: 500;' : 'color: rgb(var(--text-muted));'"></span>
                                 <svg class="w-4 h-4 transition-transform" :class="open ? 'rotate-180' : ''" style="color: rgb(var(--text-muted));" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
@@ -209,7 +211,7 @@
                                         <input type="text"
                                                x-model="search"
                                                @input="search = search.replace(/[^a-zA-Z\s]/g, '')"
-                                               placeholder="🔍 Cari kecamatan (huruf saja)..."
+                                               placeholder="Cari kecamatan"
                                                @click.stop>
                                     </div>
                                     <div class="custom-select-list">

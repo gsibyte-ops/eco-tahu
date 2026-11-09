@@ -55,7 +55,7 @@ class ProdukTahuController extends Controller
             ],
             'kategori_id' => 'required|exists:kategori,id',
             'harga' => 'required|numeric|min:100|max:100000',
-            'stok' => 'required|integer|min:1|max:1.000',
+            'stok' => 'required|integer|min:1|max:1000',
             'deskripsi' => 'nullable|string|max:1000',
             'gambar' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'status' => 'required|in:aktif,nonaktif',

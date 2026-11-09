@@ -65,7 +65,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'Asia/Jakarta',
 
     /*
     |--------------------------------------------------------------------------
@@ -78,9 +78,11 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    // UBAH BAGIAN INI: HARDCODE JADI 'id'
+    'locale' => 'id',
 
-    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
+    // UBAH JUGA INI BIAR FALLBACK-NYA INDONESIA
+    'fallback_locale' => 'id',
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 

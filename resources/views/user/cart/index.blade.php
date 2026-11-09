@@ -29,13 +29,15 @@
     @endif
 
     @if (count($cart) > 0)
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8" x-data="{ showCheckoutModal: false }">
 
             {{-- ITEM LIST --}}
             <div class="lg:col-span-2 space-y-4">
                 @foreach ($cart as $key => $item)
-                    <div class="glass-card p-4 flex gap-4" id="item-{{ $key }}"
+                    {{-- TAMBAHAN: data-nama buat bikin format WA --}}
+                    <div class="glass-card p-4 flex gap-4 cart-item" id="item-{{ $key }}"
                          data-harga="{{ $item['harga'] }}"
+                         data-nama="{{ $item['nama'] }}"
                          data-stok-max="{{ $item['stok_max'] }}">
                         <div class="w-20 h-20 rounded-2xl flex-shrink-0 overflow-hidden" style="background: rgb(var(--bg-secondary)); border: 1px solid rgb(var(--border-soft));">
                             @if ($item['gambar'])
@@ -117,16 +119,83 @@
                         </div>
                     </div>
 
-                    <a href="{{ route('user.checkout.index') }}"
-                       class="block w-full text-center py-3 btn-primary">
+                    {{-- Tombol Checkout sekarang membuka Modal --}}
+                    <button type="button" @click="updateWaLink(); showCheckoutModal = true" class="block w-full text-center py-3 btn-primary">
                         Lanjut ke Checkout
-                    </a>
+                    </button>
 
                     <p class="text-xs text-center mt-3" style="color: rgb(var(--text-muted));">
                         Ongkir & minimum pembelian dicek saat checkout.
                     </p>
                 </div>
             </div>
+
+            {{-- ============================================================ --}}
+            {{-- MODAL PILIHAN CHECKOUT --}}
+            {{-- ============================================================ --}}
+            <div x-show="showCheckoutModal" x-cloak
+                 class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0">
+                
+                <div class="glass-card w-full max-w-md p-6 sm:p-8 relative transform transition-all"
+                     @click.away="showCheckoutModal = false"
+                     x-show="showCheckoutModal"
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 translate-y-4 sm:scale-95"
+                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                     x-transition:leave="transition ease-in duration-200"
+                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                     x-transition:leave-end="opacity-0 translate-y-4 sm:scale-95">
+
+                    <button @click="showCheckoutModal = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+
+                    <div class="text-center mb-6">
+                        <div class="w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-4" style="background: rgb(var(--brand-soft)); color: rgb(var(--brand));">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        </div>
+                        <h3 class="text-xl font-extrabold mb-2" style="color: rgb(var(--text-primary));">Pilih Metode Checkout</h3>
+                        <p class="text-sm" style="color: rgb(var(--text-secondary));">Silakan pilih cara Anda menyelesaikan pesanan ini.</p>
+                    </div>
+
+                    <div class="space-y-3">
+                        {{-- Opsi 1: WhatsApp --}}
+                        <a id="waCheckoutBtn" href="#" target="_blank" class="w-full flex items-center justify-between p-4 rounded-xl transition border hover:-translate-y-0.5"
+                           style="background: rgb(37 211 102 / 0.1); border-color: rgb(37 211 102 / 0.3);">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-6 h-6" style="color: #25D366;" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                                <div class="text-left">
+                                    <p class="font-bold text-sm" style="color: rgb(var(--text-primary));">Pesan via WhatsApp</p>
+                                    <p class="text-xs mt-0.5" style="color: rgb(var(--text-secondary));">Langsung chat Admin, pesanan otomatis terisi.</p>
+                                </div>
+                            </div>
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                        </a>
+
+                        {{-- Opsi 2: Website --}}
+                        <a href="{{ route('user.checkout.index') }}" class="w-full flex items-center justify-between p-4 rounded-xl transition border hover:-translate-y-0.5"
+                           style="background: rgb(var(--brand-soft) / 0.5); border-color: rgb(var(--brand) / 0.3);">
+                            <div class="flex items-center gap-3">
+                                <div class="w-6 h-6 rounded-lg flex items-center justify-center text-white" style="background: var(--gradient-brand);">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                </div>
+                                <div class="text-left">
+                                    <p class="font-bold text-sm" style="color: rgb(var(--brand-hover));">Checkout di Website</p>
+                                    <p class="text-xs mt-0.5" style="color: rgb(var(--text-secondary));">Pilih alamat, ongkir otomatis, & bayar.</p>
+                                </div>
+                            </div>
+                            <svg class="w-5 h-5" style="color: rgb(var(--brand));" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
         </div>
     @else
         <div class="glass-card p-16 text-center max-w-md mx-auto">
@@ -149,12 +218,10 @@
     const ROUTE_REMOVE = cartData.dataset.routeRemove;
     const CSRF_TOKEN = cartData.dataset.csrf;
 
-    // ← CHANGED: format number helper
     function fmtRp(n) {
         return 'Rp ' + Number(n).toLocaleString('id-ID');
     }
 
-    // ← CHANGED: update qty tanpa reload
     function updateQty(key, delta) {
         const el = document.getElementById('qty-' + key);
         const itemEl = document.getElementById('item-' + key);
@@ -171,7 +238,6 @@
             return;
         }
 
-        // Optimistic update — update UI dulu, baru kirim request
         const oldQty = currentQty;
         el.textContent = newQty;
         document.getElementById('subtotal-' + key).textContent = fmtRp(harga * newQty);
@@ -189,16 +255,13 @@
         .then(r => r.json())
         .then(d => {
             if (!d.success) {
-                // Rollback
                 el.textContent = oldQty;
                 document.getElementById('subtotal-' + key).textContent = fmtRp(harga * oldQty);
                 recalcTotals();
                 showToast(d.message || 'Gagal', 'error');
             }
-            // Kalau success, UI udah bener
         })
         .catch(() => {
-            // Rollback
             el.textContent = oldQty;
             document.getElementById('subtotal-' + key).textContent = fmtRp(harga * oldQty);
             recalcTotals();
@@ -206,7 +269,6 @@
         });
     }
 
-    // ← CHANGED: remove item tanpa reload
     function removeItem(key) {
         if (!confirm('Hapus item ini dari keranjang?')) return;
 
@@ -224,7 +286,6 @@
             if (d.success) {
                 const el = document.getElementById('item-' + key);
                 if (el) {
-                    // Animasi fade out + slide
                     el.style.transition = 'opacity .3s ease, transform .3s ease, max-height .3s ease, margin .3s ease, padding .3s ease';
                     el.style.opacity = '0';
                     el.style.transform = 'translateX(-20px)';
@@ -240,7 +301,6 @@
                     setTimeout(() => {
                         el.remove();
                         recalcTotals();
-                        // Kalau keranjang kosong, reload biar tampil empty state
                         const remaining = document.querySelectorAll('[id^="item-"]');
                         if (remaining.length === 0) location.reload();
                     }, 400);
@@ -256,12 +316,11 @@
         .catch(() => showToast('Error', 'error'));
     }
 
-    // ← CHANGED: recalc total item + subtotal dari DOM
     function recalcTotals() {
         let totalQty = 0;
         let totalPrice = 0;
 
-        document.querySelectorAll('[id^="item-"]').forEach(el => {
+        document.querySelectorAll('.cart-item').forEach(el => {
             const key = el.id.replace('item-', '');
             const qtyEl = document.getElementById('qty-' + key);
             const harga = parseInt(el.dataset.harga) || 0;
@@ -276,6 +335,33 @@
         const subtotalEl = document.getElementById('subtotalDisplay');
         if (totalItemsEl) totalItemsEl.textContent = totalQty + ' item';
         if (subtotalEl) subtotalEl.textContent = fmtRp(totalPrice);
+    }
+
+    // FUNGSI BARU: Generate link WA dinamis sesuai isi keranjang terbaru
+    function updateWaLink() {
+        let text = "Halo *EcoTahu*, saya ingin memesan:\n\n";
+        let total = 0;
+        let count = 1;
+
+        document.querySelectorAll('.cart-item').forEach(el => {
+            const key = el.id.replace('item-', '');
+            const nama = el.dataset.nama;
+            const harga = parseInt(el.dataset.harga) || 0;
+            const qtyEl = document.getElementById('qty-' + key);
+            const qty = qtyEl ? parseInt(qtyEl.textContent) : 0;
+            const subtotal = harga * qty;
+            total += subtotal;
+
+            text += `${count}. *${nama}* (${qty}x) - Rp ${subtotal.toLocaleString('id-ID')}\n`;
+            count++;
+        });
+
+        text += `\n*Total Belanja:* Rp ${total.toLocaleString('id-ID')}\n\n`;
+        text += `Mohon info ketersediaan dan ongkirnya. Terima kasih!`;
+
+        const encoded = encodeURIComponent(text);
+        // Nomor WA diambil dari config
+        document.getElementById('waCheckoutBtn').href = `https://wa.me/{{ config('toko.whatsapp') }}?text=${encoded}`;
     }
 
     function showToast(msg, type = 'success') {

@@ -109,4 +109,24 @@ class DashboardController extends Controller
             'produkTerlaris', 'pesananTerbaru'
         ));
     }
+
+    /**
+     * Endpoint untuk real-time stats (dipanggil via AJAX)
+     */
+    public function getStats()
+    {
+        $totalTahu   = ProdukTahu::sum('stok');
+        $totalLimbah = Limbah::sum('stok');
+        $totalProduk = $totalTahu + $totalLimbah;
+
+        return response()->json([
+            'total_pesanan'    => Pesanan::count(),
+            'total_pendapatan' => Pesanan::where('payment_status', 'paid')->sum('total_harga'),
+            'total_produk'     => $totalProduk,
+            'total_tahu'       => $totalTahu,
+            'total_limbah'     => $totalLimbah,
+            'total_pelanggan'  => User::where('role_id', 2)->count(),
+            'refund_pending'   => Refund::where('status_refund', 'pending')->count(),
+        ]);
+    }
 }

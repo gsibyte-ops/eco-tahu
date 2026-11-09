@@ -3,14 +3,20 @@
 return [
     /*
     |--------------------------------------------------------------------------
+    | Kontak Toko
+    |--------------------------------------------------------------------------
+    */
+    'nama'   => 'Pabrik Tahu EcoTahu',
+    'alamat' => 'Lingkungan Panji, Tegalgede, Kec. Sumbersari, Kabupaten Jember, Jawa Timur 68124',
+    'whatsapp' => '6283833722986', // <--- Nomor WA Admin (tanpa tanda +)
+
+    /*
+    |--------------------------------------------------------------------------
     | Lokasi Toko (Pabrik Tahu)
     |--------------------------------------------------------------------------
     */
     'lat' => -8.161482,
     'lng' => 113.724290,
-
-    'nama'   => 'Pabrik Tahu EcoTahu',
-    'alamat' => 'Lingkungan Panji, Tegalgede, Kec. Sumbersari, Kabupaten Jember, Jawa Timur 68124',
 
     /*
     |--------------------------------------------------------------------------
@@ -32,11 +38,6 @@ return [
     |--------------------------------------------------------------------------
     | Kecamatan Jember (31 kecamatan)
     |--------------------------------------------------------------------------
-    | Koordinat di sini adalah TITIK TENGAH kecamatan (aproksimasi).
-    | Dipakai sebagai fallback kalau user nggak pin lokasi di peta.
-    |
-    | Kalau ada yang kurang akurat, tinggal edit. Cek di Google Maps:
-    | klik kanan lokasi → "What's here?" → copy koordinat.
     */
     'kecamatan' => [
         'Ajung'        => ['lat' => -8.2167, 'lng' => 113.6500],
