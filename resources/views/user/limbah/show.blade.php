@@ -84,9 +84,14 @@
                 </div>
             @endauth
 
-            <div class="glass-amber rounded-xl p-4 text-sm" style="color: rgb(var(--accent));">
+            <div class="glass-amber rounded-xl p-4 text-sm mb-3" style="color: rgb(var(--accent));">
                 ♻️ Setiap pembelian ampas tahu membantu mengurangi limbah industri tahu.
             </div>
+
+            {{-- Info Ongkir Tambahan --}}
+            <p class="text-xs text-center" style="color: rgb(var(--text-muted));">
+                🚚 Ongkir pengiriman mulai dari Rp 5.000 (0-2 km), selanjutnya Rp 2.500/km.
+            </p>
         </div>
     </div>
 

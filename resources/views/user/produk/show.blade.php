@@ -85,17 +85,17 @@
             @endauth
 
             <div class="grid grid-cols-3 gap-3 pt-6" style="border-top: 1px solid rgb(var(--border-soft));">
-                <div class="glass rounded-xl p-3 text-center">
+                <div class="glass rounded-xl p-3 text-center flex flex-col justify-center items-center">
                     <div class="text-2xl mb-1">🚚</div>
-                    <p class="text-xs" style="color: rgb(var(--text-secondary));">Ongkir per km</p>
+                    <p class="text-[11px] font-semibold leading-tight" style="color: rgb(var(--text-secondary));">Ongkir mulai Rp 5.000</p>
                 </div>
-                <div class="glass rounded-xl p-3 text-center">
+                <div class="glass rounded-xl p-3 text-center flex flex-col justify-center items-center">
                     <div class="text-2xl mb-1">🌿</div>
-                    <p class="text-xs" style="color: rgb(var(--text-secondary));">100% Organik</p>
+                    <p class="text-[11px] font-semibold leading-tight" style="color: rgb(var(--text-secondary));">100% Organik</p>
                 </div>
-                <div class="glass rounded-xl p-3 text-center">
+                <div class="glass rounded-xl p-3 text-center flex flex-col justify-center items-center">
                     <div class="text-2xl mb-1">✅</div>
-                    <p class="text-xs" style="color: rgb(var(--text-secondary));">Halal & BPOM</p>
+                    <p class="text-[11px] font-semibold leading-tight" style="color: rgb(var(--text-secondary));">Halal & BPOM</p>
                 </div>
             </div>
         </div>

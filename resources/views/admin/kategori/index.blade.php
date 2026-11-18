@@ -2,6 +2,15 @@
 @section('title', 'Kelola Kategori')
 @section('page-title', 'Kelola Kategori')
 
+@push('styles')
+<style>
+    /* CSS KHUSUS BIAR SIDEBAR & HEADER ILANG PAS MODAL MUNCUL */
+    body.modal-active #adminSidebar { display: none !important; }
+    body.modal-active .sticky.top-0 { display: none !important; }
+    body.modal-active .lg\:ml-\[17rem\] { margin-left: 0 !important; }
+</style>
+@endpush
+
 @section('content')
 
 @if (session('success'))
@@ -247,6 +256,7 @@
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         document.body.style.overflow = 'hidden';
+        document.body.classList.add('modal-active');
     }
 
     function closeCreateModal() {
@@ -254,6 +264,7 @@
         modal.classList.add('hidden');
         modal.classList.remove('flex');
         document.body.style.overflow = '';
+        document.body.classList.remove('modal-active');
     }
 
     // ==== EDIT MODAL ====
@@ -265,6 +276,7 @@
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         document.body.style.overflow = 'hidden';
+        document.body.classList.add('modal-active');
 
         document.getElementById('editForm').action = '/admin/kategori/' + id;
 
@@ -308,6 +320,7 @@
         modal.classList.add('hidden');
         modal.classList.remove('flex');
         document.body.style.overflow = '';
+        document.body.classList.remove('modal-active');
     }
 
     // ==== ALPINE FUNCTIONS ====

@@ -128,6 +128,40 @@
 
         {{-- Actions --}}
         <div class="flex items-center gap-1 sm:gap-2 shrink-0 relative z-10">
+            
+            {{-- NOTIFIKASI LONCENG (ALPINE VERSION) --}}
+            @auth
+                <div class="relative" x-data="notifApp({
+                    fetchUrl: '{{ route('user.notif.fetch') }}',
+                    markAllUrl: '{{ route('user.notif.markAllRead') }}',
+                    readUrl: '{{ url('/notifications') }}/'
+                })" x-init="init()" @click.away="notifOpen = false">
+                    <button @click="notifOpen = !notifOpen" class="nav-icon-btn" title="Notifikasi">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                        
+                        <span x-show="unreadCount > 0" x-text="unreadCount > 9 ? '9+' : unreadCount" class="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center" style="box-shadow: 0 0 0 2px rgb(var(--surface)); display: none;"></span>
+                    </button>
+                    
+                    <div x-show="notifOpen" x-cloak x-transition.origin.top.right class="absolute right-0 mt-3 w-72 glass-overlay rounded-2xl overflow-hidden" style="z-index: 200;">
+                        <div class="px-4 py-3 flex justify-between items-center" style="border-bottom: 1px solid rgb(var(--border-soft));">
+                            <p class="font-bold text-sm" style="color: rgb(var(--text-primary));">Notifikasi</p>
+                            <button type="button" @click="markAllRead()" x-show="unreadCount > 0" class="text-[10px] font-semibold hover:underline" style="color: rgb(var(--brand));">Tandai Dibaca</button>
+                        </div>
+                        <div class="max-h-64 overflow-y-auto">
+                            <template x-for="n in notifications" :key="n.id">
+                                <a :href="readUrl + n.id + '/read'" class="block px-4 py-3 hover:bg-black/5 transition" style="border-bottom: 1px solid rgb(var(--border-soft));">
+                                    <p class="text-xs line-clamp-2" style="color: rgb(var(--text-primary));" x-text="n.data.pesan"></p>
+                                    <p class="text-[9px] mt-1" style="color: rgb(var(--text-muted));" x-text="new Date(n.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })"></p>
+                                </a>
+                            </template>
+                            <div x-show="notifications.length === 0" class="px-4 py-6 text-center">
+                                <p class="text-xs" style="color: rgb(var(--text-muted));">Belum ada notifikasi baru.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endauth
+
             <button type="button" onclick="toggleTheme()" class="nav-icon-btn" title="Ganti Tema" aria-label="Ganti Tema">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 block dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/></svg>
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>
@@ -315,10 +349,14 @@
                     <img src="{{ asset('images/logo_dark.png') }}" alt="EcoTahu Logo" class="footer-logo-dark">
                 </div>
                 <p class="text-sm leading-relaxed mb-5 max-w-md" style="color: rgb(var(--text-secondary));">Produsen tahu organik pertama di Jember yang mengedepankan kualitas nutrisi dan kelestarian lingkungan hidup. Mendukung SDG 12: Responsible Consumption and Production.</p>
-                <div class="flex items-center gap-2 flex-wrap">
-                    <span class="pill"><span class="w-1.5 h-1.5 rounded-full" style="background: rgb(var(--brand));"></span> Halal & BPOM</span>
-                    <span class="pill-accent">🌿 100% Organik</span>
-                    <span class="pill" style="background: rgb(var(--info-soft)); color: rgb(var(--info)); border-color: rgb(var(--info) / 0.3);">♻️ Zero Waste</span>
+                
+                {{-- INFO ONGKIR DI FOOTER --}}
+                <div class="p-3 rounded-xl mb-5" style="background: rgb(var(--info-soft) / 0.5); border: 1px solid rgb(var(--info) / 0.2);">
+                    <p class="text-xs font-bold mb-1" style="color: rgb(var(--info));">Informasi Ongkir</p>
+                    <p class="text-[11px] leading-relaxed" style="color: rgb(var(--text-secondary));">
+                        Jarak <b>0 - 2 km</b> dikenakan tarif tetap <b>Rp 5.000</b>.<br>
+                        Jarak di atas 2 km dihitung <b>Rp 2.500/km</b>.
+                    </p>
                 </div>
             </div>
             <div class="md:col-span-2">
@@ -334,7 +372,7 @@
                 <h4 class="text-xs font-bold uppercase tracking-widest mb-4" style="color: rgb(var(--text-muted));">Bantuan</h4>
                 <ul class="space-y-2.5 text-sm">
                     <li><a href="{{ route('halaman.cara-pesan') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Cara Pesan</a></li>
-                    <li><a href="{{ route('halaman.pengiriman') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Pengiriman</a></li>
+                    <li><a href="{{ route('halaman.pengiriman') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Info Pengiriman</a></li>
                     <li><a href="{{ route('halaman.refund') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Kebijakan Refund</a></li>
                     <li><a href="{{ route('halaman.faq') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">FAQ</a></li>
                 </ul>
@@ -342,7 +380,7 @@
             <div class="md:col-span-3">
                 <h4 class="text-xs font-bold uppercase tracking-widest mb-4" style="color: rgb(var(--text-muted));">Kontak</h4>
                 <ul class="space-y-3 text-sm" style="color: rgb(var(--text-secondary));">
-                    <li class="flex items-start gap-2"><span class="text-base leading-none mt-0.5">📍</span><span>Lingkungan Panji, Tegalgede, Kec. Sumbersari, Jember, Jawa Timur 68124</span></li>
+                    <li class="flex items-start gap-2"><span class="text-base leading-none mt-0.5">📍</span><span>{{ config('toko.alamat') }}</span></li>
                     <li class="flex items-center gap-2"><span class="text-base leading-none">📞</span><span>(0331) 123-4567</span></li>
                     <li class="flex items-center gap-2"><span class="text-base leading-none">✉️</span><span>hello@ecotahu.id</span></li>
                 </ul>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Pesanan;
 use App\Models\Refund;
+use App\Notifications\UpdatePesanan; // TAMBAHAN
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -80,15 +81,37 @@ class PesananController extends Controller
 
         $data = ['order_status' => $request->order_status];
 
-        // Kalau bukan dikirim lagi, clear lokasi kurir
+        // Clear lokasi kurir jika tidak dikirim
         if ($request->order_status !== 'dikirim') {
             $data['lat_kurir'] = null;
             $data['lng_kurir'] = null;
             $data['lokasi_updated_at'] = null;
         }
 
+        // LOGIKA COD: Jika Selesai dan COD, otomatis lunas
+        if ($request->order_status === 'selesai' && $pesanan->payment_method === 'COD' && $pesanan->payment_status === 'pending') {
+            $data['payment_status'] = 'paid';
+            if ($pesanan->pembayaran) {
+                $pesanan->pembayaran->update(['status_pembayaran' => 'verified', 'tanggal_bayar' => now()]);
+            } else {
+                $pesanan->pembayaran()->create([
+                    'metode_pembayaran' => 'COD',
+                    'status_pembayaran' => 'verified',
+                    'jumlah_bayar' => $pesanan->total_harga,
+                    'tanggal_bayar' => now(),
+                ]);
+            }
+        }
+
         $pesanan->update($data);
 
+        // KIRIM NOTIFIKASI KE USER
+        $pesanan->user->notify(new UpdatePesanan(
+            "Status pesanan #{$pesanan->kode_pesanan} kamu berubah menjadi: " . ucfirst($request->order_status),
+            route('user.pesanan.show', $pesanan->kode_pesanan)
+        ));
+
+        // Logika Refund otomatis jika dibatalkan (Transfer)
         $refundBaru = null;
         if ($request->order_status === 'dibatalkan'
             && $pesanan->payment_method === 'Transfer'
@@ -108,8 +131,7 @@ class PesananController extends Controller
                 ->with('success', 'Pesanan Transfer dibatalkan. Silakan proses refund di halaman ini.');
         }
 
-        return redirect()->back()
-            ->with('success', 'Status pesanan berhasil diupdate!');
+        return redirect()->back()->with('success', 'Status pesanan berhasil diperbarui!');
     }
 
     public function batalkan(Request $request, Pesanan $pesanan)
@@ -133,6 +155,12 @@ class PesananController extends Controller
             'lng_kurir' => null,
             'lokasi_updated_at' => null,
         ]);
+
+        // KIRIM NOTIFIKASI KE USER
+        $pesanan->user->notify(new UpdatePesanan(
+            "Pesanan #{$pesanan->kode_pesanan} dibatalkan. Alasan: {$request->alasan_batal}",
+            route('user.pesanan.show', $pesanan->kode_pesanan)
+        ));
 
         $refundBaru = null;
         if ($pesanan->payment_method === 'Transfer'
@@ -172,18 +200,25 @@ class PesananController extends Controller
             ]);
         }
 
-        $pesanan->update(['payment_status' => 'paid']);
+        // OTOMATIS PROSES SETELAH VERIFIKASI (One-Click Action)
+        $pesanan->update([
+            'payment_status' => 'paid',
+            'order_status' => 'diproses'
+        ]);
 
-        return redirect()->back()->with('success', 'Pembayaran berhasil diverifikasi!');
+        // KIRIM NOTIFIKASI KE USER
+        $pesanan->user->notify(new UpdatePesanan(
+            "Pembayaran pesanan #{$pesanan->kode_pesanan} telah diverifikasi. Pesanan sedang diproses.",
+            route('user.pesanan.show', $pesanan->kode_pesanan)
+        ));
+
+        return redirect()->back()->with('success', 'Pembayaran berhasil diverifikasi dan pesanan sedang diproses!');
     }
 
     // ============================================================
     // TRACK KURIR
     // ============================================================
 
-    /**
-     * Admin klik "Mulai Antar" — set lokasi kurir awal.
-     */
     public function startTracking(Request $request, Pesanan $pesanan)
     {
         $request->validate([
@@ -192,10 +227,7 @@ class PesananController extends Controller
         ]);
 
         if ($pesanan->order_status !== 'dikirim') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Status pesanan harus "dikirim" untuk memulai tracking.',
-            ], 422);
+            return response()->json(['success' => false, 'message' => 'Status pesanan harus "dikirim".'], 422);
         }
 
         $pesanan->update([
@@ -204,16 +236,9 @@ class PesananController extends Controller
             'lokasi_updated_at' => now(),
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Tracking dimulai.',
-            'updated_at' => $pesanan->lokasi_updated_at->toIso8601String(),
-        ]);
+        return response()->json(['success' => true, 'message' => 'Tracking dimulai.', 'updated_at' => $pesanan->lokasi_updated_at->toIso8601String()]);
     }
 
-    /**
-     * Update lokasi kurir (dipanggil tiap 30 detik dari HP admin).
-     */
     public function updateLokasi(Request $request, Pesanan $pesanan)
     {
         $request->validate([
@@ -222,10 +247,7 @@ class PesananController extends Controller
         ]);
 
         if ($pesanan->order_status !== 'dikirim') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Tracking tidak aktif untuk pesanan ini.',
-            ], 422);
+            return response()->json(['success' => false, 'message' => 'Tracking tidak aktif.'], 422);
         }
 
         $pesanan->update([
@@ -234,15 +256,9 @@ class PesananController extends Controller
             'lokasi_updated_at' => now(),
         ]);
 
-        return response()->json([
-            'success' => true,
-            'updated_at' => $pesanan->lokasi_updated_at->toIso8601String(),
-        ]);
+        return response()->json(['success' => true, 'updated_at' => $pesanan->lokasi_updated_at->toIso8601String()]);
     }
 
-    /**
-     * Admin klik "Selesai Antar" — clear lokasi kurir.
-     */
     public function stopTracking(Pesanan $pesanan)
     {
         $pesanan->update([
@@ -251,9 +267,6 @@ class PesananController extends Controller
             'lokasi_updated_at' => null,
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Tracking dihentikan.',
-        ]);
+        return response()->json(['success' => true, 'message' => 'Tracking dihentikan.']);
     }
 }

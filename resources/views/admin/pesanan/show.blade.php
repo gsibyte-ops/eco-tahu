@@ -2,6 +2,15 @@
 @section('title', 'Detail Pesanan')
 @section('page-title', 'Detail Pesanan')
 
+@push('styles')
+<style>
+    /* CSS KHUSUS BIAR SIDEBAR & HEADER ILANG PAS PREVIEW/LIGHTBOX MUNCUL */
+    body.modal-active #adminSidebar { display: none !important; }
+    body.modal-active .sticky.top-0 { display: none !important; }
+    body.modal-active .lg\:ml-\[17rem\] { margin-left: 0 !important; }
+</style>
+@endpush
+
 @section('content')
 
 @if (session('success'))
@@ -181,10 +190,10 @@
                 @if ($pesanan->pembayaran && $pesanan->pembayaran->bukti_transfer)
                     <div>
                         <p class="txt-secondary text-xs mb-2">Bukti Transfer</p>
-                        <a href="{{ asset('storage/' . $pesanan->pembayaran->bukti_transfer) }}" target="_blank">
+                        <div onclick="openLightbox('{{ asset('storage/' . $pesanan->pembayaran->bukti_transfer) }}')" class="cursor-pointer">
                             <img src="{{ asset('storage/' . $pesanan->pembayaran->bukti_transfer) }}"
                                  class="w-full rounded-xl border bd-soft hover:opacity-90 transition">
-                        </a>
+                        </div>
                         <p class="text-xs txt-secondary mt-1">Klik untuk lihat full size</p>
                     </div>
                 @endif
@@ -254,4 +263,45 @@
     </div>
 </div>
 
+{{-- LIGHTBOX PREVIEW BUKTI TRANSFER --}}
+<div id="imageLightbox" class="fixed inset-0 hidden"
+     style="z-index: 99999; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
+    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px;">
+        <img id="imageLightboxImg" src="" alt="Preview Bukti"
+             onclick="event.stopPropagation()"
+             style="max-width: 100%; max-height: 85vh; border-radius: 16px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); object-fit: contain;">
+    </div>
+    <button type="button" onclick="closeLightbox()"
+            style="position: absolute; top: 20px; right: 20px; width: 48px; height: 48px; background: #ef4444; color: white; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100000; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"
+            title="Tutup">
+        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+</div>
+
 @endsection
+
+@push('scripts')
+<script>
+    function openLightbox(url) {
+        document.getElementById('imageLightboxImg').src = url;
+        document.getElementById('imageLightbox').classList.remove('hidden');
+        document.body.classList.add('modal-active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+        document.getElementById('imageLightbox').classList.add('hidden');
+        document.getElementById('imageLightboxImg').src = '';
+        document.body.classList.remove('modal-active');
+        document.body.style.overflow = '';
+    }
+
+    document.getElementById('imageLightbox')?.addEventListener('click', function(e) {
+        if (e.target === this) closeLightbox();
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeLightbox();
+    });
+</script>
+@endpush

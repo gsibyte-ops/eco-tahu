@@ -30,22 +30,17 @@ function initLenis() {
 
 /* ============================================================
    2) HERO ENTRANCE — fix H1 clipping
-   ⚠️ Tidak pakai overflow:hidden. Line di-split, tapi animasi
-      via y:60 + opacity, jadi huruf TIDAK mungkin kepotong.
    ============================================================ */
 function initHero() {
     if (REDUCE) return;
     const h1 = document.querySelector('main > section:first-child h1');
     if (!h1) return;
 
-    // Split per baris (tanpa bikin wrapper overflow hidden)
     const split = new SplitType(h1, { types: 'lines' });
     split.lines.forEach((line) => {
-        // Hanya bikin display:block biar tiap baris punya baris sendiri
         line.style.display = 'block';
     });
 
-    // ← Animasi: fade + slide, bukan mask reveal. Aman dari clipping.
     gsap.set(split.lines, { y: 60, opacity: 0 });
     gsap.to(split.lines, {
         y: 0,
@@ -276,6 +271,48 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('load', () => ScrollTrigger.refresh());
     setTimeout(() => ScrollTrigger.refresh(), 300);
     setTimeout(() => ScrollTrigger.refresh(), 1000);
+});
+
+/* ============================================================
+   ALPINE DATA (NOTIFIKASI)
+   ============================================================ */
+document.addEventListener('alpine:init', () => {
+    Alpine.data('notifApp', (config) => ({
+        notifOpen: false,
+        unreadCount: 0,
+        notifications: [],
+        
+        init() {
+            this.fetchNotifs();
+            setInterval(() => this.fetchNotifs(), 15000); // Cek notif tiap 15 detik
+        },
+        
+        fetchNotifs() {
+            fetch(config.fetchUrl, {
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                this.unreadCount = data.length;
+                this.notifications = data;
+            })
+            .catch(err => console.error('Notif error:', err));
+        },
+        
+        markAllRead() {
+            fetch(config.markAllUrl, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            }).then(() => {
+                this.unreadCount = 0;
+                this.notifications = [];
+            });
+        }
+    }));
 });
 
 Alpine.start();

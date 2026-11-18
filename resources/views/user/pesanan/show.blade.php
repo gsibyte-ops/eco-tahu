@@ -12,12 +12,7 @@
         <span class="font-medium tabular-nums" style="color: rgb(var(--text-primary));">#{{ $pesanan->kode_pesanan }}</span>
     </nav>
 
-    @if (session('success'))
-        <div class="glass rounded-xl px-4 py-3 mb-4 text-sm" style="color: rgb(var(--success)); border: 1px solid rgb(var(--success) / 0.3); background: rgb(var(--success-soft));">{{ session('success') }}</div>
-    @endif
-    @if (session('error'))
-        <div class="glass rounded-xl px-4 py-3 mb-4 text-sm" style="color: rgb(var(--danger)); border: 1px solid rgb(var(--danger) / 0.3); background: rgb(var(--danger-soft));">{{ session('error') }}</div>
-    @endif
+    {{-- NOTIF DOBEL UDAH DIHAPUS, LAYOUTS USER UDAH NAMPILIN --}}
 
     @php
         $statusStyle = [
@@ -134,15 +129,20 @@
                         </div>
                         <div>
                             <p class="text-xs" style="color: rgb(var(--danger));">Status Refund</p>
-                            @php
-                                $refundLabel = [
-                                    'pending' => '⏳ Menunggu Diproses',
-                                    'diproses' => '🔄 Sedang Diproses',
-                                    'selesai' => '✅ Sudah Ditransfer',
-                                    'ditolak' => '❌ Ditolak',
-                                ][$pesanan->refund->status_refund] ?? '-';
-                            @endphp
-                            <p class="font-bold" style="color: rgb(var(--danger));">{{ $refundLabel }}</p>
+                            
+                            {{-- LOGIKA PINTAR: Ngecek apakah pesanan awalnya lunas atau nggak --}}
+                            @if($pesanan->refund->status_refund === 'selesai')
+                                @if(in_array($pesanan->payment_status, ['paid', 'success', 'lunas', 'settlement', 'refunded']) || $pesanan->refund->bukti_transfer_balik)
+                                    <p class="font-bold" style="color: rgb(var(--success));">✅ Sudah Ditransfer</p>
+                                @else
+                                    <p class="font-bold" style="color: rgb(var(--text-secondary));">✅ Dibatalkan (Belum ada dana masuk)</p>
+                                @endif
+                            @elseif($pesanan->refund->status_refund === 'ditolak')
+                                <p class="font-bold" style="color: rgb(var(--danger));">❌ Ditolak</p>
+                            @else
+                                <p class="font-bold" style="color: rgb(var(--warning));">⏳ {{ ucfirst($pesanan->refund->status_refund) }}</p>
+                            @endif
+
                         </div>
                         @if ($pesanan->refund->catatan_admin)
                             <div class="col-span-2">
@@ -265,7 +265,8 @@
 
                 <form method="POST" action="{{ route('user.pesanan.uploadBukti', $pesanan->kode_pesanan) }}" enctype="multipart/form-data">
                     @csrf
-                    <input type="file" name="bukti_transfer" accept="image/*" required
+                    {{-- FIX: accept dibatasi hanya format gambar --}}
+                    <input type="file" name="bukti_transfer" accept="image/jpeg,image/jpg,image/png,image/webp" required
                            class="glass-input w-full px-3 py-2 text-sm mb-3 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200">
                     <button type="submit" class="btn-primary w-full py-2.5" style="background: var(--gradient-info);">
                         Upload Bukti
@@ -354,7 +355,7 @@
     @endif
 </div>
 
-{{-- MODAL CANCEL + LIGHTBOX — sama kayak index.blade.php --}}
+{{-- MODAL CANCEL + LIGHTBOX --}}
 <div id="cancelModal" class="fixed inset-0 z-[999] hidden items-center justify-center p-4" style="background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px);">
     <div style="width: 100%; max-width: 460px; max-height: 90vh;" class="glass-card overflow-hidden shadow-2xl flex flex-col" onclick="event.stopPropagation()">
         <div class="px-5 py-4 text-white flex-shrink-0" style="background: var(--gradient-danger);">

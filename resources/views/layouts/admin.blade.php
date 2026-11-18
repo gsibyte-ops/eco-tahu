@@ -158,19 +158,21 @@
                         <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>
                     </button>
 
-                    {{-- NOTIFIKASI DROPDOWN --}}
-                    <div class="relative" x-data="{ notifOpen: false }" @click.away="notifOpen = false">
+                    {{-- NOTIFIKASI DROPDOWN (ALPINE VERSION) --}}
+                    <div class="relative" x-data="notifApp({
+                        fetchUrl: '{{ route('admin.notifications.fetch') }}',
+                        markAllUrl: '{{ route('admin.notifications.markAll') }}',
+                        readUrl: '/admin/notifications/'
+                    })" x-init="init()" @click.away="notifOpen = false">
                         <button type="button" @click="notifOpen = !notifOpen"
                                 class="w-10 h-10 rounded-xl flex items-center justify-center transition relative"
                                 style="background: rgb(var(--surface-hover)); color: rgb(var(--text-secondary));"
                                 title="Notifikasi">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                            @if (($globalNotifTotal ?? 0) > 0)
-                                <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
-                                      style="box-shadow: 0 0 0 2px rgb(var(--surface));">
-                                    {{ $globalNotifTotal > 9 ? '9+' : $globalNotifTotal }}
-                                </span>
-                            @endif
+                            
+                            <span x-show="unreadCount > 0" x-text="unreadCount > 9 ? '9+' : unreadCount" 
+                                  class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
+                                  style="box-shadow: 0 0 0 2px rgb(var(--surface)); display: none;"></span>
                         </button>
 
                         {{-- DROPDOWN --}}
@@ -186,35 +188,36 @@
                             <div class="px-4 py-3 flex items-center justify-between" style="border-bottom: 1px solid rgb(var(--border-soft));">
                                 <div>
                                     <p class="font-bold text-sm" style="color: rgb(var(--text-primary));">Notifikasi</p>
-                                    <p class="text-xs" style="color: rgb(var(--text-muted));">
-                                        @if (($globalNotifTotal ?? 0) > 0) {{ $globalNotifTotal }} menunggu tindakan @else Semua sudah beres @endif
-                                    </p>
+                                    <p class="text-xs" style="color: rgb(var(--text-muted));" x-text="unreadCount > 0 ? unreadCount + ' menunggu tindakan' : 'Semua sudah beres'"></p>
                                 </div>
+                                <button type="button" @click="markAllRead()" x-show="unreadCount > 0" class="text-xs text-green-600 hover:underline">Tandai Semua</button>
                             </div>
                             <div class="max-h-80 overflow-y-auto">
-                                @forelse (($globalNotifs ?? []) as $n)
-                                    <a href="{{ $n['url'] }}" class="flex items-start gap-3 px-4 py-3 transition hover:bg-emerald-500/5" style="border-bottom: 1px solid rgb(var(--border-soft));">
-                                        <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgb(var(--{{ $n['icon'] === 'cart' ? 'info' : 'warning' }}-soft)); color: rgb(var(--{{ $n['icon'] === 'cart' ? 'info' : 'warning' }}));">
-                                            @if ($n['icon'] === 'cart')
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                                            @else
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
-                                            @endif
+                                <template x-for="n in notifications" :key="n.id">
+                                    <!-- LOGIKA LINK: Jika dari DB pakai readUrl, jika hardcode pakai n.data.url -->
+                                    <a :href="n.is_db ? readUrl + n.id + '/read' : n.data.url" class="flex items-start gap-3 px-4 py-3 transition hover:bg-emerald-500/5" style="border-bottom: 1px solid rgb(var(--border-soft));">
+                                        
+                                        <!-- ICON DINAMIS -->
+                                        <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgb(var(--info-soft)); color: rgb(var(--info));">
+                                            <!-- Icon Cart untuk Pesanan Pending -->
+                                            <svg x-show="n.id === 'pending_pesanan'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                                            <!-- Icon Refund untuk Refund Pending -->
+                                            <svg x-show="n.id === 'pending_refund'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                            <!-- Icon Lonceng untuk Notif DB -->
+                                            <svg x-show="n.is_db" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                                         </div>
+
                                         <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-semibold" style="color: rgb(var(--text-primary));">{{ $n['title'] }}</p>
-                                            <p class="text-xs truncate" style="color: rgb(var(--text-secondary));">{{ $n['subtitle'] }}</p>
+                                            <p class="text-sm font-semibold text-gray-800" style="color: rgb(var(--text-primary));" x-text="n.data.pesan"></p>
                                             <div class="flex justify-between items-center mt-1 gap-2">
-                                                <span class="text-xs font-bold" style="color: rgb(var(--brand));">{{ $n['amount'] }}</span>
-                                                <span class="text-[10px] flex-shrink-0" style="color: rgb(var(--text-muted));">{{ $n['time'] }}</span>
+                                                <span class="text-[10px] flex-shrink-0" style="color: rgb(var(--text-muted));" x-text="new Date(n.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })"></span>
                                             </div>
                                         </div>
                                     </a>
-                                @empty
-                                    <div class="px-4 py-10 text-center">
-                                        <p class="text-sm" style="color: rgb(var(--text-muted));">Tidak ada notifikasi baru 🎉</p>
-                                    </div>
-                                @endforelse
+                                </template>
+                                <div x-show="notifications.length === 0" class="px-4 py-10 text-center">
+                                    <p class="text-sm" style="color: rgb(var(--text-muted));">Tidak ada notifikasi baru 🎉</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -241,6 +244,49 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<!-- TAMBAHAN SCRIPT ALPINE AGAR NOTIF APP JALAN (Jaga-jaga kalau di admin.js belum ada) -->
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('notifApp', (config) => ({
+            notifOpen: false,
+            unreadCount: 0,
+            notifications: [],
+            
+            init() {
+                this.fetchNotifs();
+                setInterval(() => this.fetchNotifs(), 15000);
+            },
+            
+            fetchNotifs() {
+                fetch(config.fetchUrl, {
+                    headers: { 'Accept': 'application/json' }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    this.unreadCount = data.length;
+                    this.notifications = data;
+                })
+                .catch(err => console.error('Notif error:', err));
+            },
+            
+            markAllRead() {
+                fetch(config.markAllUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                }).then(() => {
+                    this.unreadCount = 0;
+                    this.notifications = [];
+                });
+            }
+        }));
+    });
+</script>
+
 <script>
     // Real-time Clock
     function updateClock() {

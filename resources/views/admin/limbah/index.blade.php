@@ -2,6 +2,15 @@
 @section('title', 'Kelola Limbah')
 @section('page-title', 'Kelola Limbah')
 
+@push('styles')
+<style>
+    /* CSS KHUSUS BIAR SIDEBAR & HEADER ILANG PAS MODAL MUNCUL */
+    body.modal-active #adminSidebar { display: none !important; }
+    body.modal-active .sticky.top-0 { display: none !important; }
+    body.modal-active .lg\:ml-\[17rem\] { margin-left: 0 !important; }
+</style>
+@endpush
+
 @section('content')
 
 @if (session('success'))
@@ -562,7 +571,7 @@
 {{-- GLOBAL LIGHTBOX --}}
 {{-- ============================================ --}}
 <div id="globalLightbox" class="fixed inset-0 hidden"
-     style="z-index: 99999; background: rgba(0,0,0,0.9);">
+     style="z-index: 99999; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
     <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px;">
         <img id="globalLightboxImg" src="" alt="Preview"
              onclick="event.stopPropagation()"
@@ -587,6 +596,7 @@
         document.getElementById('globalLightboxImg').src = url;
         lb.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
+        document.body.classList.add('modal-active');
     }
 
     function closeGlobalLightbox() {
@@ -594,6 +604,14 @@
         lb.classList.add('hidden');
         document.getElementById('globalLightboxImg').src = '';
         document.body.style.overflow = '';
+
+        const createModal = document.getElementById('createModal');
+        const editModal = document.getElementById('editModal');
+        const isCreateOpen = createModal && !createModal.classList.contains('hidden');
+        const isEditOpen = editModal && !editModal.classList.contains('hidden');
+        if (!isCreateOpen && !isEditOpen) {
+            document.body.classList.remove('modal-active');
+        }
     }
 
     document.getElementById('globalLightbox').addEventListener('click', function(e) {
@@ -620,6 +638,7 @@
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         document.body.style.overflow = 'hidden';
+        document.body.classList.add('modal-active');
 
         const form = document.getElementById('createForm');
         if (form) {
@@ -641,6 +660,12 @@
         modal.classList.add('hidden');
         modal.classList.remove('flex');
         document.body.style.overflow = '';
+
+        const lb = document.getElementById('globalLightbox');
+        const isLbOpen = lb && !lb.classList.contains('hidden');
+        if (!isLbOpen) {
+            document.body.classList.remove('modal-active');
+        }
 
         const fileInput = modal.querySelector('input[name="gambar"]');
         if (fileInput) fileInput.value = '';
@@ -669,6 +694,7 @@
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         document.body.style.overflow = 'hidden';
+        document.body.classList.add('modal-active');
 
         document.getElementById('editForm').action = '/admin/limbah/' + id;
 
@@ -729,6 +755,12 @@
         modal.classList.add('hidden');
         modal.classList.remove('flex');
         document.body.style.overflow = '';
+
+        const lb = document.getElementById('globalLightbox');
+        const isLbOpen = lb && !lb.classList.contains('hidden');
+        if (!isLbOpen) {
+            document.body.classList.remove('modal-active');
+        }
 
         const fileInput = modal.querySelector('input[name="gambar"]');
         if (fileInput) fileInput.value = '';

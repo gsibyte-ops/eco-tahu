@@ -11,15 +11,24 @@
     <p class="text-xs md:text-sm mt-1" style="color: rgb(var(--text-secondary));">Pantau aktivitas bisnis EcoTahu hari ini.</p>
 </div>
 
-{{-- Statistik Cards (Di-mobile jadi 2 kolom biar ga sesak) --}}
+{{-- Statistik Cards --}}
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 mb-5 md:mb-6">
 
+    {{-- Card Pesanan --}}
     <a href="{{ route('admin.pesanan.index') }}" class="glass-card p-3 md:p-5 hover:-translate-y-0.5 transition flex flex-col justify-between">
         <div class="flex items-start justify-between mb-2 md:mb-3 gap-2">
             <div class="w-9 h-9 md:w-11 md:h-11 rounded-lg md:rounded-xl flex items-center justify-center shrink-0" style="background: rgb(var(--info-soft));">
                 <svg class="w-4 h-4 md:w-5 md:h-5" style="color: rgb(var(--info));" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
             </div>
-            <span class="text-[10px] md:text-xs font-semibold px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg" style="background: rgb(var(--success-soft)); color: rgb(var(--success));">+12.5%</span>
+            @php $pGrowth = $stats['pesanan_growth']; @endphp
+            @if ($pGrowth === null)
+                <span class="text-[10px] md:text-xs font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg" style="background: rgb(var(--bg-secondary)); color: rgb(var(--text-muted));">-</span>
+            @else
+                <span class="text-[10px] md:text-xs font-semibold px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg" 
+                      style="background: rgb(var(--{{ $pGrowth >= 0 ? 'success' : 'danger' }}-soft)); color: rgb(var(--{{ $pGrowth >= 0 ? 'success' : 'danger' }}));">
+                    {{ $pGrowth > 100 ? '>100' : ($pGrowth > 0 ? '+' : '') . number_format($pGrowth, 1) }}%
+                </span>
+            @endif
         </div>
         <div>
             <p class="text-[11px] md:text-sm mb-1 truncate" style="color: rgb(var(--text-secondary));">Total Pesanan</p>
@@ -27,12 +36,21 @@
         </div>
     </a>
 
+    {{-- Card Pendapatan --}}
     <a href="{{ route('admin.laporan.index') }}" class="glass-card p-3 md:p-5 hover:-translate-y-0.5 transition flex flex-col justify-between">
         <div class="flex items-start justify-between mb-2 md:mb-3 gap-2">
             <div class="w-9 h-9 md:w-11 md:h-11 rounded-lg md:rounded-xl flex items-center justify-center shrink-0" style="background: rgb(var(--brand-soft));">
                 <svg class="w-4 h-4 md:w-5 md:h-5" style="color: rgb(var(--brand-strong));" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
-            <span class="text-[10px] md:text-xs font-semibold px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg" style="background: rgb(var(--success-soft)); color: rgb(var(--success));">+8.2%</span>
+            @php $rGrowth = $stats['pendapatan_growth']; @endphp
+            @if ($rGrowth === null)
+                <span class="text-[10px] md:text-xs font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg" style="background: rgb(var(--bg-secondary)); color: rgb(var(--text-muted));">-</span>
+            @else
+                <span class="text-[10px] md:text-xs font-semibold px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg" 
+                      style="background: rgb(var(--{{ $rGrowth >= 0 ? 'success' : 'danger' }}-soft)); color: rgb(var(--{{ $rGrowth >= 0 ? 'success' : 'danger' }}));">
+                    {{ $rGrowth > 100 ? '>100' : ($rGrowth > 0 ? '+' : '') . number_format($rGrowth, 1) }}%
+                </span>
+            @endif
         </div>
         <div>
             <p class="text-[11px] md:text-sm mb-1 truncate" style="color: rgb(var(--text-secondary));">Pendapatan</p>
@@ -40,12 +58,12 @@
         </div>
     </a>
 
+    {{-- Card Stok Produk (TANPA PERSENTASE) --}}
     <a href="{{ route('admin.produk-tahu.index') }}" class="glass-card p-3 md:p-5 hover:-translate-y-0.5 transition flex flex-col justify-between">
         <div class="flex items-start justify-between mb-2 md:mb-3 gap-2">
             <div class="w-9 h-9 md:w-11 md:h-11 rounded-lg md:rounded-xl flex items-center justify-center shrink-0" style="background: rgb(var(--warning-soft));">
                 <svg class="w-4 h-4 md:w-5 md:h-5" style="color: rgb(var(--warning));" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
             </div>
-            <span class="text-[10px] md:text-xs font-semibold px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg" style="background: rgb(var(--success-soft)); color: rgb(var(--success));">+15.4%</span>
         </div>
         <div>
             <p class="text-[11px] md:text-sm mb-1 truncate" style="color: rgb(var(--text-secondary));">Stok Produk</p>
@@ -54,19 +72,28 @@
                 <span class="text-[10px] md:text-sm font-normal" style="color: rgb(var(--text-muted));">unit</span>
             </p>
             <div class="mt-2 pt-2 flex flex-col xl:flex-row xl:items-center gap-1 xl:gap-2 text-[10px] md:text-xs" style="border-top: 1px solid rgb(var(--border-soft)); color: rgb(var(--text-secondary));">
-                <span>📦 Tahu: <b id="stat-total-tahu" style="color: rgb(var(--text-primary));">{{ number_format($stats['total_tahu'] ?? 0) }}</b></span>
+                <span>Tahu: <b id="stat-total-tahu" style="color: rgb(var(--text-primary));">{{ number_format($stats['total_tahu'] ?? 0) }}</b></span>
                 <span class="hidden xl:block" style="color: rgb(var(--text-faint));">|</span>
-                <span>♻️ Limbah: <b id="stat-total-limbah" style="color: rgb(var(--text-primary));">{{ number_format($stats['total_limbah'] ?? 0) }}</b></span>
+                <span>Limbah: <b id="stat-total-limbah" style="color: rgb(var(--text-primary));">{{ number_format($stats['total_limbah'] ?? 0) }}</b></span>
             </div>
         </div>
     </a>
 
+    {{-- Card Pelanggan --}}
     <a href="{{ route('admin.pelanggan.index') }}" class="glass-card p-3 md:p-5 hover:-translate-y-0.5 transition flex flex-col justify-between">
         <div class="flex items-start justify-between mb-2 md:mb-3 gap-2">
             <div class="w-9 h-9 md:w-11 md:h-11 rounded-lg md:rounded-xl flex items-center justify-center shrink-0" style="background: rgb(var(--info-soft));">
                 <svg class="w-4 h-4 md:w-5 md:h-5" style="color: rgb(var(--info));" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
             </div>
-            <span class="text-[10px] md:text-xs font-semibold px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg" style="background: rgb(var(--success-soft)); color: rgb(var(--success));">+6.8%</span>
+            @php $cGrowth = $stats['pelanggan_growth']; @endphp
+            @if ($cGrowth === null)
+                <span class="text-[10px] md:text-xs font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg" style="background: rgb(var(--bg-secondary)); color: rgb(var(--text-muted));">-</span>
+            @else
+                <span class="text-[10px] md:text-xs font-semibold px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg" 
+                      style="background: rgb(var(--{{ $cGrowth >= 0 ? 'success' : 'danger' }}-soft)); color: rgb(var(--{{ $cGrowth >= 0 ? 'success' : 'danger' }}));">
+                    {{ $cGrowth > 100 ? '>100' : ($cGrowth > 0 ? '+' : '') . number_format($cGrowth, 1) }}%
+                </span>
+            @endif
         </div>
         <div>
             <p class="text-[11px] md:text-sm mb-1 truncate" style="color: rgb(var(--text-secondary));">Pelanggan</p>
@@ -88,14 +115,13 @@
                     <p class="text-[10px] md:text-xs opacity-90 mt-0.5" style="color: rgb(var(--warning));">Segera validasi agar pelanggan tidak menunggu lama.</p>
                 </div>
             </div>
-            <span class="px-3 py-1.5 md:px-4 md:py-2 text-white text-xs md:text-sm font-semibold rounded-lg md:rounded-xl transition flex-shrink-0 text-center" style="background: rgb(var(--warning));">Lihat →</span>
+            <span class="px-3 py-1.5 md:px-4 md:py-2 text-white text-xs md:text-sm font-semibold rounded-lg md:rounded-xl transition flex-shrink-0 text-center" style="background: rgb(var(--warning));">Lihat</span>
         </div>
     </a>
 </div>
 
 {{-- Grafik & Produk Terlaris --}}
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-5 mb-5 md:mb-6">
-
     <div class="lg:col-span-2 glass-card p-4 md:p-6">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
             <h3 class="font-bold text-sm md:text-base" style="color: rgb(var(--text-primary));">Penjualan</h3>
@@ -129,7 +155,7 @@
 <div class="glass-card p-4 md:p-6">
     <div class="flex items-center justify-between mb-4">
         <h3 class="font-bold text-sm md:text-base" style="color: rgb(var(--text-primary));">Pesanan Terbaru</h3>
-        <a href="{{ route('admin.pesanan.index') }}" class="text-xs md:text-sm font-semibold hover:opacity-80" style="color: rgb(var(--brand));">Lihat Semua →</a>
+        <a href="{{ route('admin.pesanan.index') }}" class="text-xs md:text-sm font-semibold hover:opacity-80" style="color: rgb(var(--brand));">Lihat Semua</a>
     </div>
 
     <div class="overflow-x-auto">
@@ -176,19 +202,19 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-    // ==== REAL-TIME STATS ====
     function fetchRealtimeStats() {
         fetch('{{ route('admin.dashboard.stats') }}')
             .then(res => res.json())
             .then(data => {
+                const revenue = parseFloat(data.total_pendapatan);
+                
                 document.getElementById('stat-total-pesanan').innerText = data.total_pesanan.toLocaleString('id-ID');
-                document.getElementById('stat-total-pendapatan').innerText = 'Rp ' + data.total_pendapatan.toLocaleString('id-ID');
+                document.getElementById('stat-total-pendapatan').innerText = 'Rp ' + Math.round(revenue).toLocaleString('id-ID');
                 document.getElementById('stat-total-produk').innerText = data.total_produk.toLocaleString('id-ID');
                 document.getElementById('stat-total-tahu').innerText = data.total_tahu.toLocaleString('id-ID');
                 document.getElementById('stat-total-limbah').innerText = data.total_limbah.toLocaleString('id-ID');
                 document.getElementById('stat-total-pelanggan').innerText = data.total_pelanggan.toLocaleString('id-ID');
                 
-                // Handle Refund Banner
                 const refundBanner = document.getElementById('refund-banner');
                 const refundPendingSpan = document.getElementById('stat-refund-pending');
                 if(data.refund_pending > 0) {
@@ -200,10 +226,8 @@
             })
             .catch(err => console.error('Gagal fetch stats:', err));
     }
-    // Polling tiap 5 detik
     setInterval(fetchRealtimeStats, 5000);
 
-    // ==== CHART.JS ====
     const chartDataWeek  = { labels: @json($chartLabels),        data: @json($chartData) };
     const chartDataMonth = { labels: @json($chartLabelsBulanan), data: @json($chartDataBulanan) };
 
@@ -214,6 +238,7 @@
         if (salesChart) salesChart.destroy();
 
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const isDataEmpty = data.every(val => val === 0);
 
         salesChart = new Chart(ctx, {
             type: 'line',
@@ -224,14 +249,14 @@
                     data: data,
                     borderColor: '#10b981',
                     backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    borderWidth: 2,
+                    borderWidth: 3,
                     tension: 0.4,
                     fill: true,
                     pointBackgroundColor: '#10b981',
                     pointBorderColor: isDark ? '#0f172a' : '#fff',
                     pointBorderWidth: 2,
-                    pointRadius: 3,
-                    pointHoverRadius: 5,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
                 }]
             },
             options: {
@@ -241,16 +266,28 @@
                     legend: { display: false },
                     tooltip: {
                         backgroundColor: isDark ? '#1e293b' : '#111827',
-                        padding: 10,
+                        padding: 12,
                         cornerRadius: 8,
-                        callbacks: { label: c => 'Rp ' + c.parsed.y.toLocaleString('id-ID') }
+                        callbacks: { 
+                            label: c => 'Rp ' + Math.round(c.parsed.y).toLocaleString('id-ID') 
+                        }
                     }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
+                        suggestedMax: isDataEmpty ? 100000 : undefined, 
                         grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' },
-                        ticks: { callback: v => 'Rp ' + (v / 1000) + 'k', font: { size: 10 }, color: isDark ? '#94a3b8' : '#9ca3af' }
+                        ticks: { 
+                            callback: function(value) {
+                                if (value === 0) return 'Rp 0';
+                                if (value >= 1000000) return 'Rp ' + (value / 1000000).toFixed(1).replace('.0', '') + 'Jt';
+                                if (value >= 1000) return 'Rp ' + (value / 1000).toFixed(1).replace('.0', '') + 'k';
+                                return 'Rp ' + Math.round(value);
+                            },
+                            font: { size: 10 }, 
+                            color: isDark ? '#94a3b8' : '#9ca3af' 
+                        }
                     },
                     x: {
                         grid: { display: false },
@@ -278,7 +315,6 @@
         }
     }
 
-    // Inisialisasi chart pertama kali
     buildChart(chartDataWeek.labels, chartDataWeek.data);
 </script>
 @endpush

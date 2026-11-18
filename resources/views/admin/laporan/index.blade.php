@@ -4,9 +4,17 @@
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    body.modal-active #adminSidebar { display: none !important; }
+    body.modal-active .sticky.top-0 { display: none !important; }
+    body.modal-active .lg\:ml-\[17rem\] { margin-left: 0 !important; }
+</style>
 @endpush
 
 @section('content')
+
+{{-- Container Toast Notification --}}
+<div id="toastContainer" class="fixed top-24 right-6 z-[99999] flex flex-col gap-2"></div>
 
 {{-- Filter Tanggal --}}
 <div class="glass-card filter-card p-4 mb-6 relative z-30">
@@ -14,18 +22,14 @@
         <div>
             <label class="block text-xs font-bold uppercase tracking-widest mb-2" style="color: rgb(var(--text-muted));">Dari Tanggal</label>
             <input type="text" name="dari" id="dari" value="{{ $dari }}" readonly
-                   inputmode="none" autocomplete="off"
-                   onkeydown="return false" onpaste="return false" ondrop="return false"
-                   class="datepicker glass-input w-44 px-4 py-2.5 text-sm cursor-pointer"
+                   class="glass-input w-44 px-4 py-2.5 text-sm cursor-pointer"
                    style="color: rgb(var(--text-primary));">
         </div>
 
         <div>
             <label class="block text-xs font-bold uppercase tracking-widest mb-2" style="color: rgb(var(--text-muted));">Sampai Tanggal</label>
             <input type="text" name="sampai" id="sampai" value="{{ $sampai }}" readonly
-                   inputmode="none" autocomplete="off"
-                   onkeydown="return false" onpaste="return false" ondrop="return false"
-                   class="datepicker glass-input w-44 px-4 py-2.5 text-sm cursor-pointer"
+                   class="glass-input w-44 px-4 py-2.5 text-sm cursor-pointer"
                    style="color: rgb(var(--text-primary));">
         </div>
 
@@ -423,123 +427,100 @@
     const SEMUA_PRODUK = @json($semuaProdukJson);
     const SEMUA_LIMBAH = @json($semuaLimbahJson);
 
-    // ==== FLATPICKR — KENDALI RENTANG TANGGAL (MIN/MAX DINAMIS) ====
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
+    // ==== TOAST NOTIFICATION ====
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+        const toast = document.createElement('div');
+        const bgStyle = type === 'success' ? 'background: rgb(var(--success)); color: white;' : 'background: rgb(var(--danger)); color: white;';
+        const icon = type === 'success' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>' : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>';
+        toast.className = 'flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg text-sm font-medium transform transition-all duration-300 translate-x-full opacity-0';
+        toast.style.cssText = bgStyle;
+        toast.innerHTML = `<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">${icon}</svg><span>${message}</span>`;
+        container.appendChild(toast);
+        requestAnimationFrame(() => { toast.classList.remove('translate-x-full', 'opacity-0'); });
+        setTimeout(() => { toast.classList.add('translate-x-full', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 3000);
+    }
 
+    // GLOBAL GUARD FLATPICKR
+    (function yearInputGuard() {
+        const ALLOWED_KEYS = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End', 'Enter'];
+        document.addEventListener('keydown', function (e) {
+            if (!e.target?.classList?.contains('cur-year')) return;
+            if (ALLOWED_KEYS.includes(e.key)) return;
+            if ((e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x'].includes(e.key.toLowerCase())) return;
+            if (!/^[0-9]$/.test(e.key)) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+            }
+        }, true);
+    })();
+
+    // ============================================================
+    // FLATPICKR (SIMPEL & ANTI BENTROK SEPERTI DI REFUND & PESANAN)
+    // ============================================================
     let dariPicker, sampaiPicker;
-    let isSyncingDates = false;
 
-    function clearPickerSilent(picker) {
-        if (!picker) return;
-        const prev = isSyncingDates;
-        isSyncingDates = true;
-        try {
-            try { picker.clear(false); } catch (e) { picker.setDate([], false); }
-            if (picker.altInput) picker.altInput.value = '';
-            if (picker._input) picker._input.value = '';
-            picker.selectedDates = [];
-        } finally {
-            isSyncingDates = prev;
-        }
-    }
-
-    function syncDateConstraints(source) {
-        if (!dariPicker || !sampaiPicker || isSyncingDates) return;
-        isSyncingDates = true;
-        try {
-            const d = dariPicker.selectedDates[0] || null;
-            const s = sampaiPicker.selectedDates[0] || null;
-
-            if (d && s && d.getTime() > s.getTime()) {
-                if (source === 'dari') {
-                    clearPickerSilent(sampaiPicker);
-                } else if (source === 'sampai') {
-                    clearPickerSilent(dariPicker);
-                } else {
-                    clearPickerSilent(sampaiPicker);
-                }
-            }
-
-            const d2 = dariPicker.selectedDates[0] || null;
-            const s2 = sampaiPicker.selectedDates[0] || null;
-
-            sampaiPicker.set('minDate', d2);
-            sampaiPicker.set('maxDate', today);
-            dariPicker.set('maxDate', (s2 && s2.getTime() < today.getTime()) ? s2 : today);
-        } finally {
-            isSyncingDates = false;
-        }
-    }
-
-    function makeFlatpickrConfig(extra) {
-        return Object.assign({
-            dateFormat: "Y-m-d",
-            altInput: true,
-            altFormat: "d M Y",
-            allowInput: false,
-            monthSelectorType: "static",
-            maxDate: today,
-            clickOpens: true,
-            onReady: function(selectedDates, dateStr, instance) {
-                instance.altInput.setAttribute('readonly', 'readonly');
-                instance.altInput.setAttribute('inputmode', 'none');
-                instance.altInput.setAttribute('autocomplete', 'off');
-                instance.altInput.style.cursor = 'pointer';
-                instance.altInput.style.caretColor = 'transparent';
-                instance.altInput.classList.add('glass-input');
-                instance.altInput.style.color = 'rgb(var(--text-primary))';
-
-                const yearInput = instance.calendarContainer.querySelector('.cur-year');
-                if (yearInput) {
-                    yearInput.setAttribute('type', 'text');
-                    yearInput.setAttribute('inputmode', 'numeric');
-                    yearInput.setAttribute('pattern', '[0-9]*');
-                    yearInput.setAttribute('autocomplete', 'off');
-
-                    yearInput.addEventListener('keydown', function(e) {
-                        const allowed = ['Backspace','Delete','Tab','Escape','Enter',
-                                         'ArrowLeft','ArrowRight','ArrowUp','ArrowDown',
-                                         'Home','End'];
-                        if (allowed.includes(e.key) || e.ctrlKey || e.metaKey) return;
-                        if (!/^[0-9]$/.test(e.key)) e.preventDefault();
-                    });
-
-                    yearInput.addEventListener('input', function() {
-                        this.value = this.value.replace(/[^0-9]/g, '');
-                    });
-                }
-            },
-            onChange: function() {
-                if (isSyncingDates) return;
-                const isDari = this.input.id === 'dari';
-                syncDateConstraints(isDari ? 'dari' : 'sampai');
-            }
-        }, extra || {});
-    }
-
-    dariPicker = flatpickr("#dari", makeFlatpickrConfig({}));
-    sampaiPicker = flatpickr("#sampai", makeFlatpickrConfig({}));
-
-    // Sync awal
-    setTimeout(function() { syncDateConstraints(); }, 100);
-
-    // SAFETY NET: Validasi sebelum submit
-    document.getElementById('filterForm')?.addEventListener('submit', function(e) {
-        const d = dariPicker?.selectedDates[0];
-        const s = sampaiPicker?.selectedDates[0];
-        if (d && s && d.getTime() > s.getTime()) {
-            e.preventDefault();
-            alert('⚠️ Tanggal "Dari" tidak boleh lebih besar dari "Sampai".');
-            return false;
+    dariPicker = flatpickr("#dari", {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d M Y",
+        allowInput: false,
+        monthSelectorType: "static",
+        maxDate: "today",
+        onReady: function(_, __, fp) {
+            fp.altInput.classList.add('glass-input');
+            fp.altInput.style.color = 'rgb(var(--text-primary))';
         }
     });
+
+    sampaiPicker = flatpickr("#sampai", {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d M Y",
+        allowInput: false,
+        monthSelectorType: "static",
+        maxDate: "today",
+        onReady: function(_, __, fp) {
+            fp.altInput.classList.add('glass-input');
+            fp.altInput.style.color = 'rgb(var(--text-primary))';
+        }
+    });
+
+    // Validasi sebelum form submit (PAKE TOAST PERSIS SEPERTI DI REFUND & PESANAN)
+    function validateFilterDate(e) {
+        const d = dariPicker?.selectedDates[0];
+        const s = sampaiPicker?.selectedDates[0];
+        const dariVal = document.getElementById('dari')?.value;
+        const sampaiVal = document.getElementById('sampai')?.value;
+
+        let isInvalid = false;
+        if (d && s) {
+            isInvalid = d.getTime() > s.getTime();
+        } else if (dariVal && sampaiVal) {
+            isInvalid = dariVal > sampaiVal;
+        }
+
+        if (isInvalid) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            showToast('Rentang tanggal tidak valid. Tanggal "Sampai" tidak boleh mendahului tanggal "Dari".', 'error');
+            return false;
+        }
+        return true;
+    }
+
+    document.getElementById('filterForm')?.addEventListener('submit', validateFilterDate);
+    document.querySelector('#filterForm button[type="submit"]')?.addEventListener('click', validateFilterDate);
 
     // ==== RANKING MODAL ====
     function openRankingModal(tipe) {
         const modal = document.getElementById('rankingModal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
+        document.body.classList.add('modal-active');
         document.body.style.overflow = 'hidden';
 
         const data = tipe === 'produk' ? SEMUA_PRODUK : SEMUA_LIMBAH;
@@ -586,6 +567,7 @@
         const modal = document.getElementById('rankingModal');
         modal.classList.add('hidden');
         modal.classList.remove('flex');
+        document.body.classList.remove('modal-active');
         document.body.style.overflow = '';
     }
 

@@ -2,6 +2,15 @@
 @section('title', 'Detail Refund')
 @section('page-title', 'Detail Refund')
 
+@push('styles')
+<style>
+    /* CSS KHUSUS BIAR SIDEBAR & HEADER ILANG PAS PREVIEW/LIGHTBOX MUNCUL */
+    body.modal-active #adminSidebar { display: none !important; }
+    body.modal-active .sticky.top-0 { display: none !important; }
+    body.modal-active .lg\:ml-\[17rem\] { margin-left: 0 !important; }
+</style>
+@endpush
+
 @section('content')
 
 {{-- SUCCESS ALERT --}}
@@ -130,9 +139,11 @@
         {{-- Bukti Transfer Balik --}}
         @if ($refund->bukti_transfer_balik)
             <div class="rounded-2xl p-6" style="background: rgb(var(--success-soft) / 0.5); border: 1px solid rgb(var(--success) / 0.3);">
-                <h3 class="font-bold mb-3" style="color: rgb(var(--success));">✓ Bukti Transfer Balik</h3>
-                <img src="{{ asset('storage/' . $refund->bukti_transfer_balik) }}"
-                     class="w-full max-w-md rounded-xl" style="border: 1px solid rgb(var(--success) / 0.3);">
+                <h3 class="font-bold mb-3" style="color: rgb(var(--success));">✓ Bukti Transfer Balik (Klik untuk perbesar)</h3>
+                <div onclick="openLightbox('{{ asset('storage/' . $refund->bukti_transfer_balik) }}')" class="cursor-zoom-in inline-block">
+                    <img src="{{ asset('storage/' . $refund->bukti_transfer_balik) }}"
+                         class="w-full max-w-md rounded-xl hover:opacity-90 transition" style="border: 1px solid rgb(var(--success) / 0.3);" title="Klik untuk lihat ukuran penuh">
+                </div>
             </div>
         @endif
     </div>
@@ -259,6 +270,21 @@
     </div>
 </div>
 
+{{-- LIGHTBOX PREVIEW BUKTI TRANSFER --}}
+<div id="refundLightbox" class="fixed inset-0 hidden"
+     style="z-index: 99999; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
+    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px;">
+        <img id="refundLightboxImg" src="" alt="Preview Bukti"
+             onclick="event.stopPropagation()"
+             style="max-width: 100%; max-height: 85vh; border-radius: 16px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); object-fit: contain;">
+    </div>
+    <button type="button" onclick="closeLightbox()"
+            style="position: absolute; top: 20px; right: 20px; width: 48px; height: 48px; background: #ef4444; color: white; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100000; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"
+            title="Tutup">
+        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -271,4 +297,27 @@
         animation: pulse-once 0.6s ease-in-out;
     }
 </style>
+<script>
+    function openLightbox(url) {
+        document.getElementById('refundLightboxImg').src = url;
+        document.getElementById('refundLightbox').classList.remove('hidden');
+        document.body.classList.add('modal-active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+        document.getElementById('refundLightbox').classList.add('hidden');
+        document.getElementById('refundLightboxImg').src = '';
+        document.body.classList.remove('modal-active');
+        document.body.style.overflow = '';
+    }
+
+    document.getElementById('refundLightbox')?.addEventListener('click', function(e) {
+        if (e.target === this) closeLightbox();
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeLightbox();
+    });
+</script>
 @endpush

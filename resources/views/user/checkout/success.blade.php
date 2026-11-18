@@ -56,7 +56,8 @@
             </div>
             <div class="flex justify-between">
                 <span style="color: rgb(var(--text-secondary));">Jarak</span>
-                <span class="font-medium tabular-nums" style="color: rgb(var(--text-primary));">{{ $pesanan->jarak_km > 0 ? $pesanan->jarak_km . ' km' : 'Ambil di Tempat' }}</span>
+                {{-- UPDATE: Diganti jadi strip (-) kalau pickup --}}
+                <span class="font-medium tabular-nums" style="color: rgb(var(--text-primary));">{{ $pesanan->jarak_km > 0 ? $pesanan->jarak_km . ' km' : '-' }}</span>
             </div>
             <div class="flex justify-between pt-3" style="border-top: 1px solid rgb(var(--border-soft));">
                 <span class="font-bold" style="color: rgb(var(--text-primary));">Total</span>
@@ -137,8 +138,13 @@
         @endif
 
     @else
+        {{-- BAGIAN COD --}}
         <div class="glass rounded-2xl p-6 mb-5 text-sm" style="color: rgb(var(--success)); border-color: rgb(var(--success) / 0.3); background: rgb(var(--success-soft));">
-            💵 <strong>Metode COD</strong> — Bayar tunai ke kurir saat barang tiba.<br>
+            @if ($pesanan->delivery_type === 'delivery')
+                💵 <strong>Metode COD</strong> — Bayar tunai ke kurir saat barang tiba.<br>
+            @else
+                🏪 <strong>Metode COD</strong> — Bayar tunai di toko/pabrik saat pengambilan barang.<br>
+            @endif
             Total yang perlu dibayar: <strong class="tabular-nums">Rp {{ number_format($pesanan->total_harga, 0, ',', '.') }}</strong>
         </div>
     @endif

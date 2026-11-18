@@ -359,10 +359,14 @@
                     <img src="{{ asset('images/logo_dark.png') }}" alt="EcoTahu Logo" class="footer-logo-dark">
                 </div>
                 <p class="text-sm leading-relaxed mb-5 max-w-md" style="color: rgb(var(--text-secondary));">Produsen tahu organik pertama di Jember yang mengedepankan kualitas nutrisi dan kelestarian lingkungan hidup. Mendukung SDG 12: Responsible Consumption and Production.</p>
-                <div class="flex items-center gap-2 flex-wrap">
-                    <span class="pill"><span class="w-1.5 h-1.5 rounded-full" style="background: rgb(var(--brand));"></span> Halal & BPOM</span>
-                    <span class="pill-accent">🌿 100% Organik</span>
-                    <span class="pill" style="background: rgb(var(--info-soft)); color: rgb(var(--info)); border-color: rgb(var(--info) / 0.3);">♻️ Zero Waste</span>
+
+                {{-- INFO ONGKIR DI FOOTER --}}
+                <div class="p-3 rounded-xl mb-5" style="background: rgb(var(--info-soft) / 0.5); border: 1px solid rgb(var(--info) / 0.2);">
+                    <p class="text-xs font-bold mb-1" style="color: rgb(var(--info));">Informasi Ongkir</p>
+                    <p class="text-[11px] leading-relaxed" style="color: rgb(var(--text-secondary));">
+                        Jarak <b>0 - 2 km</b> dikenakan tarif tetap <b>Rp 5.000</b>.<br>
+                        Jarak di atas 2 km dihitung <b>Rp 2.500/km</b>.
+                    </p>
                 </div>
             </div>
             <div class="md:col-span-2">
@@ -378,7 +382,7 @@
                 <h4 class="text-xs font-bold uppercase tracking-widest mb-4" style="color: rgb(var(--text-muted));">Bantuan</h4>
                 <ul class="space-y-2.5 text-sm">
                     <li><a href="{{ route('halaman.cara-pesan') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Cara Pesan</a></li>
-                    <li><a href="{{ route('halaman.pengiriman') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Pengiriman</a></li>
+                    <li><a href="{{ route('halaman.pengiriman') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Info Pengiriman</a></li>
                     <li><a href="{{ route('halaman.refund') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Kebijakan Refund</a></li>
                     <li><a href="{{ route('halaman.faq') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">FAQ</a></li>
                 </ul>
@@ -386,7 +390,7 @@
             <div class="md:col-span-3">
                 <h4 class="text-xs font-bold uppercase tracking-widest mb-4" style="color: rgb(var(--text-muted));">Kontak</h4>
                 <ul class="space-y-3 text-sm" style="color: rgb(var(--text-secondary));">
-                    <li class="flex items-start gap-2"><span class="text-base leading-none mt-0.5">📍</span><span>Lingkungan Panji, Tegalgede, Kec. Sumbersari, Jember, Jawa Timur 68124</span></li>
+                    <li class="flex items-start gap-2"><span class="text-base leading-none mt-0.5">📍</span><span>{{ config('toko.alamat') }}</span></li>
                     <li class="flex items-center gap-2"><span class="text-base leading-none">📞</span><span>(0331) 123-4567</span></li>
                     <li class="flex items-center gap-2"><span class="text-base leading-none">✉️</span><span>hello@ecotahu.id</span></li>
                 </ul>

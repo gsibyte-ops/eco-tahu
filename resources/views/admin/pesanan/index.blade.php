@@ -4,15 +4,38 @@
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    /* CSS KHUSUS BIAR SIDEBAR & HEADER ILANG PAS MODAL MUNCUL */
+    body.modal-active #adminSidebar { display: none !important; }
+    body.modal-active .sticky.top-0 { display: none !important; }
+    body.modal-active .lg\:ml-\[17rem\] { margin-left: 0 !important; }
+
+    /* FIX PADDING & ALIGNMENT FILTER */
+    .filter-grid-item {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+    .filter-grid-item label {
+        height: 20px; /* Paksa tinggi label biar sejajar */
+        display: flex;
+        align-items: flex-end;
+        margin-bottom: 0.5rem;
+    }
+</style>
 @endpush
 
 @section('content')
 
 @if (session('success'))
+    {{-- Notif sukses dari controller (pake PHP session) --}}
     <div class="rounded-2xl px-4 py-3 mb-4 text-sm" style="color: rgb(var(--success)); background: rgb(var(--success-soft) / 0.6); border: 1px solid rgb(var(--success) / 0.3);">
         {{ session('success') }}
     </div>
 @endif
+
+{{-- Container buat Toast Notification --}}
+<div id="toastContainer" class="fixed top-24 right-6 z-[99999] flex flex-col gap-2"></div>
 
 {{-- Chip Status --}}
 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
@@ -38,41 +61,33 @@
     @endforeach
 </div>
 
-{{-- Filter — 2 baris rapi --}}
+{{-- Filter --}}
 <div class="glass-card filter-card p-6 mb-6 relative z-40" x-data="{ statusOpen: false, metodeOpen: false }">
     <form method="GET" id="filterForm">
-
-        {{-- Baris 1: Search --}}
         <div class="mb-5">
             <label class="block text-xs font-bold uppercase tracking-widest mb-2" style="color: rgb(var(--text-muted));">Cari Pesanan</label>
             <div class="auth-input-wrap" style="position: relative;">
                 <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" style="color: rgb(var(--text-muted));" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
-                <input type="text" name="q" value="{{ request('q') }}"
-                       placeholder="Kode / pelanggan / produk..."
-                       class="glass-input w-full pl-10 pr-4 py-3 text-sm" style="color: rgb(var(--text-primary));">
+                <input type="text" name="q" value="{{ request('q') }}" placeholder="Kode / pelanggan / produk..." class="glass-input w-full pl-10 pr-4 py-3 text-sm" style="color: rgb(var(--text-primary));">
             </div>
         </div>
 
-        {{-- Baris 2: Filters --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-            <div>
-                <label class="block text-xs font-bold uppercase tracking-widest mb-2" style="color: rgb(var(--text-muted));">Dari Tanggal</label>
-                <input type="text" name="dari" id="dari" value="{{ request('dari') }}" readonly
-                       class="datepicker glass-input w-full py-3 text-sm cursor-pointer" style="color: rgb(var(--text-primary));">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="filter-grid-item">
+                <label class="text-xs font-bold uppercase tracking-widest" style="color: rgb(var(--text-muted));">Dari Tanggal</label>
+                <input type="text" name="dari" id="dari" value="{{ request('dari') }}" readonly class="glass-input w-full py-3 px-4 text-sm cursor-pointer" style="color: rgb(var(--text-primary));">
             </div>
-            <div>
-                <label class="block text-xs font-bold uppercase tracking-widest mb-2" style="color: rgb(var(--text-muted));">Sampai Tanggal</label>
-                <input type="text" name="sampai" id="sampai" value="{{ request('sampai') }}" readonly
-                       class="datepicker glass-input w-full py-3 text-sm cursor-pointer" style="color: rgb(var(--text-primary));">
+            
+            <div class="filter-grid-item">
+                <label class="text-xs font-bold uppercase tracking-widest" style="color: rgb(var(--text-muted));">Sampai Tanggal</label>
+                <input type="text" name="sampai" id="sampai" value="{{ request('sampai') }}" readonly class="glass-input w-full py-3 px-4 text-sm cursor-pointer" style="color: rgb(var(--text-primary));">
             </div>
 
-            {{-- Status dropdown --}}
-            <div class="relative" @click.away="statusOpen = false">
-                <label class="block text-xs font-bold uppercase tracking-widest mb-2" style="color: rgb(var(--text-muted));">Status</label>
-                <button type="button" @click="statusOpen = !statusOpen"
-                        class="glass-input w-full flex items-center justify-between gap-2 py-3 text-sm text-left" style="color: rgb(var(--text-primary));">
+            <div class="relative filter-grid-item" @click.away="statusOpen = false">
+                <label class="text-xs font-bold uppercase tracking-widest" style="color: rgb(var(--text-muted));">Status</label>
+                <button type="button" @click="statusOpen = !statusOpen" class="glass-input w-full flex items-center justify-between gap-2 py-3 px-4 text-sm text-left" style="color: rgb(var(--text-primary));">
                     <span class="truncate" id="statusLabel">
                         @php
                             $statusLabel = match(request('status')) {
@@ -87,9 +102,7 @@
                 </button>
                 <div x-show="statusOpen" x-cloak class="absolute left-0 right-0 z-50 mt-2 rounded-xl overflow-hidden" style="background: rgb(var(--surface)); border: 1px solid rgb(var(--border)); box-shadow: var(--shadow-lg);">
                     @foreach (['' => 'Semua Status', 'pending' => 'Pending', 'diproses' => 'Diproses', 'dikirim' => 'Dikirim', 'selesai' => 'Selesai', 'dibatalkan' => 'Dibatalkan'] as $val => $label)
-                        <button type="button" data-value="{{ $val }}" data-label="{{ $label }}" onclick="selectStatusFilter(this)"
-                                class="w-full text-left px-4 py-2.5 text-sm transition hover:bg-emerald-500/10"
-                                style="{{ request('status') == $val ? 'color: rgb(var(--brand)); font-weight: 600;' : 'color: rgb(var(--text-secondary));' }}">
+                        <button type="button" data-value="{{ $val }}" data-label="{{ $label }}" onclick="selectStatusFilter(this)" class="w-full text-left px-4 py-2.5 text-sm transition hover:bg-emerald-500/10" style="{{ request('status') == $val ? 'color: rgb(var(--brand)); font-weight: 600;' : 'color: rgb(var(--text-secondary));' }}">
                             {{ $label }}
                         </button>
                     @endforeach
@@ -97,19 +110,15 @@
                 <input type="hidden" name="status" id="inputStatus" value="{{ request('status') }}">
             </div>
 
-            {{-- Metode dropdown --}}
-            <div class="relative" @click.away="metodeOpen = false">
-                <label class="block text-xs font-bold uppercase tracking-widest mb-2" style="color: rgb(var(--text-muted));">Metode</label>
-                <button type="button" @click="metodeOpen = !metodeOpen"
-                        class="glass-input w-full flex items-center justify-between gap-2 py-3 text-sm text-left" style="color: rgb(var(--text-primary));">
+            <div class="relative filter-grid-item" @click.away="metodeOpen = false">
+                <label class="text-xs font-bold uppercase tracking-widest" style="color: rgb(var(--text-muted));">Metode</label>
+                <button type="button" @click="metodeOpen = !metodeOpen" class="glass-input w-full flex items-center justify-between gap-2 py-3 px-4 text-sm text-left" style="color: rgb(var(--text-primary));">
                     <span class="truncate" id="metodeLabel">{{ request('payment_method') ?: 'Semua Metode' }}</span>
                     <svg class="w-4 h-4 flex-shrink-0" style="color: rgb(var(--text-muted));" :class="metodeOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                 </button>
                 <div x-show="metodeOpen" x-cloak class="absolute left-0 right-0 z-50 mt-2 rounded-xl overflow-hidden" style="background: rgb(var(--surface)); border: 1px solid rgb(var(--border)); box-shadow: var(--shadow-lg);">
                     @foreach (['' => 'Semua Metode', 'COD' => 'COD', 'Transfer' => 'Transfer'] as $val => $label)
-                        <button type="button" data-value="{{ $val }}" data-label="{{ $label }}" onclick="selectMetodeFilter(this)"
-                                class="w-full text-left px-4 py-2.5 text-sm transition hover:bg-emerald-500/10"
-                                style="{{ request('payment_method') == $val ? 'color: rgb(var(--brand)); font-weight: 600;' : 'color: rgb(var(--text-secondary));' }}">
+                        <button type="button" data-value="{{ $val }}" data-label="{{ $label }}" onclick="selectMetodeFilter(this)" class="w-full text-left px-4 py-2.5 text-sm transition hover:bg-emerald-500/10" style="{{ request('payment_method') == $val ? 'color: rgb(var(--brand)); font-weight: 600;' : 'color: rgb(var(--text-secondary));' }}">
                             {{ $label }}
                         </button>
                     @endforeach
@@ -118,7 +127,6 @@
             </div>
         </div>
 
-        {{-- Baris 3: Actions --}}
         <div class="flex flex-wrap gap-3 mt-5">
             <button type="submit" class="btn-primary !py-2.5 !px-6">Terapkan Filter</button>
             @if (request()->hasAny(['q', 'status', 'payment_method', 'dari', 'sampai']))
@@ -163,6 +171,8 @@
                             'total_harga' => (int) $p->total_harga,
                             'payment_method' => $p->payment_method,
                             'payment_status' => $p->payment_status,
+                            'delivery_type' => $p->delivery_type,
+                            'delivery_label' => $p->delivery_label,
                             'is_tracking_active' => $p->lat_kurir !== null && $p->lng_kurir !== null,
                             'lokasi_updated_at' => $p->lokasi_updated_at?->toIso8601String(),
                             'user' => [
@@ -271,14 +281,44 @@
     </div>
 </div>
 
-<div class="mt-4">{{ $pesanan->links() }}</div>
+{{-- PAGINASI MANUAL (TANPA FILE BARU) --}}
+@if ($pesanan->hasPages())
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+        <div class="text-xs md:text-sm" style="color: rgb(var(--text-muted));">
+            Menampilkan <span class="font-bold" style="color: rgb(var(--text-primary));">{{ $pesanan->firstItem() ?? 0 }}</span> 
+            - <span class="font-bold" style="color: rgb(var(--text-primary));">{{ $pesanan->lastItem() ?? 0 }}</span> 
+            dari <span class="font-bold" style="color: rgb(var(--text-primary));">{{ $pesanan->total() }}</span> pesanan
+        </div>
 
-{{-- MODAL DETAIL --}}
-<div id="pesananModal"
-     class="fixed inset-0 z-[999] hidden items-center justify-center p-4"
-     style="background-color: rgba(0, 0, 0, 0.65); backdrop-filter: blur(8px);">
-    <div style="width: 100%; max-width: 480px; max-height: 85vh;"
-         class="glass-card rounded-2xl overflow-hidden flex flex-col shadow-2xl">
+        <div class="flex gap-2 w-full sm:w-auto">
+            {{-- Tombol Sebelumnya --}}
+            @if ($pesanan->onFirstPage())
+                <span class="flex-1 sm:flex-none text-center glass-btn !py-2 !px-4 opacity-40 cursor-not-allowed text-xs md:text-sm">
+                    &laquo; Sebelumnya
+                </span>
+            @else
+                <a href="{{ $pesanan->previousPageUrl() }}" class="flex-1 sm:flex-none text-center glass-btn !py-2 !px-4 text-xs md:text-sm hover:-translate-y-0.5">
+                    &laquo; Sebelumnya
+                </a>
+            @endif
+
+            {{-- Tombol Selanjutnya --}}
+            @if ($pesanan->hasMorePages())
+                <a href="{{ $pesanan->nextPageUrl() }}" class="flex-1 sm:flex-none text-center glass-btn !py-2 !px-4 text-xs md:text-sm hover:-translate-y-0.5">
+                    Selanjutnya &raquo;
+                </a>
+            @else
+                <span class="flex-1 sm:flex-none text-center glass-btn !py-2 !px-4 opacity-40 cursor-not-allowed text-xs md:text-sm">
+                    Selanjutnya &raquo;
+                </span>
+            @endif
+        </div>
+    </div>
+@endif
+
+{{-- MODAL DETAIL PESANAN --}}
+<div id="pesananModal" class="fixed inset-0 z-[999] hidden items-center justify-center p-4" style="background-color: rgba(0, 0, 0, 0.65); backdrop-filter: blur(8px);">
+    <div style="width: 100%; max-width: 480px; max-height: 85vh;" class="glass-card rounded-2xl overflow-hidden flex flex-col shadow-2xl">
         <div class="flex items-start justify-between gap-4 px-5 py-4 text-white flex-shrink-0" style="background: var(--gradient-brand);">
             <div class="min-w-0 flex-1">
                 <p class="text-xs opacity-80 leading-tight">Pesanan</p>
@@ -292,9 +332,7 @@
                 </button>
             </div>
         </div>
-
         <div class="flex-1 overflow-y-auto p-4 space-y-3 text-sm">
-
             <div class="rounded-xl p-3" style="background: rgb(var(--bg-secondary) / 0.6);">
                 <p class="text-xs font-bold uppercase mb-2" style="color: rgb(var(--text-muted));">Pelanggan</p>
                 <div class="flex items-center gap-3">
@@ -306,13 +344,11 @@
                     </div>
                 </div>
             </div>
-
             <div class="rounded-xl p-3" style="background: rgb(var(--bg-secondary) / 0.6);">
                 <p class="text-xs font-bold uppercase mb-2" style="color: rgb(var(--text-muted));">Alamat Pengiriman</p>
                 <p style="color: rgb(var(--text-primary));" id="mAlamat"></p>
                 <p class="text-xs mt-1" style="color: rgb(var(--text-muted));" id="mCatatan"></p>
             </div>
-
             <div>
                 <p class="text-xs font-bold uppercase mb-2" style="color: rgb(var(--text-muted));">Item Pesanan</p>
                 <div class="rounded-xl overflow-hidden" style="border: 1px solid rgb(var(--border-soft));">
@@ -342,31 +378,29 @@
                     </table>
                 </div>
             </div>
-
             <div class="rounded-xl p-3" style="background: rgb(var(--bg-secondary) / 0.6);">
-                <p class="text-xs font-bold uppercase mb-2" style="color: rgb(var(--text-muted));">Pembayaran</p>
+                <p class="text-xs font-bold uppercase mb-2" style="color: rgb(var(--text-muted));">Detail Transaksi</p>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <p class="text-xs mb-0.5" style="color: rgb(var(--text-muted));">Metode</p>
+                        <p class="text-xs mb-0.5" style="color: rgb(var(--text-muted));">Metode Pembayaran</p>
                         <p class="font-semibold" style="color: rgb(var(--text-primary));" id="mPaymentMethod"></p>
                     </div>
                     <div>
-                        <p class="text-xs mb-0.5" style="color: rgb(var(--text-muted));">Status</p>
+                        <p class="text-xs mb-0.5" style="color: rgb(var(--text-muted));">Tipe Pengambilan</p>
+                        <p class="font-semibold" style="color: rgb(var(--text-primary));" id="mDeliveryType"></p>
+                    </div>
+                    <div class="col-span-2">
+                        <p class="text-xs mb-0.5" style="color: rgb(var(--text-muted));">Status Pembayaran</p>
                         <p class="font-semibold" id="mPaymentStatus"></p>
                     </div>
                 </div>
                 <div id="mBuktiWrapper" class="mt-2 hidden">
-                    <p class="text-xs mb-1" style="color: rgb(var(--text-muted));">Bukti Transfer</p>
-                    <img id="mBukti" src="" alt="Bukti" class="w-full rounded-xl" style="border: 1px solid rgb(var(--border-soft));">
+                    <p class="text-xs mb-1" style="color: rgb(var(--text-muted));">Bukti Transfer (Klik untuk perbesar)</p>
+                    <img id="mBukti" src="" alt="Bukti" onclick="openBuktiLightbox()" class="w-full rounded-xl cursor-zoom-in hover:opacity-90 transition" style="border: 1px solid rgb(var(--border-soft));" title="Klik untuk lihat ukuran penuh">
                 </div>
-                <form id="mFormVerifikasi" method="POST" class="mt-2 hidden">
-                    @csrf
-                    <button type="submit" class="btn-primary w-full !py-2 !text-xs">✓ Verifikasi Pembayaran</button>
-                </form>
             </div>
-
             <div id="mRefundBox" class="hidden rounded-xl p-3" style="background: rgb(var(--danger-soft) / 0.5); border: 1px solid rgb(var(--danger) / 0.3);">
-                <p class="text-xs font-bold uppercase mb-2" style="color: rgb(var(--danger));">⚠️ Pengajuan Refund</p>
+                <p class="text-xs font-bold uppercase mb-2" style="color: rgb(var(--danger));">Pengajuan Refund</p>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <p class="text-xs mb-0.5" style="color: rgb(var(--danger));">Nominal</p>
@@ -382,7 +416,6 @@
                     </div>
                 </div>
             </div>
-
             <div id="mTrackingBox" class="hidden rounded-xl p-3" style="background: rgb(var(--info-soft) / 0.4); border: 1px solid rgb(var(--info) / 0.3);">
                 <div class="flex items-center justify-between mb-2">
                     <p class="text-xs font-bold uppercase flex items-center gap-1.5" style="color: rgb(var(--info));">
@@ -395,58 +428,52 @@
                     Mulai tracking untuk mengirim lokasi Anda ke pelanggan secara real-time.
                 </p>
                 <div class="flex gap-2">
-                    <button type="button" id="mBtnStartTracking" onclick="handleStartTracking()"
-                            class="flex-1 py-2 rounded-lg text-xs font-bold text-white" style="background: rgb(var(--info));">
-                        🛵 Mulai Antar
-                    </button>
-                    <button type="button" id="mBtnStopTracking" onclick="handleStopTracking()"
-                            class="hidden flex-1 py-2 rounded-lg text-xs font-bold text-white" style="background: rgb(var(--danger));">
-                        ⏹ Selesai Antar
-                    </button>
+                    <button type="button" id="mBtnStartTracking" onclick="handleStartTracking()" class="flex-1 py-2 rounded-lg text-xs font-bold text-white" style="background: rgb(var(--info));">Mulai Antar</button>
+                    <button type="button" id="mBtnStopTracking" onclick="handleStopTracking()" class="hidden flex-1 py-2 rounded-lg text-xs font-bold text-white" style="background: rgb(var(--danger));">Selesai Antar</button>
                 </div>
                 <p class="text-[10px] mt-2 leading-relaxed" style="color: rgb(var(--info));">
-                    💡 GPS akan aktif saat Anda klik "Mulai Antar". Update tiap 30 detik.
+                    GPS akan aktif saat Anda klik "Mulai Antar". Update tiap 30 detik.
                 </p>
             </div>
-
-            <div id="mFormStatusWrapper" class="rounded-xl p-3" style="background: rgb(var(--bg-secondary) / 0.6);">
-                <p class="text-xs font-bold uppercase mb-2" style="color: rgb(var(--text-muted));">Update Status</p>
-                <form id="mFormStatus" method="POST" class="flex flex-col gap-2">
-                    @csrf
-                    <input type="hidden" name="_method" id="mMethod" value="PATCH">
-                    <div class="relative" x-data="{ statusModalOpen: false }" @click.away="statusModalOpen = false">
-                        <button type="button" @click="statusModalOpen = !statusModalOpen"
-                                class="glass-input w-full flex items-center justify-between gap-2 py-2 text-sm text-left" style="color: rgb(var(--text-primary));">
-                            <span id="mStatusFormLabel">Pilih Status</span>
-                            <svg class="w-4 h-4 flex-shrink-0" style="color: rgb(var(--text-muted));" :class="statusModalOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-                        </button>
-                        <div x-show="statusModalOpen" x-cloak
-                             class="absolute left-0 right-0 z-30 bottom-full mb-2 rounded-xl overflow-hidden"
-                             style="background: rgb(var(--surface)); border: 1px solid rgb(var(--border)); box-shadow: var(--shadow-lg);">
-                            @foreach (['pending' => 'Pending', 'diproses' => 'Diproses', 'dikirim' => 'Dikirim', 'selesai' => 'Selesai', 'dibatalkan' => 'Dibatalkan'] as $val => $label)
-                                <button type="button" data-value="{{ $val }}" data-label="{{ $label }}" onclick="selectOrderStatus(this)"
-                                        class="order-status-option w-full text-left px-4 py-2.5 text-sm transition hover:bg-emerald-500/10"
-                                        style="color: rgb(var(--text-secondary));">
-                                    {{ $label }}
-                                </button>
-                            @endforeach
-                        </div>
-                        <input type="hidden" name="order_status" id="mInputOrderStatus" value="pending">
-                    </div>
-
-                    <div id="mAlasanWrapper" class="hidden">
-                        <label class="block text-xs font-medium mb-1" style="color: rgb(var(--danger));">Alasan Pembatalan <span style="color: rgb(var(--danger));">*</span></label>
-                        <input type="text" name="alasan_batal" id="mAlasanBatal" placeholder="Tulis alasan pembatalan..."
-                               class="glass-input w-full py-2 text-sm" style="color: rgb(var(--text-primary));">
-                    </div>
-
-                    <button type="submit" class="btn-primary w-full !py-2 !text-xs" onclick="return confirm('Update status pesanan ini?')">
-                        Update
-                    </button>
-                </form>
+            <div id="mActionWrapper" class="rounded-xl p-3" style="background: rgb(var(--bg-secondary) / 0.6);">
+                <p class="text-xs font-bold uppercase mb-2" style="color: rgb(var(--text-muted));">Aksi Cepat</p>
+                <div id="mActionBtnContainer"></div>
             </div>
         </div>
     </div>
+</div>
+
+{{-- MODAL INPUT ALASAN PEMBATALAN (PENGGANTI PROMPT BAWAAN) --}}
+<div id="cancelModal" class="fixed inset-0 z-[1000] hidden items-center justify-center p-4" style="background-color: rgba(0, 0, 0, 0.65); backdrop-filter: blur(8px);">
+    <div class="glass-card rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
+        <div class="px-5 py-4" style="border-bottom: 1px solid rgb(var(--border-soft));">
+            <h3 class="font-bold text-lg" style="color: rgb(var(--text-primary));">Batalkan Pesanan</h3>
+            <p class="text-xs mt-1" style="color: rgb(var(--text-muted));">Berikan alasan mengapa pesanan ini dibatalkan.</p>
+        </div>
+        <div class="p-5">
+            <textarea id="cancelReason" rows="3" class="glass-input w-full px-4 py-2 text-sm" style="color: rgb(var(--text-primary));" placeholder="Contoh: Stok habis, pembeli salah input..."></textarea>
+            <p id="cancelError" class="text-xs mt-2 hidden" style="color: rgb(var(--danger));">Alasan pembatalan wajib diisi!</p>
+        </div>
+        <div class="px-5 py-4 flex justify-end gap-2" style="background: rgb(var(--bg-secondary) / 0.6); border-top: 1px solid rgb(var(--border-soft));">
+            <button type="button" onclick="closeCancelModal()" class="glass-btn px-4 py-2 text-sm">Batal</button>
+            <button type="button" onclick="submitCancel()" class="btn-primary px-4 py-2 text-sm" style="background: rgb(var(--danger));">Ya, Batalkan</button>
+        </div>
+    </div>
+</div>
+
+{{-- LIGHTBOX PREVIEW BUKTI TRANSFER --}}
+<div id="buktiLightbox" class="fixed inset-0 z-[1001] hidden"
+     style="background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
+    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px;">
+        <img id="buktiLightboxImg" src="" alt="Preview Bukti"
+             onclick="event.stopPropagation()"
+             style="max-width: 100%; max-height: 85vh; border-radius: 16px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); object-fit: contain;">
+    </div>
+    <button type="button" onclick="closeBuktiLightbox()"
+            style="position: absolute; top: 20px; right: 20px; width: 48px; height: 48px; background: #ef4444; color: white; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100000; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"
+            title="Tutup">
+        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
 </div>
 
 @endsection
@@ -455,11 +482,47 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
     // ============================================================
-    // GLOBAL GUARD: INPUT TAHUN FLATPICKR CUMA BOLEH ANGKA 0-9
+    // TOAST NOTIFICATION (PENGGANTI ALERT)
+    // ============================================================
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        
+        // Style berdasarkan tipe
+        const bgStyle = type === 'success' 
+            ? 'background: rgb(var(--success)); color: white;' 
+            : 'background: rgb(var(--danger)); color: white;';
+            
+        const icon = type === 'success' 
+            ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>'
+            : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>';
+
+        toast.className = 'flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg text-sm font-medium transform transition-all duration-300 translate-x-full opacity-0';
+        toast.style.cssText = bgStyle;
+        toast.innerHTML = `
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">${icon}</svg>
+            <span>${message}</span>
+        `;
+        
+        container.appendChild(toast);
+        
+        // Animasi masuk
+        requestAnimationFrame(() => {
+            toast.classList.remove('translate-x-full', 'opacity-0');
+        });
+
+        // Hapus setelah 3 detik
+        setTimeout(() => {
+            toast.classList.add('translate-x-full', 'opacity-0');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // ============================================================
+    // GLOBAL GUARD FLATPICKR
     // ============================================================
     (function yearInputGuard() {
         const ALLOWED_KEYS = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End', 'Enter'];
-
         document.addEventListener('keydown', function (e) {
             if (!e.target?.classList?.contains('cur-year')) return;
             if (ALLOWED_KEYS.includes(e.key)) return;
@@ -469,35 +532,6 @@
                 e.stopImmediatePropagation();
             }
         }, true);
-
-        document.addEventListener('paste', function (e) {
-            if (!e.target?.classList?.contains('cur-year')) return;
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            const pasted = ((e.clipboardData || window.clipboardData).getData('text') || '').replace(/\D/g, '').slice(0, 4);
-            if (pasted) {
-                e.target.value = pasted;
-                e.target.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-        }, true);
-
-        document.addEventListener('input', function (e) {
-            if (!e.target?.classList?.contains('cur-year')) return;
-            const cleaned = e.target.value.replace(/\D/g, '').slice(0, 4);
-            if (e.target.value !== cleaned) {
-                e.target.value = cleaned;
-            }
-        }, true);
-
-        new MutationObserver(function () {
-            document.querySelectorAll('.flatpickr-calendar .cur-year').forEach(function (input) {
-                if (input.type !== 'text') {
-                    input.type = 'text';
-                    input.setAttribute('inputmode', 'numeric');
-                    input.setAttribute('pattern', '[0-9]*');
-                }
-            });
-        }).observe(document.body, { childList: true, subtree: true });
     })();
 
     // ============================================================
@@ -505,6 +539,8 @@
     // ============================================================
     let currentTrackingPesanan = null;
     let trackingInterval = null;
+    let cancelRoute = null;
+    let cancelCsrf = null;
 
     // ============================================================
     // FILTER HANDLERS
@@ -523,143 +559,86 @@
     }
 
     // ============================================================
-    // ORDER STATUS SELECT
+    // FLATPICKR (SIMPEL & ANTI BENTROK)
     // ============================================================
-    function selectOrderStatus(el) {
-        const value = el.dataset.value;
-        const label = el.dataset.label;
-
-        document.getElementById('mInputOrderStatus').value = value;
-        document.getElementById('mStatusFormLabel').textContent = label;
-
-        document.querySelectorAll('.order-status-option').forEach(btn => {
-            btn.style.background = '';
-            btn.style.color = 'rgb(var(--text-secondary))';
-            btn.style.fontWeight = '';
-        });
-        el.style.background = 'rgb(var(--brand) / 0.1)';
-        el.style.color = 'rgb(var(--brand))';
-        el.style.fontWeight = '600';
-
-        const alasanWrapper = document.getElementById('mAlasanWrapper');
-        const alasanInput = document.getElementById('mAlasanBatal');
-        const formStatus = document.getElementById('mFormStatus');
-        const methodInput = document.getElementById('mMethod');
-
-        if (value === 'dibatalkan') {
-            alasanWrapper.classList.remove('hidden');
-            alasanInput.required = true;
-            formStatus.action = formStatus.getAttribute('data-batalkan-route');
-            methodInput.value = 'PUT';
-        } else {
-            alasanWrapper.classList.add('hidden');
-            alasanInput.required = false;
-            alasanInput.value = '';
-            formStatus.action = formStatus.getAttribute('data-update-route');
-            methodInput.value = 'PATCH';
-        }
-
-        const c = el.closest('[x-data]');
-        if (c && c.__x) c.__x.$data.statusModalOpen = false;
-    }
-
-    // ============================================================
-    // FLATPICKR — KENDALI RENTANG TANGGAL (MIN/MAX DINAMIS)
-    // ============================================================
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
     let dariPicker, sampaiPicker;
-    let isSyncingDates = false;
-
-    function clearPickerSilent(picker) {
-        if (!picker) return;
-        const prev = isSyncingDates;
-        isSyncingDates = true;
-        try {
-            try { picker.clear(false); } catch (e) { picker.setDate([], false); }
-            if (picker.altInput) picker.altInput.value = '';
-            if (picker._input) picker._input.value = '';
-            picker.selectedDates = [];
-        } finally {
-            isSyncingDates = prev;
-        }
-    }
-
-    function syncDateConstraints(source) {
-        if (!dariPicker || !sampaiPicker || isSyncingDates) return;
-        isSyncingDates = true;
-        try {
-            const d = dariPicker.selectedDates[0] || null;
-            const s = sampaiPicker.selectedDates[0] || null;
-
-            // Handle konflik (dari > sampai)
-            if (d && s && d.getTime() > s.getTime()) {
-                if (source === 'dari') {
-                    clearPickerSilent(sampaiPicker);
-                } else if (source === 'sampai') {
-                    clearPickerSilent(dariPicker);
-                } else {
-                    clearPickerSilent(sampaiPicker);
-                }
-            }
-
-            const d2 = dariPicker.selectedDates[0] || null;
-            const s2 = sampaiPicker.selectedDates[0] || null;
-
-            // Sampai: min = dari, max = today
-            sampaiPicker.set('minDate', d2);
-            sampaiPicker.set('maxDate', today);
-
-            // Dari: max = sampai (kalau < today) atau today
-            dariPicker.set('maxDate', (s2 && s2.getTime() < today.getTime()) ? s2 : today);
-        } finally {
-            isSyncingDates = false;
-        }
-    }
 
     dariPicker = flatpickr("#dari", {
         dateFormat: "Y-m-d", altInput: true, altFormat: "d M Y",
-        allowInput: false, monthSelectorType: "static", maxDate: today,
+        allowInput: false, monthSelectorType: "static", maxDate: "today",
         onReady: function(_, __, fp) {
             fp.altInput.classList.add('glass-input');
             fp.altInput.style.color = 'rgb(var(--text-primary))';
-        },
-        onChange: function() {
-            if (!isSyncingDates) syncDateConstraints('dari');
         }
     });
 
     sampaiPicker = flatpickr("#sampai", {
         dateFormat: "Y-m-d", altInput: true, altFormat: "d M Y",
-        allowInput: false, monthSelectorType: "static", maxDate: today,
+        allowInput: false, monthSelectorType: "static", maxDate: "today",
         onReady: function(_, __, fp) {
             fp.altInput.classList.add('glass-input');
             fp.altInput.style.color = 'rgb(var(--text-primary))';
-        },
-        onChange: function() {
-            if (!isSyncingDates) syncDateConstraints('sampai');
         }
     });
 
-    // Sync awal (handle URL params yang mungkin konflik)
-    setTimeout(function() { syncDateConstraints(); }, 100);
-
-    // ============================================================
-    // SAFETY NET: Validasi sebelum form submit
-    // ============================================================
+    // Validasi sebelum form submit (PAKE TOAST)
     document.getElementById('filterForm')?.addEventListener('submit', function(e) {
         const d = dariPicker?.selectedDates[0];
         const s = sampaiPicker?.selectedDates[0];
 
         if (d && s && d.getTime() > s.getTime()) {
-            e.preventDefault();
-            alert('⚠️ Tanggal "Dari" tidak boleh lebih besar dari "Sampai".');
+            e.preventDefault(); 
+            showToast('Rentang tanggal tidak valid. Tanggal "Sampai" tidak boleh mendahului tanggal "Dari".', 'error');
             return false;
         }
     });
 
     // ============================================================
-    // MODAL HELPERS
+    // MODAL PEMBATALAN CUSTOM (PENGGANTI PROMPT)
+    // ============================================================
+    function promptCancel(route, csrf) {
+        cancelRoute = route;
+        cancelCsrf = csrf;
+        document.getElementById('cancelReason').value = '';
+        document.getElementById('cancelError').classList.add('hidden');
+        document.getElementById('cancelModal').classList.remove('hidden');
+        document.getElementById('cancelModal').classList.add('flex');
+        document.body.classList.add('modal-active');
+    }
+
+    function closeCancelModal() {
+        document.getElementById('cancelModal').classList.add('hidden');
+        document.getElementById('cancelModal').classList.remove('flex');
+        cancelRoute = null;
+
+        const pesananModal = document.getElementById('pesananModal');
+        const isPesananOpen = pesananModal && !pesananModal.classList.contains('hidden');
+        if (!isPesananOpen) {
+            document.body.classList.remove('modal-active');
+        }
+    }
+
+    function submitCancel() {
+        const alasan = document.getElementById('cancelReason').value.trim();
+        if (alasan === "") {
+            document.getElementById('cancelError').classList.remove('hidden');
+            return;
+        }
+        
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = cancelRoute;
+        form.innerHTML = `
+            <input type="hidden" name="_token" value="${cancelCsrf}">
+            <input type="hidden" name="_method" value="PUT">
+            <input type="hidden" name="alasan_batal" value="${alasan}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    // ============================================================
+    // MODAL DETAIL PESANAN
     // ============================================================
     const STATUS_COLORS = {
         pending: 'rgb(var(--warning))',
@@ -678,14 +657,12 @@
     function formatRupiah(num) {
         return 'Rp ' + Number(num).toLocaleString('id-ID');
     }
-    function csrfToken() {
-        return document.querySelector('meta[name="csrf-token"]')?.content || '';
-    }
 
     function openPesananModal(data) {
         const modal = document.getElementById('pesananModal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
+        document.body.classList.add('modal-active');
         document.body.style.overflow = 'hidden';
 
         document.getElementById('mKode').textContent = data.kode;
@@ -725,6 +702,7 @@
         document.getElementById('mTotal').textContent = formatRupiah(data.total_harga);
 
         document.getElementById('mPaymentMethod').textContent = data.payment_method;
+        document.getElementById('mDeliveryType').textContent = data.delivery_label;
         const payStatus = document.getElementById('mPaymentStatus');
         payStatus.textContent = data.payment_status.charAt(0).toUpperCase() + data.payment_status.slice(1);
         payStatus.style.color = PAYMENT_STATUS_COLORS[data.payment_status] || 'rgb(var(--text-muted))';
@@ -737,14 +715,6 @@
             buktiWrapper.classList.add('hidden');
         }
 
-        const formVerif = document.getElementById('mFormVerifikasi');
-        if (data.payment_method === 'Transfer' && data.payment_status !== 'paid' && data.pembayaran) {
-            formVerif.action = data.route_verifikasi;
-            formVerif.classList.remove('hidden');
-        } else {
-            formVerif.classList.add('hidden');
-        }
-
         const refundBox = document.getElementById('mRefundBox');
         if (data.refund) {
             document.getElementById('mRefundNominal').textContent = formatRupiah(data.refund.nominal);
@@ -755,34 +725,6 @@
             refundBox.classList.add('hidden');
         }
 
-        const formStatusWrapper = document.getElementById('mFormStatusWrapper');
-        const formStatus = document.getElementById('mFormStatus');
-        if (data.order_status === 'selesai' || data.order_status === 'dibatalkan') {
-            formStatusWrapper.classList.add('hidden');
-        } else {
-            formStatusWrapper.classList.remove('hidden');
-            formStatus.setAttribute('data-update-route', data.route_update_status);
-            formStatus.setAttribute('data-batalkan-route', data.route_batalkan);
-            formStatus.action = data.route_update_status;
-            document.getElementById('mAlasanWrapper').classList.add('hidden');
-            document.getElementById('mAlasanBatal').value = '';
-            document.getElementById('mAlasanBatal').required = false;
-            document.getElementById('mInputOrderStatus').value = data.order_status;
-            document.getElementById('mStatusFormLabel').textContent = data.order_status.charAt(0).toUpperCase() + data.order_status.slice(1);
-
-            document.querySelectorAll('.order-status-option').forEach(btn => {
-                btn.style.background = '';
-                btn.style.color = 'rgb(var(--text-secondary))';
-                btn.style.fontWeight = '';
-                if (btn.dataset.value === data.order_status) {
-                    btn.style.background = 'rgb(var(--brand) / 0.1)';
-                    btn.style.color = 'rgb(var(--brand))';
-                    btn.style.fontWeight = '600';
-                }
-            });
-        }
-
-        // TRACKING
         const trackingBox = document.getElementById('mTrackingBox');
         if (data.order_status === 'dikirim') {
             trackingBox.classList.remove('hidden');
@@ -798,6 +740,96 @@
             currentTrackingPesanan = null;
             stopTrackingCleanup();
         }
+
+        renderActionButton(data);
+    }
+
+    // === FUNGSI BARU: NENTUIN TOMBOL BERDASARKAN STATUS & TIPE (PAKE FORM HTML BIAR PASTI JALAN) ===
+    function renderActionButton(data) {
+        const container = document.getElementById('mActionBtnContainer');
+        let html = '';
+        const csrf = document.querySelector('meta[name="csrf-token"]').content;
+
+        if (data.order_status === 'selesai') {
+            html = `
+                <div class="text-center py-4">
+                    <p class="text-sm font-bold" style="color: rgb(var(--success));">Pesanan Selesai</p>
+                    <p class="text-xs mt-1" style="color: rgb(var(--text-muted));">Terima kasih, transaksi telah berhasil.</p>
+                </div>`;
+        }
+        else if (data.order_status === 'dibatalkan') {
+            html = `
+                <div class="text-center py-4">
+                    <p class="text-sm font-bold" style="color: rgb(var(--danger));">Pesanan Dibatalkan</p>
+                    <p class="text-xs mt-1" style="color: rgb(var(--text-muted));">Pesanan ini sudah tidak berlaku.</p>
+                </div>`;
+        }
+        else if (data.order_status === 'pending') {
+            if (data.payment_method === 'Transfer') {
+                html = `
+                <form action="${data.route_verifikasi}" method="POST" onsubmit="return confirm('Verifikasi pembayaran ini dan ubah status ke Diproses?')">
+                    <input type="hidden" name="_token" value="${csrf}">
+                    <button type="submit" class="w-full py-2.5 rounded-lg text-sm font-bold text-white transition hover:opacity-90" style="background: rgb(var(--brand));">
+                        Verifikasi Pembayaran & Proses
+                    </button>
+                </form>`;
+            } else {
+                html = `
+                <form action="${data.route_update_status}" method="POST" onsubmit="return confirm('Proses pesanan ini?')">
+                    <input type="hidden" name="_token" value="${csrf}">
+                    <input type="hidden" name="_method" value="PATCH">
+                    <input type="hidden" name="order_status" value="diproses">
+                    <button type="submit" class="w-full py-2.5 rounded-lg text-sm font-bold text-white transition hover:opacity-90" style="background: rgb(var(--brand));">
+                        Proses Pesanan (COD)
+                    </button>
+                </form>`;
+            }
+        }
+        else if (data.order_status === 'diproses') {
+            if (data.delivery_type === 'delivery') {
+                html = `
+                <form action="${data.route_update_status}" method="POST" onsubmit="return confirm('Kirim pesanan ini?')">
+                    <input type="hidden" name="_token" value="${csrf}">
+                    <input type="hidden" name="_method" value="PATCH">
+                    <input type="hidden" name="order_status" value="dikirim">
+                    <button type="submit" class="w-full py-2.5 rounded-lg text-sm font-bold text-white transition hover:opacity-90" style="background: rgb(var(--info));">
+                        Kirim Pesanan (Mulai Antar)
+                    </button>
+                </form>`;
+            } else {
+                html = `
+                <form action="${data.route_update_status}" method="POST" onsubmit="return confirm('Selesaikan pesanan ini? Pastikan pelanggan sudah mengambil barang.')">
+                    <input type="hidden" name="_token" value="${csrf}">
+                    <input type="hidden" name="_method" value="PATCH">
+                    <input type="hidden" name="order_status" value="selesai">
+                    <button type="submit" class="w-full py-2.5 rounded-lg text-sm font-bold text-white transition hover:opacity-90" style="background: rgb(var(--success));">
+                        Selesaikan Pesanan (Sudah Diambil)
+                    </button>
+                </form>`;
+            }
+        }
+        else if (data.order_status === 'dikirim') {
+            let label = data.payment_method === 'COD' ? 'Terima Uang & Selesaikan' : 'Selesaikan Pesanan';
+            html = `
+            <form action="${data.route_update_status}" method="POST" onsubmit="return confirm('${label}?')">
+                <input type="hidden" name="_token" value="${csrf}">
+                <input type="hidden" name="_method" value="PATCH">
+                <input type="hidden" name="order_status" value="selesai">
+                <button type="submit" class="w-full py-2.5 rounded-lg text-sm font-bold text-white transition hover:opacity-90" style="background: rgb(var(--success));">
+                    ${label}
+                </button>
+            </form>`;
+        }
+
+        // Tombol Batal pake Modal Kustom
+        if (data.order_status !== 'selesai' && data.order_status !== 'dibatalkan') {
+            html += `
+            <button type="button" onclick="promptCancel('${data.route_batalkan}', '${csrf}')" class="w-full mt-2 py-2 rounded-lg text-xs font-bold transition hover:opacity-80" style="background: rgb(var(--danger-soft)); color: rgb(var(--danger));">
+                Batalkan Pesanan
+            </button>`;
+        }
+
+        container.innerHTML = html;
     }
 
     function setTrackingUI(active, updatedAt = null) {
@@ -811,7 +843,7 @@
             statusEl.style.color = 'white';
             btnStart.classList.add('hidden');
             btnStop.classList.remove('hidden');
-            infoEl.innerHTML = '<span class="font-bold">🛵 Sedang mengantar...</span><br>Lokasi Anda dibagikan ke pelanggan.';
+            infoEl.innerHTML = '<span class="font-bold">Sedang mengantar...</span><br>Lokasi Anda dibagikan ke pelanggan.';
         } else {
             statusEl.textContent = 'OFF';
             statusEl.style.background = 'rgb(var(--bg-secondary))';
@@ -826,19 +858,55 @@
         const modal = document.getElementById('pesananModal');
         modal.classList.add('hidden');
         modal.classList.remove('flex');
+        document.body.classList.remove('modal-active');
         document.body.style.overflow = '';
     }
+
+    // ==== LIGHTBOX PREVIEW BUKTI ====
+    function openBuktiLightbox() {
+        const src = document.getElementById('mBukti').src;
+        if (!src) return;
+        document.getElementById('buktiLightboxImg').src = src;
+        document.getElementById('buktiLightbox').classList.remove('hidden');
+        document.body.classList.add('modal-active');
+    }
+
+    function closeBuktiLightbox() {
+        const lb = document.getElementById('buktiLightbox');
+        if (lb) lb.classList.add('hidden');
+        document.getElementById('buktiLightboxImg').src = '';
+        const pesananModal = document.getElementById('pesananModal');
+        if (!pesananModal || pesananModal.classList.contains('hidden')) {
+            document.body.classList.remove('modal-active');
+        }
+    }
+
+    document.getElementById('buktiLightbox')?.addEventListener('click', function(e) {
+        if (e.target === this) closeBuktiLightbox();
+    });
 
     document.getElementById('pesananModal').addEventListener('click', function(e) {
         if (e.target === this) closePesananModal();
     });
+    document.getElementById('cancelModal').addEventListener('click', function(e) {
+        if (e.target === this) closeCancelModal();
+    });
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closePesananModal();
+        if (e.key === 'Escape') {
+            const buktiLb = document.getElementById('buktiLightbox');
+            if (buktiLb && !buktiLb.classList.contains('hidden')) {
+                closeBuktiLightbox();
+                return;
+            }
+            const cancelModal = document.getElementById('cancelModal');
+            if (cancelModal && !cancelModal.classList.contains('hidden')) {
+                closeCancelModal();
+                return;
+            }
+            closePesananModal();
+        }
     });
 
-    // ============================================================
-    // TRACKING
-    // ============================================================
     function stopTrackingCleanup() {
         if (trackingInterval) { clearInterval(trackingInterval); trackingInterval = null; }
     }
@@ -846,6 +914,7 @@
     async function handleStartTracking() {
         if (!currentTrackingPesanan) return alert('Pesanan tidak valid.');
         if (!navigator.geolocation) return alert('Browser tidak mendukung GPS.');
+        
         if (!confirm('Mulai antar pesanan ini? GPS Anda akan aktif.')) return;
 
         navigator.geolocation.getCurrentPosition(
@@ -875,22 +944,22 @@
         try {
             const res = await fetch(currentTrackingPesanan.route_stop_tracking, {
                 method: 'POST',
-                headers: { 'X-CSRF-TOKEN': csrfToken(), 'Accept': 'application/json' },
+                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' },
             });
             const data = await res.json();
             if (data.success) {
                 stopTrackingCleanup();
                 setTrackingUI(false);
-                alert('Tracking dihentikan. Jangan lupa ubah status ke "Selesai".');
-            } else alert(data.message || 'Gagal.');
-        } catch (e) { alert('Error: ' + e.message); }
+                showToast('Tracking dihentikan.', 'success');
+            } else showToast(data.message || 'Gagal.', 'error');
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
     }
 
     async function kirimLokasi(route, lat, lng) {
         try {
             const res = await fetch(route, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken(), 'Accept': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' },
                 body: JSON.stringify({ lat, lng }),
             });
             const data = await res.json();

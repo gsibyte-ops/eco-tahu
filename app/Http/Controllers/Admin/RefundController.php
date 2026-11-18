@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Refund;
+use App\Notifications\UpdatePesanan; // TAMBAHAN
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
@@ -12,12 +13,9 @@ class RefundController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Refund::with(['pesanan.user', 'pesanan.detail'])->orderByDesc('id');
+        $query = Refund::with(['pesanan.user', 'pesanan.detail', 'pesanan.pembayaran'])->orderByDesc('id');
 
-        if ($request->filled('status')) {
-            $query->where('status_refund', $request->status);
-        }
-
+        if ($request->filled('status')) { $query->where('status_refund', $request->status); }
         if ($request->filled('q')) {
             $q = $request->q;
             $query->whereHas('pesanan', function ($w) use ($q) {
@@ -27,28 +25,15 @@ class RefundController extends Controller
             });
         }
 
-        // ============ FILTER TANGGAL (SERVER-SIDE BACKUP) ============
         $dari = $request->filled('dari') ? $request->dari : null;
         $sampai = $request->filled('sampai') ? $request->sampai : null;
 
-        if ($dari && Carbon::parse($dari)->isFuture()) {
-            $dari = now()->format('Y-m-d');
-        }
-        if ($sampai && Carbon::parse($sampai)->isFuture()) {
-            $sampai = now()->format('Y-m-d');
-        }
+        if ($dari && Carbon::parse($dari)->isFuture()) { $dari = now()->format('Y-m-d'); }
+        if ($sampai && Carbon::parse($sampai)->isFuture()) { $sampai = now()->format('Y-m-d'); }
+        if ($dari && $sampai && Carbon::parse($dari)->gt(Carbon::parse($sampai))) { [$dari, $sampai] = [$sampai, $dari]; }
 
-        if ($dari && $sampai && Carbon::parse($dari)->gt(Carbon::parse($sampai))) {
-            [$dari, $sampai] = [$sampai, $dari];
-        }
-
-        if ($dari) {
-            $query->where('tanggal_refund', '>=', $dari . ' 00:00:00');
-        }
-        if ($sampai) {
-            $query->where('tanggal_refund', '<=', $sampai . ' 23:59:59');
-        }
-        // ===========================================================
+        if ($dari) { $query->where('tanggal_refund', '>=', $dari . ' 00:00:00'); }
+        if ($sampai) { $query->where('tanggal_refund', '<=', $sampai . ' 23:59:59'); }
 
         $refund = $query->paginate(10)->withQueryString();
 
@@ -75,10 +60,6 @@ class RefundController extends Controller
             'status_refund' => 'required|in:pending,diproses,selesai,ditolak',
             'catatan_admin' => 'nullable|string|max:1000',
             'bukti_transfer_balik' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
-        ], [
-            'bukti_transfer_balik.image' => 'File harus berupa gambar.',
-            'bukti_transfer_balik.mimes' => 'Format gambar harus JPG, JPEG, PNG, atau WEBP.',
-            'bukti_transfer_balik.max' => 'Ukuran gambar maksimal 5MB.',
         ]);
 
         try {
@@ -96,14 +77,30 @@ class RefundController extends Controller
 
             $refund->update($data);
 
+            $isPaid = in_array($refund->pesanan->payment_status, ['paid', 'success', 'lunas', 'settlement', 'refunded']);
+
             if ($request->status_refund === 'selesai') {
-                $refund->pesanan->update(['payment_status' => 'refunded']);
+                $orderData = ['order_status' => 'dibatalkan'];
+                if ($isPaid) { $orderData['payment_status'] = 'refunded'; }
+                $refund->pesanan->update($orderData);
             }
 
-            return redirect()->route('admin.refund.show', $refund->id)
-                ->with('success', 'Status refund berhasil diupdate!');
+            // NOTIFIKASI KE USER
+            $refund->pesanan->user->notify(new UpdatePesanan(
+                "Status refund pesanan #{$refund->pesanan->kode_pesanan} menjadi: " . ucfirst($request->status_refund),
+                route('user.pesanan.show', $refund->pesanan->kode_pesanan)
+            ));
+
+            if ($request->wantsJson()) {
+                return response()->json(['success' => true, 'message' => 'Status refund berhasil diupdate!']);
+            }
+
+            return redirect()->route('admin.refund.index')->with('success', 'Status refund berhasil diupdate!');
 
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            }
             return back()->withInput()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
         }
     }
@@ -113,10 +110,7 @@ class RefundController extends Controller
         if ($refund->bukti_transfer_balik && Storage::disk('public')->exists($refund->bukti_transfer_balik)) {
             Storage::disk('public')->delete($refund->bukti_transfer_balik);
         }
-
         $refund->delete();
-
-        return redirect()->route('admin.refund.index')
-            ->with('success', 'Data refund berhasil dihapus!');
+        return redirect()->route('admin.refund.index')->with('success', 'Data refund berhasil dihapus!');
     }
 }

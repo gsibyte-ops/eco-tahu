@@ -2,6 +2,15 @@
 @section('title', 'Tambah Limbah')
 @section('page-title', 'Tambah Limbah')
 
+@push('styles')
+<style>
+    /* CSS KHUSUS BIAR SIDEBAR & HEADER ILANG PAS PREVIEW/LIGHTBOX MUNCUL */
+    body.modal-active #adminSidebar { display: none !important; }
+    body.modal-active .sticky.top-0 { display: none !important; }
+    body.modal-active .lg\:ml-\[17rem\] { margin-left: 0 !important; }
+</style>
+@endpush
+
 @section('content')
 
 <div class="max-w-3xl mx-auto glass-card rounded-2xl p-6"
@@ -23,11 +32,13 @@
              this.lightboxUrl = url;
              this.showLightbox = true;
              document.body.style.overflow = 'hidden';
+             document.body.classList.add('modal-active');
          },
 
          closeLightbox() {
              this.showLightbox = false;
              document.body.style.overflow = '';
+             document.body.classList.remove('modal-active');
          },
 
          handleFileChange(e) {
@@ -350,8 +361,9 @@
     {{-- LIGHTBOX --}}
     <div x-show="showLightbox" x-cloak
          @click="closeLightbox()"
+         @keydown.escape.window="closeLightbox()"
          class="fixed inset-0"
-         style="z-index: 99999; background: rgba(0,0,0,0.9);">
+         style="z-index: 99999; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
         <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px;">
             <img :src="lightboxUrl" alt="Preview"
                  @click.stop

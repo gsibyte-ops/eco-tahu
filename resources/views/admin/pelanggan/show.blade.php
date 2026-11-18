@@ -2,6 +2,15 @@
 @section('title', 'Detail Pelanggan')
 @section('page-title', 'Detail Pelanggan')
 
+@push('styles')
+<style>
+    /* CSS KHUSUS BIAR SIDEBAR & HEADER ILANG PAS MODAL MUNCUL */
+    body.modal-active #adminSidebar { display: none !important; }
+    body.modal-active .sticky.top-0 { display: none !important; }
+    body.modal-active .lg\:ml-\[17rem\] { margin-left: 0 !important; }
+</style>
+@endpush
+
 @section('content')
 
 {{-- BACK BUTTON --}}
@@ -327,7 +336,7 @@
                 </div>
                 <div id="mBuktiWrapper" class="mt-2 hidden">
                     <p class="text-xs txt-secondary mb-1">Bukti Transfer</p>
-                    <img id="mBukti" src="" alt="Bukti" class="w-full rounded-xl" style="border: 1px solid rgb(var(--border-soft));">
+                    <img id="mBukti" src="" alt="Bukti" onclick="openBuktiLightbox()" class="w-full rounded-xl cursor-zoom-in hover:opacity-90 transition" style="border: 1px solid rgb(var(--border-soft));" title="Klik untuk lihat ukuran penuh">
                 </div>
             </div>
 
@@ -351,6 +360,21 @@
             </div>
         </div>
     </div>
+</div>
+
+{{-- LIGHTBOX PREVIEW BUKTI TRANSFER --}}
+<div id="buktiLightbox" class="fixed inset-0 z-[1001] hidden"
+     style="background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
+    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px;">
+        <img id="buktiLightboxImg" src="" alt="Preview Bukti"
+             onclick="event.stopPropagation()"
+             style="max-width: 100%; max-height: 85vh; border-radius: 16px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); object-fit: contain;">
+    </div>
+    <button type="button" onclick="closeBuktiLightbox()"
+            style="position: absolute; top: 20px; right: 20px; width: 48px; height: 48px; background: #ef4444; color: white; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 1002; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"
+            title="Tutup">
+        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
 </div>
 
 @endsection
@@ -380,6 +404,7 @@
         const modal = document.getElementById('pesananModal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
+        document.body.classList.add('modal-active');
         document.body.style.overflow = 'hidden';
 
         document.getElementById('mKode').textContent = data.kode;
@@ -447,15 +472,46 @@
         const modal = document.getElementById('pesananModal');
         modal.classList.add('hidden');
         modal.classList.remove('flex');
+        document.body.classList.remove('modal-active');
         document.body.style.overflow = '';
     }
+
+    // === PREVIEW BUKTI TRANSFER LIGHTBOX ===
+    function openBuktiLightbox() {
+        const src = document.getElementById('mBukti').src;
+        if (!src) return;
+        document.getElementById('buktiLightboxImg').src = src;
+        document.getElementById('buktiLightbox').classList.remove('hidden');
+        document.body.classList.add('modal-active');
+    }
+
+    function closeBuktiLightbox() {
+        const lb = document.getElementById('buktiLightbox');
+        if (lb) lb.classList.add('hidden');
+        document.getElementById('buktiLightboxImg').src = '';
+        const pModal = document.getElementById('pesananModal');
+        if (!pModal || pModal.classList.contains('hidden')) {
+            document.body.classList.remove('modal-active');
+        }
+    }
+
+    document.getElementById('buktiLightbox')?.addEventListener('click', function(e) {
+        if (e.target === this) closeBuktiLightbox();
+    });
 
     document.getElementById('pesananModal').addEventListener('click', function(e) {
         if (e.target === this) closePesananModal();
     });
 
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closePesananModal();
+        if (e.key === 'Escape') {
+            const buktiLb = document.getElementById('buktiLightbox');
+            if (buktiLb && !buktiLb.classList.contains('hidden')) {
+                closeBuktiLightbox();
+                return;
+            }
+            closePesananModal();
+        }
     });
 
     // === COPY EMAIL ===

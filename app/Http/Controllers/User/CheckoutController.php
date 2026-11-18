@@ -9,10 +9,13 @@ use App\Models\Limbah;
 use App\Models\Pembayaran;
 use App\Models\Pesanan;
 use App\Models\ProdukTahu;
+use App\Models\User; // TAMBAHAN
+use App\Notifications\UpdatePesanan; // TAMBAHAN
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Notification; // TAMBAHAN
 
 class CheckoutController extends Controller
 {
@@ -210,6 +213,18 @@ class CheckoutController extends Controller
                 'status_pembayaran' => 'pending',
                 'jumlah_bayar'      => $total,
             ]);
+
+            // KIRIM NOTIFIKASI KE SEMUA ADMIN
+            $admins = User::whereHas('role', function($q) {
+                $q->where('nama_role', 'admin');
+            })->get();
+
+            if ($admins->count() > 0) {
+                Notification::send($admins, new UpdatePesanan(
+                    "Pesanan baru masuk #{$pesanan->kode_pesanan} dari " . Auth::user()->username,
+                    route('admin.pesanan.show', $pesanan->id)
+                ));
+            }
 
             DB::commit();
             session()->forget('cart');

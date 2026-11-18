@@ -30,7 +30,6 @@
         </div>
     @endif
 
-    {{-- TAMBAHAN NOVALIDATE DI SINI --}}
     <form method="POST"
           action="{{ route('user.checkout.store') }}"
           x-data="checkoutForm()"
@@ -142,6 +141,11 @@
                                         </div>
                                     </div>
                                     <p class="text-xs mt-2" style="color: rgb(var(--text-secondary));">Min. belanja Rp 15.000. Pilih kecamatan / pin lokasi.</p>
+                                    
+                                    <!-- TAMBAHAN INFO ONGKIR DI CARD DIANTAR -->
+                                    <p class="text-[11px] mt-1 leading-tight font-medium" style="color: rgb(var(--brand));">
+                                        Tarif: 0-2 km = Rp 5.000. >2 km = Rp 2.500/km.
+                                    </p>
                                 </div>
                             </label>
                         </div>
@@ -172,8 +176,14 @@
                         Lokasi Pengiriman
                     </h3>
 
+                    <!-- TAMBAHAN INFO ONGKIR DI BOX LOKASI -->
                     <div class="glass-amber rounded-xl p-3 mb-4 text-sm" style="color: rgb(var(--accent));">
-                        Wajib pilih kecamatan. Kalau mau lebih presisi, boleh pin lokasi di peta (opsional) kecamatan otomatis ikut berubah.
+                        <p class="font-bold mb-1">Info Tarif Ongkir:</p>
+                        <ul class="list-disc pl-4 space-y-0.5 text-xs">
+                            <li>Jarak 0 - 2 km: Tarif tetap <b>Rp 5.000</b>.</li>
+                            <li>Jarak di atas 2 km: <b>Rp 2.500/km</b>.</li>
+                        </ul>
+                        <p class="mt-2 text-xs">Wajib pilih kecamatan. Kalau mau lebih presisi, boleh pin lokasi di peta (opsional) kecamatan otomatis ikut berubah.</p>
                     </div>
 
                     <div x-show="butuhOngkir && subtotal < minimalDelivery" x-cloak

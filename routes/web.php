@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\EdukasiController as AdminEdukasiController;
 use App\Http\Controllers\Admin\KategoriController;
 use App\Http\Controllers\Admin\LaporanController;
 use App\Http\Controllers\Admin\LimbahController as AdminLimbahController;
+use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
 use App\Http\Controllers\Admin\PelangganController;
 use App\Http\Controllers\Admin\PesananController as AdminPesananController;
 use App\Http\Controllers\Admin\ProdukTahuController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\User\CartController;
 use App\Http\Controllers\User\CheckoutController;
 use App\Http\Controllers\User\EdukasiController;
 use App\Http\Controllers\User\LimbahController;
+use App\Http\Controllers\User\NotificationController; 
 use App\Http\Controllers\User\PesananController;
 use App\Http\Controllers\User\ProdukController;
 use App\Http\Controllers\User\ReviewController;
@@ -59,6 +61,13 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // Route Notifikasi User (LENGKAP)
+    Route::prefix('notifications')->name('user.notif.')->group(function () {
+        Route::get('/fetch', [NotificationController::class, 'index'])->name('fetch');
+        Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('markAllRead');
+        Route::get('/{id}/read', [NotificationController::class, 'readOne'])->name('readOne');
+    });
+
     Route::prefix('cart')->name('user.cart.')->group(function () {
         Route::get('/', [CartController::class, 'index'])->name('index');
         Route::post('/add', [CartController::class, 'add'])->name('add');
@@ -94,9 +103,14 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    
-    // RUTE BARU UNTUK REAL-TIME STATS AJAX
     Route::get('/dashboard/stats', [DashboardController::class, 'getStats'])->name('dashboard.stats');
+
+    // Route Notifikasi Admin (LENGKAP)
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/fetch', [AdminNotificationController::class, 'index'])->name('fetch');
+        Route::post('/mark-all-read', [AdminNotificationController::class, 'markAllAsRead'])->name('markAll');
+        Route::get('/{id}/read', [AdminNotificationController::class, 'readOne'])->name('read');
+    });
 
     Route::resource('kategori', KategoriController::class);
     Route::resource('produk-tahu', ProdukTahuController::class);

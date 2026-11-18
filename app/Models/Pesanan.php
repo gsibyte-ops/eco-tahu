@@ -45,6 +45,7 @@ class Pesanan extends Model
         'lat_kurir'         => 'float',
         'lng_kurir'         => 'float',
         'pakai_pin'         => 'boolean',
+        'total_harga'       => 'float', // TAMBAHAN: Biar jadi angka
     ];
 
     public function user()
