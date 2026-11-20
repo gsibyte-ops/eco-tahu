@@ -18,7 +18,7 @@ class LimbahSeeder extends Seeder
         ];
 
         foreach ($limbah as $l) {
-            Limbah::create([
+            Limbah::firstOrCreate([
                 'kategori_id' => $l['kategori_id'],
                 'nama_limbah' => $l['nama_limbah'],
                 'slug' => Str::slug($l['nama_limbah']),

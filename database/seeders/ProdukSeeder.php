@@ -25,7 +25,7 @@ class ProdukSeeder extends Seeder
         ];
 
         foreach ($tahu as $t) {
-            ProdukTahu::create([
+            ProdukTahu::firstOrCreate([
                 'kategori_id' => $kategoriTahu->id,
                 'nama_produk' => $t[0],
                 'slug'        => Str::slug($t[0]) . '-' . uniqid(),
@@ -46,7 +46,7 @@ class ProdukSeeder extends Seeder
         ];
 
         foreach ($limbah as $l) {
-            Limbah::create([
+            Limbah::firstOrCreate([
                 'kategori_id' => $kategoriLimbah->id,
                 'nama_limbah' => $l[0],
                 'slug'        => Str::slug($l[0]) . '-' . uniqid(),
