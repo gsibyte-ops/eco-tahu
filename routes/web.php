@@ -165,46 +165,9 @@ Route::view('/syarat-ketentuan', 'pages.snk')->name('halaman.snk');
 Route::view('/kebijakan-privasi', 'pages.privasi')->name('halaman.privasi');
 Route::view('/sitemap', 'pages.sitemap')->name('halaman.sitemap');
 
-// Proxy route untuk Flutter Mobile yang memanggil /files/{path} dengan CORS lengkap
-Route::match(['GET', 'OPTIONS'], '/files/{path}', function (\Illuminate\Http\Request $request, $path) {
-    if ($request->isMethod('OPTIONS')) {
-        return response('', 200, [
-            'Access-Control-Allow-Origin' => '*',
-            'Access-Control-Allow-Methods' => 'GET, HEAD, OPTIONS',
-            'Access-Control-Allow-Headers' => '*',
-            'Access-Control-Expose-Headers' => 'Content-Length, Content-Range, Accept-Ranges',
-            'Cross-Origin-Resource-Policy' => 'cross-origin',
-        ]);
-    }
-
-    $cleanPath = ltrim(preg_replace('#^(storage|public)/#', '', $path), '/');
-    $filePath = storage_path('app/public/' . $cleanPath);
-
-    if (!file_exists($filePath)) {
-        $filePath = public_path($path);
-    }
-
-    if (!file_exists($filePath)) {
-        abort(404);
-    }
-
-    $mime = mime_content_type($filePath) ?: 'application/octet-stream';
-
-    while (ob_get_level() > 0) {
-        ob_end_clean();
-    }
-
-    return response()->file($filePath, [
-        'Access-Control-Allow-Origin' => '*',
-        'Access-Control-Allow-Methods' => 'GET, HEAD, OPTIONS',
-        'Access-Control-Allow-Headers' => '*',
-        'Access-Control-Expose-Headers' => 'Content-Length, Content-Range, Accept-Ranges',
-        'Cross-Origin-Resource-Policy' => 'cross-origin',
-        'Cross-Origin-Embedder-Policy' => 'unsafe-none',
-        'Content-Type' => $mime,
-        'Cache-Control' => 'public, max-age=86400',
-    ]);
-})->where('path', '.*')
-  ->withoutMiddleware('web');
+// Proxy route untuk Flutter Mobile yang memanggil /files/{path} dengan CORS & realpath guard
+Route::match(['GET', 'OPTIONS'], '/files/{path}', [\App\Http\Controllers\FileProxyController::class, 'show'])
+    ->where('path', '.*')
+    ->withoutMiddleware('web');
 
 require __DIR__.'/auth.php';

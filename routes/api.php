@@ -17,11 +17,16 @@ use App\Http\Controllers\Api\TokoController;
 // ==========================================
 // PUBLIC ROUTES (tidak butuh token)
 // ==========================================
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/auth/google', [AuthController::class, 'googleAuth']);
-Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
-Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+Route::middleware('throttle:10,1')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/auth/google', [AuthController::class, 'googleAuth']);
+});
+
+Route::middleware('throttle:5,1')->group(function () {
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+});
 
 // Info Toko & Kalkulasi Ongkir
 Route::get('/toko', [TokoController::class, 'info']);
@@ -51,9 +56,7 @@ Route::get('/reviews', [ReviewController::class, 'index']);
 // ==========================================
 Route::middleware('auth:sanctum')->group(function () {
     // User info, Profile & Logout
-    Route::get('/user', function (Request $request) {
-        return $request->user()->load('role');
-    });
+    Route::get('/user', [AuthController::class, 'me']);
     Route::match(['put', 'post'], '/user/profile', [AuthController::class, 'updateProfile']);
     Route::put('/user/password', [AuthController::class, 'changePassword']);
     Route::delete('/user', [AuthController::class, 'deleteAccount'])
@@ -100,12 +103,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/resep/{id}/like', [ResepController::class, 'toggleLike'])
         ->middleware('no-admin-customer-action');
 
-    // Admin Overview (Read-Only untuk Mobile)
-    Route::get('/admin/overview', [AdminDashboardController::class, 'overview']);
+    // Admin-only API endpoints (wajib role admin)
+    Route::middleware('admin')->group(function () {
+        // Admin Overview (Read-Only untuk Mobile)
+        Route::get('/admin/overview', [AdminDashboardController::class, 'overview']);
 
-    // Admin CRUD Produk Tahu
-    Route::post('/produk-tahu', [ProdukTahuController::class, 'store']);
-    Route::put('/produk-tahu/{id}', [ProdukTahuController::class, 'update']);
-    Route::patch('/produk-tahu/{id}', [ProdukTahuController::class, 'update']);
-    Route::delete('/produk-tahu/{id}', [ProdukTahuController::class, 'destroy']);
+        // Admin CRUD Produk Tahu
+        Route::post('/produk-tahu', [ProdukTahuController::class, 'store']);
+        Route::put('/produk-tahu/{id}', [ProdukTahuController::class, 'update']);
+        Route::patch('/produk-tahu/{id}', [ProdukTahuController::class, 'update']);
+        Route::delete('/produk-tahu/{id}', [ProdukTahuController::class, 'destroy']);
+    });
 });

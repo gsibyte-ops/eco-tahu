@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             KategoriSeeder::class,
             ProdukSeeder::class,
             EdukasiSeeder::class, // dummy edukasi (opsional)
+            ResepSeeder::class,
             PesananSeeder::class,
         ]);
     }

@@ -16,6 +16,15 @@ use Illuminate\Support\Str;
 class AuthController extends Controller
 {
     /**
+     * GET /api/user
+     * Ambil data user yang sedang login beserta relasi role.
+     */
+    public function me(Request $request)
+    {
+        return response()->json($request->user()->load('role'));
+    }
+
+    /**
      * POST /api/register
      * Registrasi pelanggan baru & dapetin token.
      */

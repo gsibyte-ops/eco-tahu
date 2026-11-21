@@ -12,9 +12,16 @@ class IsAdmin
     public function handle(Request $request, Closure $next): Response
     {
         /** @var \App\Models\User|null $user */
-        $user = Auth::user();
+        $user = $request->user() ?? Auth::user();
 
         if (!$user || !$user->isAdmin()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Akses ditolak. Endpoint ini hanya untuk admin.',
+                ], 403);
+            }
+
             abort(403, 'Akses ditolak. Halaman ini hanya untuk admin.');
         }
 
