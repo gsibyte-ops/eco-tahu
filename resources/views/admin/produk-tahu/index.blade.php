@@ -229,6 +229,7 @@
                     </label>
 
                     <input type="file" name="gambar" accept="image/jpeg,image/jpg,image/png,image/webp"
+                           data-filter="image-only"
                            x-ref="fileInput" @change="handleFileChange($event)" class="hidden">
 
                     {{-- Undo Banner --}}
@@ -422,6 +423,7 @@
                     </label>
 
                     <input type="file" name="gambar" accept="image/jpeg,image/jpg,image/png,image/webp"
+                           data-filter="image-only"
                            x-ref="fileInput" @change="handleFileChange($event)" class="hidden">
                     <input type="hidden" name="hapus_gambar" :value="hapusGambarLama ? 1 : 0">
 
@@ -775,13 +777,13 @@
 
                 const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
                 if (!allowed.includes(file.type)) {
-                    alert('⚠️ Hanya file gambar yang diperbolehkan (JPG, PNG, WEBP).');
+                    alert('Hanya file gambar yang diperbolehkan (JPG, PNG, WEBP).');
                     e.target.value = '';
                     this.fileName = null;
                     return;
                 }
                 if (file.size > 2 * 1024 * 1024) {
-                    alert('⚠️ Ukuran gambar maksimal 2MB.');
+                    alert('Ukuran gambar maksimal 2MB.');
                     e.target.value = '';
                     this.fileName = null;
                     return;
@@ -890,13 +892,13 @@
 
                 const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
                 if (!allowed.includes(file.type)) {
-                    alert('⚠️ Hanya file gambar yang diperbolehkan (JPG, PNG, WEBP).');
+                    alert('Hanya file gambar yang diperbolehkan (JPG, PNG, WEBP).');
                     e.target.value = '';
                     this.fileName = null;
                     return;
                 }
                 if (file.size > 2 * 1024 * 1024) {
-                    alert('⚠️ Ukuran gambar maksimal 2MB.');
+                    alert('Ukuran gambar maksimal 2MB.');
                     e.target.value = '';
                     this.fileName = null;
                     return;

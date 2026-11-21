@@ -7,6 +7,7 @@ use App\Models\Kategori;
 use App\Models\Limbah;
 use App\Models\Pesanan;
 use App\Models\ProdukTahu;
+use App\Models\Resep;
 use App\Models\Review;
 
 class HomeController extends Controller
@@ -40,8 +41,17 @@ class HomeController extends Controller
             ->get();
 
         // Artikel edukasi terbaru
-        $edukasi = Edukasi::visibleToUser()
+        $edukasi = Edukasi::withCount('likes')
+            ->visibleToUser()
             ->orderByDesc('published_at')
+            ->limit(3)
+            ->get();
+
+        // Resep olahan tahu terbaru
+        $resepTerbaru = Resep::withCount('likes')
+            ->visibleToUser()
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
             ->limit(3)
             ->get();
 
@@ -54,20 +64,26 @@ class HomeController extends Controller
                                      + Limbah::where('status', 'aktif')->count(),
         ];
 
-        // TESTIMONI REAL dari review (rating >= 4)
-        $testimoniReal = Review::with('user')
+        // TESTIMONI REAL dari review (rating >= 4), prioritaskan user berbeda jika mencukupi
+        $recentReviews = Review::with(['user', 'reviewable'])
             ->where('rating', '>=', 4)
             ->whereNotNull('komentar')
             ->where('komentar', '!=', '')
             ->orderByDesc('created_at')
-            ->limit(3)
+            ->limit(24)
             ->get();
+
+        $distinctUsers = $recentReviews->unique('user_id')->values();
+        $testimoniReal = $distinctUsers->count() >= 3
+            ? $distinctUsers->take(8)
+            : $recentReviews->take(8);
 
         return view('user.home', compact(
             'produkPilihan',
             'limbahPilihan',
             'kategori',
             'edukasi',
+            'resepTerbaru',
             'stats',
             'testimoniReal'
         ));

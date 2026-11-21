@@ -10,7 +10,7 @@
         <h2 class="text-2xl font-extrabold tracking-tight mb-2" style="color: rgb(var(--text-primary));">Syarat & Ketentuan</h2>
     </div>
     
-    <div class="space-y-3 text-sm auth-hint max-h-96 overflow-y-auto pr-2">
+    <div class="space-y-3.5 text-sm leading-relaxed auth-hint">
         <p>1. Dengan menggunakan layanan EcoTahu, Anda setuju untuk mematuhi semua peraturan yang berlaku.</p>
         <p>2. Pesanan yang sudah dibayar tidak dapat dibatalkan secara sepihak, kecuali sesuai kebijakan refund.</p>
         <p>3. Produk yang dikirim adalah produk segar, pastikan Anda menerima dengan baik.</p>

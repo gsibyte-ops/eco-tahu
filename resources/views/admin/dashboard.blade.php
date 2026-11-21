@@ -7,7 +7,7 @@
 
 {{-- Salam --}}
 <div class="mb-5 md:mb-6">
-    <h2 class="text-xl md:text-2xl font-extrabold tracking-tight" style="color: rgb(var(--text-primary));">Selamat Datang, Admin 👋</h2>
+    <h2 class="text-xl md:text-2xl font-extrabold tracking-tight" style="color: rgb(var(--text-primary));">Selamat Datang, Admin</h2>
     <p class="text-xs md:text-sm mt-1" style="color: rgb(var(--text-secondary));">Pantau aktivitas bisnis EcoTahu hari ini.</p>
 </div>
 
@@ -120,6 +120,45 @@
     </a>
 </div>
 
+{{-- Ringkasan Konten & Ulasan --}}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-5 mb-5 md:mb-6">
+    <a href="{{ route('admin.edukasi.index') }}" class="glass-card p-4 hover:-translate-y-0.5 transition flex items-center justify-between gap-3">
+        <div class="min-w-0">
+            <p class="text-[11px] md:text-xs font-bold uppercase tracking-wider mb-1 inline-flex items-center gap-1.5" style="color: rgb(var(--brand));"><x-icon name="book-open" class="w-3.5 h-3.5" /> Edukasi</p>
+            <p class="text-xl font-extrabold tabular-nums" style="color: rgb(var(--text-primary));">
+                <span id="stat-edukasi-publish">{{ number_format($stats['edukasi_publish'] ?? 0) }}</span>
+                <span class="text-xs font-normal" style="color: rgb(var(--text-muted));">/ <span id="stat-total-edukasi">{{ number_format($stats['total_edukasi'] ?? 0) }}</span> tayang</span>
+            </p>
+            <p class="text-xs mt-1 tabular-nums flex items-center gap-1" style="color: rgb(var(--text-secondary));"><x-icon name="heart-solid" class="w-3.5 h-3.5 text-rose-500" /> <span id="stat-edukasi-likes">{{ number_format($stats['total_edukasi_likes'] ?? 0) }}</span> total suka</p>
+        </div>
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background: rgb(var(--brand-soft)); color: rgb(var(--brand));"><x-icon name="book-open" class="w-5 h-5" /></div>
+    </a>
+
+    <a href="{{ route('admin.resep.index') }}" class="glass-card p-4 hover:-translate-y-0.5 transition flex items-center justify-between gap-3">
+        <div class="min-w-0">
+            <p class="text-[11px] md:text-xs font-bold uppercase tracking-wider mb-1 inline-flex items-center gap-1.5" style="color: rgb(var(--info));"><x-icon name="utensils" class="w-3.5 h-3.5" /> Resep Tahu</p>
+            <p class="text-xl font-extrabold tabular-nums" style="color: rgb(var(--text-primary));">
+                <span id="stat-resep-publish">{{ number_format($stats['resep_publish'] ?? 0) }}</span>
+                <span class="text-xs font-normal" style="color: rgb(var(--text-muted));">/ <span id="stat-total-resep">{{ number_format($stats['total_resep'] ?? 0) }}</span> tayang</span>
+            </p>
+            <p class="text-xs mt-1 tabular-nums flex items-center gap-1" style="color: rgb(var(--text-secondary));"><x-icon name="heart-solid" class="w-3.5 h-3.5 text-rose-500" /> <span id="stat-resep-likes">{{ number_format($stats['total_resep_likes'] ?? 0) }}</span> total suka</p>
+        </div>
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background: rgb(var(--info-soft)); color: rgb(var(--info));"><x-icon name="utensils" class="w-5 h-5" /></div>
+    </a>
+
+    <div class="glass-card p-4 flex items-center justify-between gap-3">
+        <div class="min-w-0">
+            <p class="text-[11px] md:text-xs font-bold uppercase tracking-wider mb-1 inline-flex items-center gap-1.5" style="color: rgb(var(--warning));"><x-icon name="star-solid" class="w-3.5 h-3.5" /> Ulasan &amp; Media</p>
+            <p class="text-xl font-extrabold tabular-nums" style="color: rgb(var(--text-primary));">
+                <span id="stat-total-ulasan">{{ number_format($stats['total_ulasan'] ?? 0) }}</span>
+                <span class="text-xs font-semibold inline-flex items-center gap-1" style="color: rgb(var(--warning));">· <x-icon name="star-solid" class="w-3.5 h-3.5" /> <span id="stat-rating-rata">{{ number_format($stats['rating_rata'] ?? 0, 1) }}</span></span>
+            </p>
+            <p class="text-xs mt-1 tabular-nums flex items-center gap-1" style="color: rgb(var(--text-secondary));"><x-icon name="photo" class="w-3.5 h-3.5" /> <span id="stat-ulasan-bermedia">{{ number_format($stats['ulasan_bermedia'] ?? 0) }}</span> ulasan foto/video</p>
+        </div>
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background: rgb(var(--warning-soft)); color: rgb(var(--warning));"><x-icon name="chat-bubble" class="w-5 h-5" /></div>
+    </div>
+</div>
+
 {{-- Grafik & Produk Terlaris --}}
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-5 mb-5 md:mb-6">
     <div class="lg:col-span-2 glass-card p-4 md:p-6">
@@ -197,6 +236,115 @@
     </div>
 </div>
 
+{{-- Ulasan Terbaru (Foto/Video) & Pengajuan Refund Terbaru --}}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5 mt-5 md:mt-6">
+
+    {{-- Ulasan Terbaru --}}
+    <div class="glass-card p-4 md:p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-sm md:text-base flex items-center gap-2" style="color: rgb(var(--text-primary));"><x-icon name="star-solid" class="w-4 h-4 text-amber-400" /> Ulasan Terbaru</h3>
+            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full" style="background: rgb(var(--warning-soft)); color: rgb(var(--warning));">
+                {{ number_format($stats['ulasan_bermedia'] ?? 0) }} dengan foto/video
+            </span>
+        </div>
+
+        <div class="space-y-3">
+            @forelse ($ulasanTerbaru ?? [] as $rev)
+                @php
+                    $revItemName = $rev->reviewable?->nama_produk ?? $rev->reviewable?->nama_limbah ?? 'Produk';
+                @endphp
+                <div class="p-3.5 rounded-xl" style="background: rgb(var(--bg-secondary) / 0.55); border: 1px solid rgb(var(--border-soft));">
+                    <div class="flex items-start justify-between gap-2 mb-1.5">
+                        <div class="min-w-0">
+                            <p class="text-xs md:text-sm font-bold truncate" style="color: rgb(var(--text-primary));">{{ $rev->user->username ?? 'Pelanggan' }}</p>
+                            <p class="text-[11px] truncate" style="color: rgb(var(--text-muted));">{{ $revItemName }} · {{ $rev->created_at?->format('d M Y H:i') }}</p>
+                        </div>
+                        <div class="flex items-center gap-0.5 whitespace-nowrap">
+                            @for ($s = 1; $s <= 5; $s++)
+                                <x-icon name="star-solid" class="w-3.5 h-3.5 {{ $s <= (int) $rev->rating ? 'text-amber-400' : '' }}" style="{{ $s > (int) $rev->rating ? 'color: rgb(var(--text-faint));' : '' }}" />
+                            @endfor
+                        </div>
+                    </div>
+                    @if ($rev->komentar)
+                        <p class="text-xs leading-relaxed mb-2" style="color: rgb(var(--text-secondary));">{{ $rev->komentar }}</p>
+                    @endif
+                    @if ($rev->media_url)
+                        @if ($rev->media_type === 'video')
+                            <video src="{{ $rev->media_url }}" controls preload="metadata" class="w-full max-w-[260px] max-h-40 rounded-lg bg-black mt-1"></video>
+                        @else
+                            <img src="{{ $rev->media_url }}" alt="Foto ulasan"
+                                 onclick="openDashLightbox('{{ $rev->media_url }}')"
+                                 class="w-20 h-20 object-cover rounded-lg cursor-zoom-in hover:opacity-90 transition mt-1"
+                                 style="border: 1px solid rgb(var(--border));">
+                        @endif
+                    @endif
+                </div>
+            @empty
+                <p class="text-sm text-center py-6" style="color: rgb(var(--text-muted));">Belum ada ulasan pelanggan</p>
+            @endforelse
+        </div>
+    </div>
+
+    {{-- Pengajuan Refund Terbaru --}}
+    <div class="glass-card p-4 md:p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-sm md:text-base flex items-center gap-2" style="color: rgb(var(--text-primary));"><x-icon name="bank" class="w-4 h-4" style="color: rgb(var(--brand));" /> Pengajuan Refund &amp; Pembatalan</h3>
+            <a href="{{ route('admin.refund.index') }}" class="text-xs md:text-sm font-semibold hover:opacity-80" style="color: rgb(var(--brand));">Kelola</a>
+        </div>
+
+        <div class="space-y-3">
+            @forelse ($refundTerbaru ?? [] as $ref)
+                @php
+                    $refStyle = [
+                        'pending'  => 'background: rgb(var(--warning-soft)); color: rgb(var(--warning));',
+                        'diproses' => 'background: rgb(var(--info-soft)); color: rgb(var(--info));',
+                        'selesai'  => 'background: rgb(var(--success-soft)); color: rgb(var(--success));',
+                        'ditolak'  => 'background: rgb(var(--danger-soft)); color: rgb(var(--danger));',
+                    ][$ref->status_refund] ?? 'background: rgb(var(--bg-secondary)); color: rgb(var(--text-secondary));';
+                @endphp
+                <a href="{{ route('admin.refund.show', $ref->id) }}" class="block p-3.5 rounded-xl hover:opacity-90 transition"
+                   style="background: rgb(var(--bg-secondary) / 0.55); border: 1px solid rgb(var(--border-soft));">
+                    <div class="flex items-start justify-between gap-2 mb-1">
+                        <div class="min-w-0">
+                            <p class="text-xs md:text-sm font-bold truncate" style="color: rgb(var(--text-primary));">
+                                #{{ $ref->pesanan->kode_pesanan ?? '-' }} · {{ $ref->pesanan->user->username ?? '-' }}
+                            </p>
+                            <p class="text-[11px] font-bold tabular-nums" style="color: rgb(var(--brand));">
+                                Rp {{ number_format($ref->nominal_refund, 0, ',', '.') }}
+                            </p>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold whitespace-nowrap" style="{{ $refStyle }}">
+                            {{ ucfirst($ref->status_refund) }}
+                        </span>
+                    </div>
+                    <p class="text-xs line-clamp-2 mb-1.5" style="color: rgb(var(--text-secondary));">{{ $ref->alasan_batal }}</p>
+                    @if ($ref->nama_bank || $ref->nomor_rekening || $ref->atas_nama)
+                        <div class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1.5" style="background: rgb(var(--brand-soft) / 0.45); color: rgb(var(--brand-strong));">
+                            <x-icon name="bank" class="w-3.5 h-3.5 shrink-0" />
+                            <span>{{ $ref->nama_bank ?: '-' }} · {{ $ref->nomor_rekening ?: '-' }}@if($ref->atas_nama) (a.n. {{ $ref->atas_nama }})@endif</span>
+                        </div>
+                    @endif
+                </a>
+            @empty
+                <p class="text-sm text-center py-6" style="color: rgb(var(--text-muted));">Belum ada pengajuan refund</p>
+            @endforelse
+        </div>
+    </div>
+</div>
+
+{{-- LIGHTBOX FOTO ULASAN DASHBOARD --}}
+<div id="dashLightbox" class="fixed inset-0 hidden" style="z-index: 99999; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
+    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px;">
+        <img id="dashLightboxImg" src="" alt="Preview" onclick="event.stopPropagation()"
+             style="max-width: 100%; max-height: 85vh; border-radius: 16px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); object-fit: contain;">
+    </div>
+    <button type="button" onclick="closeDashLightbox()"
+            style="position: absolute; top: 20px; right: 20px; width: 48px; height: 48px; background: #ef4444; color: white; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100000;"
+            title="Tutup">
+        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -214,6 +362,17 @@
                 document.getElementById('stat-total-tahu').innerText = data.total_tahu.toLocaleString('id-ID');
                 document.getElementById('stat-total-limbah').innerText = data.total_limbah.toLocaleString('id-ID');
                 document.getElementById('stat-total-pelanggan').innerText = data.total_pelanggan.toLocaleString('id-ID');
+                if (document.getElementById('stat-total-edukasi')) {
+                    document.getElementById('stat-total-edukasi').innerText = (data.total_edukasi ?? 0).toLocaleString('id-ID');
+                    document.getElementById('stat-edukasi-publish').innerText = (data.edukasi_publish ?? 0).toLocaleString('id-ID');
+                    document.getElementById('stat-edukasi-likes').innerText = (data.total_edukasi_likes ?? 0).toLocaleString('id-ID');
+                    document.getElementById('stat-total-resep').innerText = (data.total_resep ?? 0).toLocaleString('id-ID');
+                    document.getElementById('stat-resep-publish').innerText = (data.resep_publish ?? 0).toLocaleString('id-ID');
+                    document.getElementById('stat-resep-likes').innerText = (data.total_resep_likes ?? 0).toLocaleString('id-ID');
+                    document.getElementById('stat-total-ulasan').innerText = (data.total_ulasan ?? 0).toLocaleString('id-ID');
+                    document.getElementById('stat-ulasan-bermedia').innerText = (data.ulasan_bermedia ?? 0).toLocaleString('id-ID');
+                    document.getElementById('stat-rating-rata').innerText = Number(data.rating_rata ?? 0).toFixed(1);
+                }
                 
                 const refundBanner = document.getElementById('refund-banner');
                 const refundPendingSpan = document.getElementById('stat-refund-pending');
@@ -316,5 +475,22 @@
     }
 
     buildChart(chartDataWeek.labels, chartDataWeek.data);
+
+    function openDashLightbox(url) {
+        if (!url) return;
+        document.getElementById('dashLightboxImg').src = url;
+        document.getElementById('dashLightbox').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeDashLightbox() {
+        document.getElementById('dashLightbox')?.classList.add('hidden');
+        document.getElementById('dashLightboxImg').src = '';
+        document.body.style.overflow = '';
+    }
+
+    document.getElementById('dashLightbox')?.addEventListener('click', function(e) {
+        if (e.target === this) closeDashLightbox();
+    });
 </script>
 @endpush

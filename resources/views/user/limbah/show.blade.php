@@ -18,7 +18,7 @@
                 @if ($limbah->gambar)
                     <img src="{{ asset('storage/' . $limbah->gambar) }}" alt="{{ $limbah->nama_limbah }}" class="w-full h-full object-cover rounded-2xl">
                 @else
-                    <div class="w-full h-full flex items-center justify-center text-9xl">🌾</div>
+                    <div class="w-full h-full flex items-center justify-center"><x-icon name="recycle" class="w-24 h-24 opacity-40" style="color: rgb(var(--accent));" /></div>
                 @endif
             </div>
         </div>
@@ -84,13 +84,15 @@
                 </div>
             @endauth
 
-            <div class="glass-amber rounded-xl p-4 text-sm mb-3" style="color: rgb(var(--accent));">
-                ♻️ Setiap pembelian ampas tahu membantu mengurangi limbah industri tahu.
+            <div class="glass-amber rounded-xl p-4 text-sm mb-3 flex items-start gap-2.5" style="color: rgb(var(--accent));">
+                <x-icon name="recycle" class="w-4 h-4 mt-0.5 shrink-0" />
+                <span>Setiap pembelian ampas tahu membantu mengurangi limbah industri tahu.</span>
             </div>
 
             {{-- Info Ongkir Tambahan --}}
-            <p class="text-xs text-center" style="color: rgb(var(--text-muted));">
-                🚚 Ongkir pengiriman mulai dari Rp 5.000 (0-2 km), selanjutnya Rp 2.500/km.
+            <p class="text-xs text-center flex items-center justify-center gap-1.5" style="color: rgb(var(--text-muted));">
+                <x-icon name="truck" class="w-3.5 h-3.5 shrink-0" />
+                <span>Ongkir pengiriman mulai dari Rp 5.000 (0-2 km), selanjutnya Rp 2.500/km.</span>
             </p>
         </div>
     </div>
@@ -99,20 +101,40 @@
 
     @if ($related->count() > 0)
     <section class="mt-16">
-        <h2 class="text-2xl font-extrabold tracking-tight mb-6" style="color: rgb(var(--text-primary));">Produk Serupa</h2>
+        <div class="flex items-center justify-between gap-4 mb-6">
+            <h2 class="text-2xl font-extrabold tracking-tight" style="color: rgb(var(--text-primary));">Produk Serupa</h2>
+            <a href="{{ route('user.limbah.index') }}" class="inline-flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold shrink-0 transition py-2 px-4 sm:py-2.5 sm:px-5 rounded-full hover:opacity-90" style="color: rgb(var(--accent-hover)); background: rgb(var(--accent-soft));">
+                Lihat Semua
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+            </a>
+        </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
             @foreach ($related as $r)
-                <a href="{{ route('user.limbah.show', $r->slug) }}" class="surface limbah-card overflow-hidden block">
+                @php $rAvg = $r->averageRating(); $rCnt = $r->reviewCount(); @endphp
+                <a href="{{ route('user.limbah.show', $r->slug) }}" class="surface limbah-card group overflow-hidden flex flex-col">
                     <div class="aspect-square overflow-hidden" style="background: rgb(var(--bg-secondary));">
                         @if ($r->gambar)
-                            <img src="{{ asset('storage/' . $r->gambar) }}" alt="{{ $r->nama_limbah }}" class="w-full h-full object-cover">
+                            <img src="{{ asset('storage/' . $r->gambar) }}" alt="{{ $r->nama_limbah }}" class="w-full h-full object-cover transition duration-500 group-hover:scale-110">
                         @else
-                            <div class="w-full h-full flex items-center justify-center text-5xl">🌾</div>
+                            <div class="w-full h-full flex items-center justify-center"><x-icon name="recycle" class="w-12 h-12 opacity-40" style="color: rgb(var(--accent));" /></div>
                         @endif
                     </div>
-                    <div class="p-3">
-                        <h3 class="font-semibold text-sm line-clamp-2 min-h-[40px] mb-1" style="color: rgb(var(--text-primary));">{{ $r->nama_limbah }}</h3>
-                        <p class="price text-sm" style="color: rgb(var(--accent-hover));">Rp {{ number_format($r->harga, 0, ',', '.') }}</p>
+                    <div class="p-3 sm:p-4 flex flex-col flex-1">
+                        <h3 class="font-semibold text-sm line-clamp-2 min-h-[40px] mb-1.5" style="color: rgb(var(--text-primary));">{{ $r->nama_limbah }}</h3>
+                        <div class="flex flex-wrap items-center gap-0.5 text-[11px] mb-2">
+                            @for ($j = 1; $j <= 5; $j++)
+                                <svg class="w-3.5 h-3.5 {{ $j <= round($rAvg) ? 'text-amber-400 fill-current' : 'fill-current' }}" style="{{ $j > round($rAvg) ? 'color: rgb(var(--text-faint))' : '' }}" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                            @endfor
+                            <span class="ml-1 tabular-nums" style="color: rgb(var(--text-muted));">
+                                @if ($rCnt > 0) {{ number_format($rAvg, 1) }} ({{ $rCnt }}) @else Baru @endif
+                            </span>
+                        </div>
+                        <p class="price text-sm mt-auto" style="color: rgb(var(--accent-hover));">
+                            Rp {{ number_format($r->harga, 0, ',', '.') }}
+                            @if ($r->satuan)
+                                <span class="text-xs font-normal" style="color: rgb(var(--text-muted));">/ {{ $r->satuan }}</span>
+                            @endif
+                        </p>
                     </div>
                 </a>
             @endforeach

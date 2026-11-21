@@ -13,6 +13,7 @@
                 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                 const theme = stored || (prefersDark ? 'dark' : 'light');
                 document.documentElement.setAttribute('data-theme', theme);
+                document.documentElement.style.colorScheme = theme;
             } catch (e) {}
         })();
     </script>
@@ -96,6 +97,11 @@
             <a href="{{ route('admin.edukasi.index') }}" class="admin-nav-item {{ request()->routeIs('admin.edukasi.*') ? 'is-active' : '' }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
                 Edukasi
+            </a>
+
+            <a href="{{ route('admin.resep.index') }}" class="admin-nav-item {{ request()->routeIs('admin.resep.*') ? 'is-active' : '' }}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18m-4-15v6a4 4 0 004 4 4 4 0 004-4V6m-4-3h.01M19 6v15"/></svg>
+                Resep Tahu
             </a>
 
             <a href="{{ route('admin.laporan.index') }}" class="admin-nav-item {{ request()->routeIs('admin.laporan.*') ? 'is-active' : '' }}">
@@ -216,7 +222,7 @@
                                     </a>
                                 </template>
                                 <div x-show="notifications.length === 0" class="px-4 py-10 text-center">
-                                    <p class="text-sm" style="color: rgb(var(--text-muted));">Tidak ada notifikasi baru 🎉</p>
+                                    <p class="text-sm" style="color: rgb(var(--text-muted));">Tidak ada notifikasi baru</p>
                                 </div>
                             </div>
                         </div>

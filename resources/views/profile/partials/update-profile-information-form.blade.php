@@ -61,8 +61,8 @@
             @if (session('status') === 'profile-updated')
                 <p x-data="{ show: true }" x-show="show" x-transition
                    x-init="setTimeout(() => show = false, 2000)"
-                   class="text-sm text-emerald-600 font-medium">
-                    ✓ {{ __('Saved.') }}
+                   class="text-sm text-emerald-600 font-medium inline-flex items-center gap-1">
+                    <x-icon name="check" class="w-3.5 h-3.5" /> {{ __('Saved.') }}
                 </p>
             @endif
         </div>

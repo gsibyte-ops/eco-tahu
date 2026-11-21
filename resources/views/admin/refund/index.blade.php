@@ -154,6 +154,9 @@
                             'status_refund' => $r->status_refund,
                             'nominal_refund' => (int) $r->nominal_refund,
                             'alasan_batal' => $r->alasan_batal,
+                            'nama_bank' => $r->nama_bank,
+                            'nomor_rekening' => $r->nomor_rekening,
+                            'atas_nama' => $r->atas_nama,
                             'catatan_admin' => $r->catatan_admin,
                             'bukti_transfer_balik' => $r->bukti_transfer_balik ? asset('storage/' . $r->bukti_transfer_balik) : null,
                             'bukti_transfer_user' => $buktiUser,
@@ -188,7 +191,7 @@
                                 <div class="space-y-1 max-w-[240px]">
                                     @foreach ($r->pesanan->detail->take(2) as $d)
                                         <div class="flex items-center gap-1.5 text-sm">
-                                            <span class="text-xs">{{ $d->item_type === 'App\\Models\\ProdukTahu' ? '🥛' : '🌾' }}</span>
+                                            <x-icon :name="$d->item_type === 'App\\Models\\ProdukTahu' ? 'cube' : 'recycle'" class="w-3.5 h-3.5 shrink-0 opacity-70" />
                                             <span class="truncate" style="color: rgb(var(--text-secondary));">{{ $d->nama_item }}</span>
                                             <span class="text-xs flex-shrink-0" style="color: rgb(var(--text-muted));">×{{ $d->jumlah }}</span>
                                         </div>
@@ -206,6 +209,12 @@
                         </td>
                         <td class="px-5 py-4 text-sm" style="color: rgb(var(--text-secondary));">
                             <p class="line-clamp-2 max-w-xs">{{ $r->alasan_batal }}</p>
+                            @if ($r->nama_bank || $r->nomor_rekening || $r->atas_nama)
+                                <p class="text-[11px] font-semibold mt-1 flex items-center gap-1" style="color: rgb(var(--brand));">
+                                    <x-icon name="bank" class="w-3.5 h-3.5 shrink-0" />
+                                    <span>{{ $r->nama_bank ?: '-' }} · {{ $r->nomor_rekening ?: '-' }}@if($r->atas_nama) ({{ $r->atas_nama }})@endif</span>
+                                </p>
+                            @endif
                         </td>
                         <td class="px-5 py-4">
                             <span class="px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap" style="{{ $statusStyle }}">
@@ -336,7 +345,7 @@
                     </div>
 
                     <div id="mBuktiUserWrapper" class="hidden rounded-xl p-4" style="background: rgb(var(--info-soft) / 0.4); border: 1px solid rgb(var(--info) / 0.3);">
-                        <h4 class="font-bold mb-2 text-sm" style="color: rgb(var(--info));">📎 Bukti Transfer dari User</h4>
+                        <h4 class="font-bold mb-2 text-sm flex items-center gap-1.5" style="color: rgb(var(--info));"><x-icon name="paperclip" class="w-4 h-4" /> Bukti Transfer dari User</h4>
                         <p class="text-xs mb-3" style="color: rgb(var(--info));">Bukti dari user saat checkout / pembatalan (Klik untuk perbesar).</p>
                         <div onclick="openRefundLightbox(document.getElementById('mBuktiUserImg').src)" class="cursor-zoom-in inline-block">
                             <img id="mBuktiUserImg" src="" alt="Bukti User" class="w-full max-w-xs rounded-xl hover:opacity-90 transition" style="border: 1px solid rgb(var(--info) / 0.3);" title="Klik untuk lihat ukuran penuh">
@@ -344,7 +353,7 @@
                     </div>
 
                     <div id="mBuktiWrapper" class="hidden rounded-xl p-4" style="background: rgb(var(--success-soft) / 0.5); border: 1px solid rgb(var(--success) / 0.3);">
-                        <h4 class="font-bold mb-2 text-sm" style="color: rgb(var(--success));">✓ Bukti Transfer Balik</h4>
+                        <h4 class="font-bold mb-2 text-sm flex items-center gap-1.5" style="color: rgb(var(--success));"><x-icon name="check-circle" class="w-4 h-4" /> Bukti Transfer Balik</h4>
                         <div onclick="openRefundLightbox(document.getElementById('mBuktiImg').src)" class="cursor-zoom-in inline-block">
                             <img id="mBuktiImg" src="" alt="Bukti" class="w-full max-w-xs rounded-xl hover:opacity-90 transition" style="border: 1px solid rgb(var(--success) / 0.3);" title="Klik untuk lihat ukuran penuh">
                         </div>
@@ -361,10 +370,32 @@
                                 <p class="text-xs truncate" style="color: rgb(var(--text-muted));" id="mEmail">-</p>
                             </div>
                         </div>
-                        <div class="text-xs">
+                        <div class="text-xs mb-3">
                             <p style="color: rgb(var(--text-muted));">No. Telepon</p>
                             <p class="font-medium" style="color: rgb(var(--text-primary));" id="mTelepon">-</p>
                         </div>
+                        <div id="mRekeningWrapper" class="hidden pt-3 space-y-2 text-xs" style="border-top: 1px solid rgb(var(--border-soft));">
+                            <div class="flex items-center justify-between gap-2">
+                                <span style="color: rgb(var(--text-muted));">Bank / E-Wallet</span>
+                                <span class="font-bold" style="color: rgb(var(--text-primary));" id="mNamaBank">-</span>
+                            </div>
+                            <div class="flex items-center justify-between gap-2">
+                                <span style="color: rgb(var(--text-muted));">No. Rekening</span>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="font-bold font-mono tabular-nums" style="color: rgb(var(--brand));" id="mNomorRekening">-</span>
+                                    <button type="button" onclick="copyRefundRekening()" title="Salin Nomor Rekening"
+                                            class="px-1.5 py-0.5 rounded text-[10px] font-bold transition"
+                                            style="background: rgb(var(--brand-soft)); color: rgb(var(--brand-strong));">Salin</button>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between gap-2">
+                                <span style="color: rgb(var(--text-muted));">Atas Nama</span>
+                                <span class="font-semibold" style="color: rgb(var(--text-primary));" id="mAtasNama">-</span>
+                            </div>
+                        </div>
+                        <p id="mRekeningEmpty" class="hidden pt-2 text-[11px] italic" style="border-top: 1px solid rgb(var(--border-soft)); color: rgb(var(--text-muted));">
+                            Pelanggan tidak mencantumkan rekening pengembalian dana.
+                        </p>
                     </div>
 
                     <div class="rounded-xl p-4" style="background: rgb(var(--surface)); border: 1px solid rgb(var(--border-soft));">
@@ -399,6 +430,7 @@
                             <div id="mUploadWrapper">
                                 <label class="block text-xs font-medium mb-1" style="color: rgb(var(--text-secondary));">Bukti Transfer Balik</label>
                                 <input type="file" name="bukti_transfer_balik" accept="image/jpeg,image/jpg,image/png,image/webp"
+                                       data-filter="image-only"
                                        class="glass-input w-full px-3 py-2 text-xs" style="color: rgb(var(--text-primary));">
                                 <p class="text-[10px] mt-1" style="color: rgb(var(--text-muted));">JPG, PNG, WEBP · Max 5MB.</p>
                             </div>
@@ -424,7 +456,7 @@
         </form>
 
         <div class="flex items-center justify-between gap-3 px-6 py-4 flex-shrink-0" style="border-top: 1px solid rgb(var(--border-soft)); background: rgb(var(--bg-secondary) / 0.5);">
-            <p class="text-xs" style="color: rgb(var(--text-muted));">⚠️ Pastikan data sudah benar sebelum menyimpan</p>
+            <p class="text-xs flex items-center gap-1.5" style="color: rgb(var(--text-muted));"><x-icon name="alert-triangle" class="w-3.5 h-3.5 shrink-0" /> Pastikan data sudah benar sebelum menyimpan</p>
             <div class="flex gap-2">
                 <button type="button" onclick="closeRefundModal()" class="glass-btn">Batal</button>
                 <button type="submit" id="btnSubmitRefund" form="refundForm" class="btn-primary">Simpan Perubahan</button>
@@ -578,7 +610,6 @@
         const buktiUserWrapper = document.getElementById('mBuktiUserWrapper');
         if (data.bukti_transfer_user) {
             document.getElementById('mBuktiUserImg').src = data.bukti_transfer_user;
-            document.getElementById('mBuktiUserLink').href = data.bukti_transfer_user;
             buktiUserWrapper.classList.remove('hidden');
         } else {
             buktiUserWrapper.classList.add('hidden');
@@ -596,6 +627,19 @@
         document.getElementById('mUsername').textContent = data.user.username;
         document.getElementById('mEmail').textContent = data.user.email;
         document.getElementById('mTelepon').textContent = data.user.no_telepon || '-';
+
+        const rekWrap = document.getElementById('mRekeningWrapper');
+        const rekEmpty = document.getElementById('mRekeningEmpty');
+        if (data.nama_bank || data.nomor_rekening || data.atas_nama) {
+            document.getElementById('mNamaBank').textContent = data.nama_bank || '-';
+            document.getElementById('mNomorRekening').textContent = data.nomor_rekening || '-';
+            document.getElementById('mAtasNama').textContent = data.atas_nama || '-';
+            rekWrap.classList.remove('hidden');
+            rekEmpty.classList.add('hidden');
+        } else {
+            rekWrap.classList.add('hidden');
+            rekEmpty.classList.remove('hidden');
+        }
 
         document.getElementById('refundForm').action = data.route_update;
         document.getElementById('mInputStatus').value = data.status_refund;
@@ -622,6 +666,16 @@
         document.body.style.overflow = '';
         const fileInput = modal.querySelector('input[name="bukti_transfer_balik"]');
         if (fileInput) fileInput.value = '';
+    }
+
+    function copyRefundRekening() {
+        const rek = document.getElementById('mNomorRekening')?.textContent?.trim();
+        if (!rek || rek === '-') return;
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(rek).then(() => showToast('Nomor rekening berhasil disalin!'));
+        } else {
+            showToast('Nomor rekening: ' + rek);
+        }
     }
 
     // ==== LIGHTBOX PREVIEW BUKTI REFUND ====

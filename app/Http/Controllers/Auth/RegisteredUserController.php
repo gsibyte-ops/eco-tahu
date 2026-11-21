@@ -41,6 +41,6 @@ class RegisteredUserController extends Controller
         Auth::login($user);
 
         return redirect()->route('home')
-            ->with('success', 'Selamat datang di EcoTahu, ' . $user->username . '! 🌿');
+            ->with('success', 'Selamat datang di EcoTahu, ' . $user->username . '!');
     }
 }

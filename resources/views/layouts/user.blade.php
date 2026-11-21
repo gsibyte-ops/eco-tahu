@@ -13,6 +13,7 @@
                 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                 const theme = stored || (prefersDark ? 'dark' : 'light');
                 document.documentElement.setAttribute('data-theme', theme);
+                document.documentElement.style.colorScheme = theme;
             } catch (e) {}
         })();
     </script>
@@ -21,7 +22,6 @@
     <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:200,300,400,500,600,700,800&display=swap" rel="stylesheet" />
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
 
     @stack('styles')
 
@@ -84,7 +84,7 @@
         }
     </style>
 </head>
-<body class="font-sans antialiased" x-data="{ mobileMenu: false }">
+<body class="font-sans antialiased min-h-screen flex flex-col" x-data="{ mobileMenu: false }">
 
 @include('components.loader')
 
@@ -105,6 +105,7 @@
                     ['route' => 'home', 'pattern' => 'home', 'label' => 'Beranda', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/>'],
                     ['route' => 'user.produk.index', 'pattern' => 'user.produk.*', 'label' => 'Produk Tahu', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>'],
                     ['route' => 'user.limbah.index', 'pattern' => 'user.limbah.*', 'label' => 'Produk Limbah', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 0015 0m-15 0a7.5 7.5 0 1115 0m-15 0H3m16.5 0H21m-1.5 0H12m-8.457 3.077l1.41-.513m14.095-5.13l1.41-.513M5.106 17.785l1.15-.964m11.49-9.642l1.149-.964M7.501 19.795l.75-1.3m7.5-12.99l.75-1.3m-6.063 16.658l.26-1.477m2.605-14.772l.26-1.477m0 17.726l-.26-1.477M10.698 4.614l-.26-1.477M16.5 19.794l-.75-1.3M7.5 4.205l-.75 1.3M5.106 6.215l-1.15.964M18.894 17.785l-1.15.964M4.543 12.923l-1.41.513M20.868 11.077l-1.41.513"/>'],
+                    ['route' => 'user.resep.index', 'pattern' => 'user.resep.*', 'label' => 'Resep', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18m-4-15v6a4 4 0 004 4 4 4 0 004-4V6m-4-3h.01M19 6v15"/>'],
                     ['route' => 'user.edukasi.index', 'pattern' => 'user.edukasi.*', 'label' => 'Edukasi', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>'],
                 ];
                 $isAuth = auth()->check() && !auth()->user()->isAdmin();
@@ -167,7 +168,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>
             </button>
 
-            @php $cartCount = count(session('cart', [])); @endphp
+            @php $cartCount = auth()->check() ? \App\Support\CartStore::countForUser(auth()->user()) : 0; @endphp
             <a href="{{ route('user.cart.index') }}" class="nav-icon-btn" title="Keranjang">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
                 @if ($cartCount > 0)
@@ -184,13 +185,25 @@
             @auth
                 <div class="relative hidden sm:block" x-data="{ open: false }" @click.away="open = false" style="z-index: 100;">
                     <button type="button" @click.prevent="open = !open" class="nav-profile-btn" :aria-expanded="open">
-                        <div class="w-7 h-7 rounded-lg flex items-center justify-center text-white font-bold text-[11px] brand-gradient">{{ strtoupper(substr(auth()->user()->username, 0, 1)) }}</div>
+                        <div class="w-7 h-7 rounded-lg flex items-center justify-center text-white font-bold text-[11px] brand-gradient overflow-hidden">
+                            @if (auth()->user()->avatar_url)
+                                <img src="{{ auth()->user()->avatar_url }}" alt="{{ auth()->user()->username }}" class="w-full h-full object-cover">
+                            @else
+                                {{ strtoupper(substr(auth()->user()->username, 0, 1)) }}
+                            @endif
+                        </div>
                         <span class="hidden md:block text-xs font-semibold max-w-[80px] truncate" style="color: rgb(var(--text-primary));">{{ auth()->user()->username }}</span>
                         <svg class="w-3 h-3 opacity-60 transition-transform duration-200" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
                     </button>
                     <div x-show="open" x-cloak x-transition.origin.top.right class="absolute right-0 mt-3 w-60 glass-overlay rounded-2xl overflow-hidden" style="z-index: 200;">
                         <div class="px-4 py-3 flex items-center gap-3" style="border-bottom: 1px solid rgb(var(--border-soft));">
-                            <div class="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0 brand-gradient">{{ strtoupper(substr(auth()->user()->username, 0, 1)) }}</div>
+                            <div class="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0 brand-gradient overflow-hidden">
+                                @if (auth()->user()->avatar_url)
+                                    <img src="{{ auth()->user()->avatar_url }}" alt="{{ auth()->user()->username }}" class="w-full h-full object-cover">
+                                @else
+                                    {{ strtoupper(substr(auth()->user()->username, 0, 1)) }}
+                                @endif
+                            </div>
                             <div class="min-w-0">
                                 <p class="text-sm font-semibold truncate" style="color: rgb(var(--text-primary));">{{ auth()->user()->username }}</p>
                                 <p class="text-xs truncate" style="color: rgb(var(--text-muted));">{{ auth()->user()->email ?? 'Member' }}</p>
@@ -246,7 +259,13 @@
         {{-- Profile --}}
         @auth
             <div class="px-5 py-4 flex items-center gap-3" style="border-bottom: 1px solid rgb(var(--border-soft)); background: rgb(var(--brand) / 0.04);">
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0 brand-gradient">{{ strtoupper(substr(auth()->user()->username, 0, 1)) }}</div>
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0 brand-gradient overflow-hidden">
+                    @if (auth()->user()->avatar_url)
+                        <img src="{{ auth()->user()->avatar_url }}" alt="{{ auth()->user()->username }}" class="w-full h-full object-cover">
+                    @else
+                        {{ strtoupper(substr(auth()->user()->username, 0, 1)) }}
+                    @endif
+                </div>
                 <div class="min-w-0">
                     <p class="text-sm font-bold truncate" style="color: rgb(var(--text-primary));">{{ auth()->user()->username }}</p>
                     <p class="text-[11px] truncate" style="color: rgb(var(--text-muted));">{{ auth()->user()->email ?? 'Member' }}</p>
@@ -261,6 +280,7 @@
                     ['route' => 'home', 'pattern' => 'home', 'label' => 'Beranda', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/>'],
                     ['route' => 'user.produk.index', 'pattern' => 'user.produk.*', 'label' => 'Produk Tahu', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>'],
                     ['route' => 'user.limbah.index', 'pattern' => 'user.limbah.*', 'label' => 'Produk Limbah', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 0015 0m-15 0a7.5 7.5 0 1115 0m-15 0H3m16.5 0H21m-1.5 0H12m-8.457 3.077l1.41-.513m14.095-5.13l1.41-.513M5.106 17.785l1.15-.964m11.49-9.642l1.149-.964M7.501 19.795l.75-1.3m7.5-12.99l.75-1.3m-6.063 16.658l.26-1.477m2.605-14.772l.26-1.477m0 17.726l-.26-1.477M10.698 4.614l-.26-1.477M16.5 19.794l-.75-1.3M7.5 4.205l-.75 1.3M5.106 6.215l-1.15.964M18.894 17.785l-1.15.964M4.543 12.923l-1.41.513M20.868 11.077l-1.41.513"/>'],
+                    ['route' => 'user.resep.index', 'pattern' => 'user.resep.*', 'label' => 'Resep', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18m-4-15v6a4 4 0 004 4 4 4 0 004-4V6m-4-3h.01M19 6v15"/>'],
                     ['route' => 'user.edukasi.index', 'pattern' => 'user.edukasi.*', 'label' => 'Edukasi', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>'],
                 ];
             @endphp
@@ -334,7 +354,7 @@
     </div>
 @endif
 
-<main>
+<main class="flex-1 min-h-[calc(100vh-5rem)]">
     @yield('content')
 </main>
 
@@ -365,6 +385,7 @@
                     <li><a href="{{ route('home') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Beranda</a></li>
                     <li><a href="{{ route('user.produk.index') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Produk Tahu</a></li>
                     <li><a href="{{ route('user.limbah.index') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Produk Limbah</a></li>
+                    <li><a href="{{ route('user.resep.index') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Resep Tahu</a></li>
                     <li><a href="{{ route('user.edukasi.index') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Edukasi</a></li>
                 </ul>
             </div>
@@ -379,17 +400,30 @@
             </div>
             <div class="md:col-span-3">
                 <h4 class="text-xs font-bold uppercase tracking-widest mb-4" style="color: rgb(var(--text-muted));">Kontak</h4>
+                @php
+                    $waUrl = 'https://wa.me/' . config('toko.whatsapp') . '?text=' . urlencode('Halo Admin EcoTahu, saya ingin bertanya seputar produk EcoTahu.');
+                @endphp
                 <ul class="space-y-3 text-sm" style="color: rgb(var(--text-secondary));">
-                    <li class="flex items-start gap-2"><span class="text-base leading-none mt-0.5">📍</span><span>{{ config('toko.alamat') }}</span></li>
-                    <li class="flex items-center gap-2"><span class="text-base leading-none">📞</span><span>(0331) 123-4567</span></li>
-                    <li class="flex items-center gap-2"><span class="text-base leading-none">✉️</span><span>hello@ecotahu.id</span></li>
+                    <li class="flex items-start gap-2"><x-icon name="map-pin" class="w-4 h-4 mt-0.5 shrink-0" style="color: rgb(var(--brand));" /><span>{{ config('toko.alamat') }}</span></li>
+                    <li class="flex items-center gap-2"><x-icon name="chat-bubble" class="w-4 h-4 shrink-0" style="color: rgb(var(--brand));" /><a href="{{ $waUrl }}" target="_blank" rel="noopener noreferrer" class="transition hover:text-emerald-600">{{ config('toko.whatsapp_display') }}</a></li>
+                    <li class="flex items-center gap-2"><x-icon name="mail" class="w-4 h-4 shrink-0" style="color: rgb(var(--brand));" /><a href="mailto:{{ config('toko.email') }}" class="transition hover:text-emerald-600">{{ config('toko.email') }}</a></li>
                 </ul>
                 <div class="flex items-center gap-2 mt-5">
-                    @php $socials = [['icon' => 'instagram', 'label' => 'Instagram'], ['icon' => 'whatsapp', 'label' => 'WhatsApp'], ['icon' => 'facebook', 'label' => 'Facebook']]; @endphp
+                    @php
+                        $socials = [
+                            ['icon' => 'instagram', 'label' => 'Instagram (' . config('toko.sosmed.instagram.label') . ')', 'href' => config('toko.sosmed.instagram.url')],
+                            ['icon' => 'tiktok', 'label' => 'TikTok (' . config('toko.sosmed.tiktok.label') . ')', 'href' => config('toko.sosmed.tiktok.url')],
+                            ['icon' => 'facebook', 'label' => 'Facebook (' . config('toko.sosmed.facebook.label') . ')', 'href' => config('toko.sosmed.facebook.url')],
+                        ];
+                    @endphp
                     @foreach ($socials as $s)
-                        <a href="#" class="w-9 h-9 rounded-xl flex items-center justify-center transition" style="background: rgb(var(--surface-hover)); color: rgb(var(--text-secondary)); border: 1px solid rgb(var(--border-soft));" title="{{ $s['label'] }}">
+                        <a href="{{ $s['href'] }}"
+                           target="_blank" rel="noopener noreferrer"
+                           class="w-9 h-9 rounded-xl flex items-center justify-center transition"
+                           style="background: rgb(var(--surface-hover)); color: rgb(var(--text-secondary)); border: 1px solid rgb(var(--border-soft));"
+                           title="{{ $s['label'] }}">
                             @if ($s['icon'] === 'instagram') <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-                            @elseif ($s['icon'] === 'whatsapp') <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+                            @elseif ($s['icon'] === 'tiktok') <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>
                             @else <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
                             @endif
                         </a>
@@ -413,6 +447,7 @@
         const current = document.documentElement.getAttribute('data-theme');
         const next = current === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', next);
+        document.documentElement.style.colorScheme = next;
         try { localStorage.setItem('theme', next); } catch (e) {}
     };
 

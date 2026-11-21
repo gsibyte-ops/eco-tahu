@@ -136,10 +136,22 @@
             </table>
         </div>
 
+        {{-- Bukti Transfer dari User --}}
+        @if ($refund->pesanan && $refund->pesanan->pembayaran && $refund->pesanan->pembayaran->bukti_transfer)
+            <div class="rounded-2xl p-6" style="background: rgb(var(--info-soft) / 0.45); border: 1px solid rgb(var(--info) / 0.3);">
+                <h3 class="font-bold mb-2 flex items-center gap-1.5" style="color: rgb(var(--info));"><x-icon name="paperclip" class="w-4 h-4" /> Bukti Transfer dari User</h3>
+                <p class="text-xs mb-3" style="color: rgb(var(--info));">Klik gambar untuk melihat ukuran penuh.</p>
+                <div onclick="openLightbox('{{ asset('storage/' . $refund->pesanan->pembayaran->bukti_transfer) }}')" class="cursor-zoom-in inline-block">
+                    <img src="{{ asset('storage/' . $refund->pesanan->pembayaran->bukti_transfer) }}"
+                         class="w-full max-w-md rounded-xl hover:opacity-90 transition" style="border: 1px solid rgb(var(--info) / 0.3);" title="Klik untuk lihat ukuran penuh">
+                </div>
+            </div>
+        @endif
+
         {{-- Bukti Transfer Balik --}}
         @if ($refund->bukti_transfer_balik)
             <div class="rounded-2xl p-6" style="background: rgb(var(--success-soft) / 0.5); border: 1px solid rgb(var(--success) / 0.3);">
-                <h3 class="font-bold mb-3" style="color: rgb(var(--success));">✓ Bukti Transfer Balik (Klik untuk perbesar)</h3>
+                <h3 class="font-bold mb-3 flex items-center gap-1.5" style="color: rgb(var(--success));"><x-icon name="check-circle" class="w-4 h-4" /> Bukti Transfer Balik (Klik untuk perbesar)</h3>
                 <div onclick="openLightbox('{{ asset('storage/' . $refund->bukti_transfer_balik) }}')" class="cursor-zoom-in inline-block">
                     <img src="{{ asset('storage/' . $refund->bukti_transfer_balik) }}"
                          class="w-full max-w-md rounded-xl hover:opacity-90 transition" style="border: 1px solid rgb(var(--success) / 0.3);" title="Klik untuk lihat ukuran penuh">
@@ -169,6 +181,34 @@
                     <p class="txt-primary">{{ $refund->pesanan->user->no_telepon ?? '-' }}</p>
                 </div>
             </div>
+
+            @if ($refund->nama_bank || $refund->nomor_rekening || $refund->atas_nama)
+                <div class="mt-4 pt-4 space-y-2.5 text-sm" style="border-top: 1px solid rgb(var(--border-soft));">
+                    <div class="flex justify-between gap-2">
+                        <span class="txt-secondary">Bank / E-Wallet</span>
+                        <span class="font-bold txt-primary">{{ $refund->nama_bank ?: '-' }}</span>
+                    </div>
+                    <div class="flex justify-between items-center gap-2">
+                        <span class="txt-secondary">No. Rekening</span>
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-bold font-mono tabular-nums" style="color: rgb(var(--brand));">{{ $refund->nomor_rekening ?: '-' }}</span>
+                            @if ($refund->nomor_rekening)
+                                <button type="button" onclick="copyRekening('{{ $refund->nomor_rekening }}', this)"
+                                        class="px-2 py-0.5 rounded text-[11px] font-bold transition"
+                                        style="background: rgb(var(--brand-soft)); color: rgb(var(--brand-strong));">Salin</button>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="flex justify-between gap-2">
+                        <span class="txt-secondary">Atas Nama</span>
+                        <span class="font-semibold txt-primary">{{ $refund->atas_nama ?: '-' }}</span>
+                    </div>
+                </div>
+            @else
+                <p class="mt-3 pt-3 text-xs italic txt-muted" style="border-top: 1px solid rgb(var(--border-soft));">
+                    Pelanggan tidak mencantumkan rekening pengembalian dana.
+                </p>
+            @endif
         </div>
 
         {{-- Form Update --}}
@@ -193,10 +233,10 @@
 
                 {{-- Template Pesan Cepat --}}
                 <div class="rounded-xl p-3" style="background: rgb(var(--info-soft) / 0.5); border: 1px solid rgb(var(--info) / 0.3);">
-                    <p class="text-xs font-semibold mb-2" style="color: rgb(var(--info));">💡 Template Pesan Cepat:</p>
+                    <p class="text-xs font-semibold mb-2 flex items-center gap-1.5" style="color: rgb(var(--info));"><x-icon name="light-bulb" class="w-3.5 h-3.5" /> Template Pesan Cepat:</p>
                     <div class="flex flex-wrap gap-1.5">
                         <button type="button"
-                                @click="if(status === 'selesai') $refs.catatan.value = 'Dana refund sudah berhasil kami transfer ke rekening Anda. Mohon cek mutasi rekening. Terima kasih sudah berbelanja di EcoTahu, kami mohon maaf atas ketidaknyamanannya. 🙏'"
+                                @click="if(status === 'selesai') $refs.catatan.value = 'Dana refund sudah berhasil kami transfer ke rekening Anda. Mohon cek mutasi rekening. Terima kasih sudah berbelanja di EcoTahu, kami mohon maaf atas ketidaknyamanannya.'"
                                 class="text-xs px-2.5 py-1.5 rounded-lg transition glass-btn">
                             Template: Selesai
                         </button>
@@ -233,6 +273,7 @@
                 <div>
                     <label class="block text-xs font-medium txt-secondary mb-1">Bukti Transfer Balik (Opsional)</label>
                     <input type="file" name="bukti_transfer_balik" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                           data-filter="image-only"
                            class="w-full px-3 py-2 rounded-xl border bd-default text-xs glass-input"
                            style="color: rgb(var(--text-primary));">
                     <p class="text-xs txt-secondary mt-1">Format: JPG, PNG, WEBP. Max 5MB.</p>
@@ -298,6 +339,15 @@
     }
 </style>
 <script>
+    function copyRekening(rek, btn) {
+        if (!rek) return;
+        navigator.clipboard?.writeText(rek).then(() => {
+            const orig = btn.textContent;
+            btn.textContent = 'Tersalin!';
+            setTimeout(() => btn.textContent = orig, 1500);
+        });
+    }
+
     function openLightbox(url) {
         document.getElementById('refundLightboxImg').src = url;
         document.getElementById('refundLightbox').classList.remove('hidden');

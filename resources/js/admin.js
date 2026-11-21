@@ -9,6 +9,7 @@ window.toggleTheme = function () {
     const current = document.documentElement.getAttribute('data-theme');
     const next = current === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
+    document.documentElement.style.colorScheme = next;
     try { localStorage.setItem('theme', next); } catch (e) {}
 };
 
@@ -92,6 +93,98 @@ window.toggleSidebar = function () {
             window.flatpickr[key] = originalFlatpickr[key];
         });
     }
+})();
+
+/* ============================================================
+   GLOBAL INPUT & MEDIA VALIDATION FILTERS (ADMIN)
+   ============================================================ */
+(function initGlobalInputFilters() {
+    const IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp'];
+    const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'webp'];
+    const VIDEO_MIMES = ['video/mp4', 'video/quicktime', 'video/webm'];
+    const VIDEO_EXTS = ['mp4', 'mov', 'webm'];
+
+    window.extractYoutubeId = function (url) {
+        if (!url || typeof url !== 'string') return null;
+        const trimmed = url.trim();
+        if (!/^https?:\/\//i.test(trimmed)) return null;
+        try {
+            const parsed = new URL(trimmed);
+            const host = parsed.hostname.toLowerCase();
+            if (!['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'].includes(host)) {
+                return null;
+            }
+            if (host === 'youtu.be') {
+                const m = parsed.pathname.match(/^\/([A-Za-z0-9_-]{11})(\/.*)?$/);
+                return m ? m[1] : null;
+            }
+            const mPath = parsed.pathname.match(/^\/(shorts|embed)\/([A-Za-z0-9_-]{11})(\/.*)?$/);
+            if (mPath) return mPath[2];
+            const v = parsed.searchParams.get('v');
+            if (v && /^[A-Za-z0-9_-]{11}$/.test(v)) return v;
+        } catch (e) {
+            return null;
+        }
+        return null;
+    };
+
+    window.isValidYoutubeUrl = function (url) {
+        return window.extractYoutubeId(url) !== null;
+    };
+
+    document.addEventListener('input', function (e) {
+        const el = e.target;
+        if (!el || !el.dataset || !el.dataset.filter) return;
+        const mode = el.dataset.filter;
+        const oldVal = el.value;
+        let nextVal = oldVal;
+        if (mode === 'number') {
+            nextVal = oldVal.replace(/[^0-9]/g, '');
+        } else if (mode === 'letters') {
+            nextVal = oldVal.replace(/[^A-Za-z\s]/g, '');
+        } else if (mode === 'title') {
+            nextVal = oldVal.replace(/[^A-Za-z0-9\s.,:!?()\-]/g, '');
+        }
+        if (nextVal !== oldVal) {
+            el.value = nextVal;
+        }
+    });
+
+    document.addEventListener('change', function (e) {
+        const el = e.target;
+        if (!el || el.type !== 'file' || !el.dataset || !el.dataset.filter) return;
+        const mode = el.dataset.filter;
+        if (!['image-only', 'video-only', 'media-only'].includes(mode)) return;
+        const files = el.files;
+        if (!files || !files.length) return;
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const mime = (file.type || '').toLowerCase();
+            const ext = (file.name.split('.').pop() || '').toLowerCase();
+            const isImg = IMAGE_MIMES.includes(mime) && IMAGE_EXTS.includes(ext);
+            const isVid = VIDEO_MIMES.includes(mime) && VIDEO_EXTS.includes(ext);
+
+            if (mode === 'image-only' && !isImg) {
+                el.value = '';
+                e.stopImmediatePropagation();
+                window.alert('Hanya file FOTO (JPG, PNG, WEBP) yang diperbolehkan!');
+                return;
+            }
+            if (mode === 'video-only' && !isVid) {
+                el.value = '';
+                e.stopImmediatePropagation();
+                window.alert('Hanya file VIDEO (MP4, MOV, WEBM) yang diperbolehkan!');
+                return;
+            }
+            if (mode === 'media-only' && !isImg && !isVid) {
+                el.value = '';
+                e.stopImmediatePropagation();
+                window.alert('Hanya file FOTO (JPG, PNG, WEBP) atau VIDEO (MP4, MOV, WEBM) yang diperbolehkan!');
+                return;
+            }
+        }
+    }, true);
 })();
 
 Alpine.start();

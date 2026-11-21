@@ -47,13 +47,13 @@
 
              const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
              if (!allowed.includes(file.type)) {
-                 alert('⚠️ Hanya file gambar yang diperbolehkan (JPG, PNG, WEBP).');
+                 alert('Hanya file gambar yang diperbolehkan (JPG, PNG, WEBP).');
                  e.target.value = '';
                  this.fileName = null;
                  return;
              }
              if (file.size > 2 * 1024 * 1024) {
-                 alert('⚠️ Ukuran gambar maksimal 2MB.');
+                 alert('Ukuran gambar maksimal 2MB.');
                  e.target.value = '';
                  this.fileName = null;
                  return;

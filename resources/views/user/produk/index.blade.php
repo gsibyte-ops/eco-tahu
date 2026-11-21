@@ -56,20 +56,22 @@
             @if ($produk->count() > 0)
                 <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
                     @foreach ($produk as $p)
-                        <div class="surface flex flex-col rounded-xl sm:rounded-2xl overflow-hidden">
-                            <a href="{{ route('user.produk.show', $p->slug) }}" class="block relative overflow-hidden aspect-square">
+                        <div class="surface relative group flex flex-col rounded-xl sm:rounded-2xl overflow-hidden">
+                            <div class="block relative overflow-hidden aspect-square">
                                 <div class="w-full h-full flex items-center justify-center" style="background: rgb(var(--bg-secondary));">
                                     @if ($p->gambar)
-                                        <img src="{{ asset('storage/' . $p->gambar) }}" alt="{{ $p->nama_produk }}" class="h-full w-full object-cover">
+                                        <img src="{{ asset('storage/' . $p->gambar) }}" alt="{{ $p->nama_produk }}" class="h-full w-full object-cover transition duration-500 group-hover:scale-110">
                                     @else
-                                        <div class="text-4xl sm:text-5xl">🥛</div>
+                                        <x-icon name="cube" class="w-12 h-12 opacity-40" style="color: rgb(var(--text-muted));" />
                                     @endif
                                 </div>
-                            </a>
+                            </div>
 
                             <div class="p-2.5 sm:p-4 flex flex-col flex-1">
                                 <span class="pill text-[8px] sm:text-[10px] self-start mb-1.5">{{ $p->kategori->nama_kategori ?? '-' }}</span>
-                                <p class="font-bold text-[15px] sm:text-base leading-snug line-clamp-2 min-h-[42px] sm:min-h-[48px] mb-1.5 text-left" style="color: rgb(var(--text-primary));">{{ $p->nama_produk }}</p>
+                                <h3 class="font-bold text-[15px] sm:text-base leading-snug line-clamp-2 min-h-[42px] sm:min-h-[48px] mb-1.5 text-left" style="color: rgb(var(--text-primary));">
+                                    <a href="{{ route('user.produk.show', $p->slug) }}" class="after:absolute after:inset-0 after:z-[1] focus:outline-none">{{ $p->nama_produk }}</a>
+                                </h3>
 
                                 @php $avg = $p->averageRating(); $cnt = $p->reviewCount(); @endphp
                                 <div class="flex flex-wrap items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs mb-2">
@@ -84,17 +86,17 @@
                                 <p class="text-left text-base sm:text-lg price mb-2 mt-auto">Rp {{ number_format($p->harga, 0, ',', '.') }}</p>
 
                                 @if(auth()->check() && auth()->user()->isAdmin())
-                                    <button type="button" onclick="window.showAdminNotif()" class="btn-primary w-full !text-[10px] sm:!text-xs flex items-center justify-center gap-1 opacity-80 py-1.5 sm:py-2">
+                                    <button type="button" onclick="window.showAdminNotif()" class="btn-primary relative z-10 w-full !text-[10px] sm:!text-xs flex items-center justify-center gap-1 opacity-80 py-1.5 sm:py-2">
                                         <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                                         Tambah
                                     </button>
                                 @elseif(auth()->check())
-                                    <button type="button" onclick="window.addToCart('produk', {{ $p->id }})" class="btn-primary w-full !text-[10px] sm:!text-xs flex items-center justify-center gap-1 py-1.5 sm:py-2">
+                                    <button type="button" onclick="window.addToCart('produk', {{ $p->id }})" class="btn-primary relative z-10 w-full !text-[10px] sm:!text-xs flex items-center justify-center gap-1 py-1.5 sm:py-2">
                                         <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                                         Tambah
                                     </button>
                                 @else
-                                    <a href="{{ route('login') }}" class="btn-primary w-full !text-[10px] sm:!text-xs flex items-center justify-center gap-1 py-1.5 sm:py-2">
+                                    <a href="{{ route('login') }}" class="btn-primary relative z-10 w-full !text-[10px] sm:!text-xs flex items-center justify-center gap-1 py-1.5 sm:py-2">
                                         <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                                         Tambah
                                     </a>
@@ -107,7 +109,7 @@
                 <div class="mt-6">{{ $produk->links() }}</div>
             @else
                 <div class="glass-card p-10 sm:p-12 text-center">
-                    <div class="mb-3 text-4xl sm:text-5xl">🔍</div>
+                    <div class="w-16 h-16 mx-auto mb-3 rounded-2xl flex items-center justify-center" style="background: rgb(var(--brand-soft)); color: rgb(var(--brand));"><x-icon name="search" class="w-8 h-8" /></div>
                     <h3 class="text-lg sm:text-xl font-bold" style="color: rgb(var(--text-primary));">Produk tidak ditemukan</h3>
                     <p class="mt-1 text-xs sm:text-sm" style="color: rgb(var(--text-secondary));">Coba ubah filter atau kata kunci pencarian.</p>
                 </div>

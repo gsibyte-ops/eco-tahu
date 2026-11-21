@@ -194,6 +194,9 @@
                                 'nominal' => (int) $p->refund->nominal_refund,
                                 'alasan' => $p->refund->alasan_batal,
                                 'status' => $p->refund->status_refund,
+                                'nama_bank' => $p->refund->nama_bank,
+                                'nomor_rekening' => $p->refund->nomor_rekening,
+                                'atas_nama' => $p->refund->atas_nama,
                             ] : null,
                             'route_update_status' => route('admin.pesanan.updateStatus', $p->id),
                             'route_verifikasi' => route('admin.pesanan.verifikasi', $p->id),
@@ -230,7 +233,7 @@
                                 <div class="space-y-1 max-w-[280px]">
                                     @foreach ($p->detail->take(2) as $d)
                                         <div class="flex items-center gap-1.5 text-sm">
-                                            <span class="text-xs">{{ $d->item_type === 'App\\Models\\ProdukTahu' ? '🥛' : '🌾' }}</span>
+                                            <x-icon :name="$d->item_type === 'App\\Models\\ProdukTahu' ? 'cube' : 'recycle'" class="w-3.5 h-3.5 shrink-0 opacity-70" />
                                             <span class="truncate" style="color: rgb(var(--text-secondary));">{{ $d->nama_item }}</span>
                                             <span class="text-xs flex-shrink-0" style="color: rgb(var(--text-muted));">×{{ $d->jumlah }}</span>
                                         </div>
@@ -413,6 +416,10 @@
                     <div class="col-span-2">
                         <p class="text-xs mb-0.5" style="color: rgb(var(--danger));">Alasan</p>
                         <p style="color: rgb(var(--danger));" id="mRefundAlasan"></p>
+                    </div>
+                    <div id="mRefundRekeningWrap" class="col-span-2 hidden pt-2" style="border-top: 1px dashed rgb(var(--danger) / 0.3);">
+                        <p class="text-xs mb-0.5 font-bold flex items-center gap-1" style="color: rgb(var(--danger));"><x-icon name="bank" class="w-3.5 h-3.5" /> Rekening Pengembalian Dana</p>
+                        <p class="text-xs font-semibold" style="color: rgb(var(--danger));" id="mRefundRekeningText">-</p>
                     </div>
                 </div>
             </div>
@@ -720,6 +727,15 @@
             document.getElementById('mRefundNominal').textContent = formatRupiah(data.refund.nominal);
             document.getElementById('mRefundAlasan').textContent = data.refund.alasan;
             document.getElementById('mRefundStatus').textContent = data.refund.status.charAt(0).toUpperCase() + data.refund.status.slice(1);
+            const rekWrap = document.getElementById('mRefundRekeningWrap');
+            const rekText = document.getElementById('mRefundRekeningText');
+            if (data.refund.nama_bank || data.refund.nomor_rekening || data.refund.atas_nama) {
+                const an = data.refund.atas_nama ? ' (a.n. ' + data.refund.atas_nama + ')' : '';
+                rekText.textContent = (data.refund.nama_bank || '-') + ' · ' + (data.refund.nomor_rekening || '-') + an;
+                rekWrap.classList.remove('hidden');
+            } else {
+                rekWrap.classList.add('hidden');
+            }
             refundBox.classList.remove('hidden');
         } else {
             refundBox.classList.add('hidden');

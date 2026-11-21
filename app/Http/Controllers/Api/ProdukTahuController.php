@@ -17,6 +17,11 @@ class ProdukTahuController extends Controller
     public function index()
     {
         $produk = ProdukTahu::with('kategori')
+            ->where('status', 'aktif')
+            ->withCount('reviews')
+            ->withAvg('reviews', 'rating')
+            ->orderByDesc('reviews_count')
+            ->orderByDesc('reviews_avg_rating')
             ->orderByDesc('id')
             ->get();
 

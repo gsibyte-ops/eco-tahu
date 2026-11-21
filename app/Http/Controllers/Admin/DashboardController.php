@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Edukasi;
+use App\Models\Limbah;
 use App\Models\Pesanan;
 use App\Models\ProdukTahu;
-use App\Models\Limbah;
-use App\Models\User;
 use App\Models\Refund;
+use App\Models\Resep;
+use App\Models\Review;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -27,11 +30,20 @@ class DashboardController extends Controller
             'total_pendapatan' => (int) Pesanan::where(function($q) use ($statusLunas) {
                 $q->whereIn('payment_status', $statusLunas)->orWhere('order_status', 'selesai');
             })->sum('total_harga'),
-            'total_produk'     => $totalProduk,
-            'total_tahu'       => $totalTahu,
-            'total_limbah'     => $totalLimbah,
-            'total_pelanggan'  => User::where('role_id', 2)->count(),
-            'refund_pending'   => Refund::where('status_refund', 'pending')->count(),
+            'total_produk'        => $totalProduk,
+            'total_tahu'          => $totalTahu,
+            'total_limbah'        => $totalLimbah,
+            'total_pelanggan'     => User::where('role_id', 2)->count(),
+            'refund_pending'      => Refund::where('status_refund', 'pending')->count(),
+            'total_edukasi'       => Edukasi::count(),
+            'edukasi_publish'     => Edukasi::visibleToUser()->count(),
+            'total_edukasi_likes' => DB::table('edukasi_likes')->count(),
+            'total_resep'         => Resep::count(),
+            'resep_publish'       => Resep::visibleToUser()->count(),
+            'total_resep_likes'   => DB::table('resep_likes')->count(),
+            'total_ulasan'        => Review::count(),
+            'ulasan_bermedia'     => Review::whereNotNull('media_path')->count(),
+            'rating_rata'         => round((float) (Review::avg('rating') ?? 0), 1),
         ];
 
         // ============ 2. KALKULASI PERSENTASE (APPLES-TO-APPLES) ============
@@ -126,9 +138,12 @@ class DashboardController extends Controller
         $produkTerlaris = $produkTahuTerlaris->concat($produkLimbahTerlaris)->sortByDesc('total_terjual')->take(5)->values();
 
         $pesananTerbaru = Pesanan::with('user')->orderByDesc('tanggal_order')->limit(5)->get();
+        $ulasanTerbaru  = Review::with(['user', 'reviewable'])->orderByDesc('id')->limit(5)->get();
+        $refundTerbaru  = Refund::with('pesanan.user')->orderByDesc('id')->limit(5)->get();
 
         return view('admin.dashboard', compact(
-            'stats', 'chartLabels', 'chartData', 'chartLabelsBulanan', 'chartDataBulanan', 'produkTerlaris', 'pesananTerbaru'
+            'stats', 'chartLabels', 'chartData', 'chartLabelsBulanan', 'chartDataBulanan',
+            'produkTerlaris', 'pesananTerbaru', 'ulasanTerbaru', 'refundTerbaru'
         ));
     }
 
@@ -150,15 +165,24 @@ class DashboardController extends Controller
         $totalProduk = $totalTahu + $totalLimbah;
 
         return response()->json([
-            'total_pesanan'    => Pesanan::count(),
-            'total_pendapatan' => (int) Pesanan::where(function($q) use ($statusLunas) {
+            'total_pesanan'       => Pesanan::count(),
+            'total_pendapatan'    => (int) Pesanan::where(function($q) use ($statusLunas) {
                 $q->whereIn('payment_status', $statusLunas)->orWhere('order_status', 'selesai');
             })->sum('total_harga'),
-            'total_produk'     => $totalProduk,
-            'total_tahu'       => $totalTahu,
-            'total_limbah'     => $totalLimbah,
-            'total_pelanggan'  => User::where('role_id', 2)->count(),
-            'refund_pending'   => Refund::where('status_refund', 'pending')->count(),
+            'total_produk'        => $totalProduk,
+            'total_tahu'          => $totalTahu,
+            'total_limbah'        => $totalLimbah,
+            'total_pelanggan'     => User::where('role_id', 2)->count(),
+            'refund_pending'      => Refund::where('status_refund', 'pending')->count(),
+            'total_edukasi'       => Edukasi::count(),
+            'edukasi_publish'     => Edukasi::visibleToUser()->count(),
+            'total_edukasi_likes' => DB::table('edukasi_likes')->count(),
+            'total_resep'         => Resep::count(),
+            'resep_publish'       => Resep::visibleToUser()->count(),
+            'total_resep_likes'   => DB::table('resep_likes')->count(),
+            'total_ulasan'        => Review::count(),
+            'ulasan_bermedia'     => Review::whereNotNull('media_path')->count(),
+            'rating_rata'         => round((float) (Review::avg('rating') ?? 0), 1),
         ]);
     }
 }

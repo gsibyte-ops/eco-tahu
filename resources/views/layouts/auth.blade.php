@@ -13,6 +13,7 @@
                 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                 const theme = stored || (prefersDark ? 'dark' : 'light');
                 document.documentElement.setAttribute('data-theme', theme);
+                document.documentElement.style.colorScheme = theme;
             } catch (e) {}
         })();
     </script>
@@ -47,19 +48,44 @@
         .btn-daftar-gradient:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 6px 16px rgb(var(--brand) / 0.5); }
 
         /* AMBIENT & EFFECTS */
-        body.auth-shell::before { content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(ellipse 55% 45% at 0% 0%, rgb(var(--brand) / 0.16), transparent 55%), radial-gradient(ellipse 50% 40% at 100% 100%, rgb(var(--accent) / 0.10), transparent 55%), radial-gradient(ellipse 40% 40% at 100% 0%, rgb(var(--info) / 0.08), transparent 50%); }
-        [data-theme="dark"] body.auth-shell::before { background: radial-gradient(ellipse 55% 45% at 0% 0%, rgb(var(--brand) / 0.26), transparent 55%), radial-gradient(ellipse 50% 40% at 100% 100%, rgb(var(--accent) / 0.15), transparent 55%), radial-gradient(ellipse 40% 40% at 100% 0%, rgb(var(--info) / 0.13), transparent 50%); }
-        .auth-blob { position: fixed; border-radius: 50%; pointer-events: none; z-index: 1; will-change: transform; transform: translate3d(0, 0, 0); backface-visibility: hidden; }
-        .auth-blob-1 { width: 480px; height: 480px; top: -20%; left: -10%; background: radial-gradient(circle, rgb(var(--brand) / 0.5) 0%, transparent 65%); animation: blobMove1 22s ease-in-out infinite; }
-        .auth-blob-2 { width: 420px; height: 420px; bottom: -20%; right: -10%; background: radial-gradient(circle, rgb(var(--accent) / 0.4) 0%, transparent 65%); animation: blobMove2 26s ease-in-out infinite; }
-        .auth-blob-3 { width: 360px; height: 360px; top: 30%; left: 40%; background: radial-gradient(circle, rgb(var(--info) / 0.3) 0%, transparent 65%); animation: blobMove3 30s ease-in-out infinite; }
-        @keyframes blobMove1 { 0%, 100% { transform: translate3d(0, 0, 0) scale(1); } 33% { transform: translate3d(80px, 60px, 0) scale(1.1); } 66% { transform: translate3d(-40px, 100px, 0) scale(0.95); } }
-        @keyframes blobMove2 { 0%, 100% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(-100px, -60px, 0) scale(1.15); } }
-        @keyframes blobMove3 { 0%, 100% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(60px, 80px, 0) scale(0.9); } }
-        .auth-grid { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.05; background-image: linear-gradient(rgb(var(--text-primary)) 1px, transparent 1px), linear-gradient(90deg, rgb(var(--text-primary)) 1px, transparent 1px); background-size: 64px 64px; mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%); -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%); }
-        [data-theme="dark"] .auth-grid { opacity: 0.07; }
-        .auth-noise { position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: 0.035; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
-        [data-theme="dark"] .auth-noise { opacity: 0.06; }
+        body.auth-shell::before {
+            content: '';
+            position: fixed;
+            inset: -120px;
+            z-index: 0;
+            pointer-events: none;
+            filter: blur(90px);
+            -webkit-filter: blur(90px);
+            transform: translate3d(0, 0, 0);
+            background:
+                radial-gradient(ellipse 55% 45% at 0% 0%, rgb(var(--brand) / 0.10) 0%, rgb(var(--brand) / 0.03) 45%, transparent 75%),
+                radial-gradient(ellipse 50% 40% at 100% 100%, rgb(var(--accent) / 0.07) 0%, rgb(var(--accent) / 0.02) 45%, transparent 75%),
+                radial-gradient(ellipse 40% 40% at 100% 0%, rgb(var(--info) / 0.05) 0%, rgb(var(--info) / 0.02) 45%, transparent 75%);
+        }
+        [data-theme="dark"] body.auth-shell::before {
+            filter: blur(100px);
+            -webkit-filter: blur(100px);
+            background:
+                radial-gradient(ellipse 55% 45% at 0% 0%, rgb(var(--brand) / 0.18) 0%, rgb(var(--brand) / 0.08) 45%, transparent 75%),
+                radial-gradient(ellipse 50% 40% at 100% 100%, rgb(var(--accent) / 0.11) 0%, rgb(var(--accent) / 0.05) 45%, transparent 75%),
+                radial-gradient(ellipse 40% 40% at 100% 0%, rgb(var(--info) / 0.09) 0%, rgb(var(--info) / 0.04) 45%, transparent 75%);
+        }
+        .auth-blob {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1;
+            will-change: transform;
+            transform: translate3d(0, 0, 0);
+            backface-visibility: hidden;
+            filter: blur(80px);
+            -webkit-filter: blur(80px);
+        }
+        .auth-blob-1 { width: 500px; height: 500px; top: -15%; left: -10%; background: radial-gradient(circle, rgb(var(--brand) / 0.35) 0%, rgb(var(--brand) / 0.12) 40%, transparent 70%); animation: blobMove1 22s ease-in-out infinite; }
+        .auth-blob-2 { width: 450px; height: 450px; bottom: -15%; right: -10%; background: radial-gradient(circle, rgb(var(--accent) / 0.28) 0%, rgb(var(--accent) / 0.10) 40%, transparent 70%); animation: blobMove2 26s ease-in-out infinite; }
+        .auth-blob-3 { width: 380px; height: 380px; top: 30%; left: 40%; background: radial-gradient(circle, rgb(var(--info) / 0.22) 0%, rgb(var(--info) / 0.08) 40%, transparent 70%); animation: blobMove3 30s ease-in-out infinite; }
+        .auth-grid { display: none !important; }
+        .auth-noise { display: none !important; }
         .auth-particles { position: fixed; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
         .auth-particles span { position: absolute; bottom: -20px; width: 5px; height: 5px; border-radius: 50%; background: rgb(var(--brand)); box-shadow: 0 0 10px rgb(var(--brand) / 0.8); will-change: transform, opacity; backface-visibility: hidden; animation: particleFloat linear infinite; }
         @keyframes particleFloat { 0% { transform: translate3d(0, 0, 0) scale(0); opacity: 0; } 15% { transform: translate3d(0, -60px, 0) scale(1); opacity: 0.9; } 85% { transform: translate3d(20px, -85vh, 0) scale(0.7); opacity: 0.5; } 100% { transform: translate3d(0, -105vh, 0) scale(0); opacity: 0; } }
@@ -91,10 +117,64 @@
         .auth-input-wrap:focus-within > .auth-input-icon { color: rgb(var(--brand)); }
         .auth-input-wrap > input { position: relative; z-index: 1; }
 
-        .auth-shell .glass-input { color: rgb(var(--text-primary)); background: rgb(var(--surface)); border: 1px solid rgb(var(--border)); }
-        .auth-shell .glass-input::placeholder { color: rgb(var(--text-muted)); }
-        .auth-shell .glass-input:focus { border-color: rgb(var(--brand)); box-shadow: 0 0 0 3px rgb(var(--brand) / 0.15); }
-        [data-theme="dark"] .auth-shell .glass-input { background: rgb(var(--surface) / 0.9); }
+        :root { color-scheme: light; }
+        [data-theme="dark"] { color-scheme: dark; }
+
+        .auth-shell .glass-input {
+            color: rgb(var(--text-primary));
+            background: rgb(var(--surface));
+            border: 1px solid rgb(var(--border));
+            border-radius: var(--radius-md);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+        .auth-shell .glass-input::placeholder {
+            color: rgb(var(--text-muted)) !important;
+            opacity: 0.8;
+        }
+        .auth-shell .glass-input:focus-within, .auth-shell .glass-input:focus {
+            outline: none;
+            border-color: rgb(var(--brand)) !important;
+            box-shadow: 0 0 0 3px rgb(var(--brand) / 0.2) !important;
+        }
+        [data-theme="dark"] .auth-shell .glass-input {
+            background: rgb(var(--surface) / 0.85);
+            border-color: rgb(var(--border));
+            color: #f8fafc;
+        }
+        [data-theme="dark"] .auth-shell .glass-input:focus {
+            background: rgb(var(--surface));
+            border-color: rgb(var(--brand)) !important;
+            box-shadow: 0 0 0 3px rgb(var(--brand) / 0.3) !important;
+        }
+
+        /* Autofill Overrides for Auth forms */
+        .auth-shell input:-webkit-autofill,
+        .auth-shell input:-webkit-autofill:hover, 
+        .auth-shell input:-webkit-autofill:focus, 
+        .auth-shell input:-webkit-autofill:active {
+            -webkit-text-fill-color: rgb(var(--text-primary)) !important;
+            caret-color: rgb(var(--text-primary)) !important;
+            -webkit-box-shadow: 0 0 0 1000px rgb(var(--surface)) inset !important;
+            box-shadow: 0 0 0 1000px rgb(var(--surface)) inset !important;
+            transition: background-color 5000000s ease-in-out 0s, color 5000000s ease-in-out 0s;
+        }
+
+        [data-theme="dark"] .auth-shell input:-webkit-autofill,
+        [data-theme="dark"] .auth-shell input:-webkit-autofill:hover, 
+        [data-theme="dark"] .auth-shell input:-webkit-autofill:focus, 
+        [data-theme="dark"] .auth-shell input:-webkit-autofill:active {
+            -webkit-text-fill-color: #f8fafc !important;
+            caret-color: #f8fafc !important;
+            -webkit-box-shadow: 0 0 0 1000px rgb(30 41 59) inset !important;
+            box-shadow: 0 0 0 1000px rgb(30 41 59) inset !important;
+            border-color: rgb(var(--border)) !important;
+        }
+
+        [data-theme="dark"] .auth-shell input:-webkit-autofill:focus {
+            border-color: rgb(var(--brand)) !important;
+            -webkit-box-shadow: 0 0 0 1000px rgb(30 41 59) inset, 0 0 0 3px rgb(var(--brand) / 0.3) !important;
+            box-shadow: 0 0 0 1000px rgb(30 41 59) inset, 0 0 0 3px rgb(var(--brand) / 0.3) !important;
+        }
 
         .text-glow-pulse { animation: textGlowPulse 4s ease-in-out infinite; }
         @keyframes textGlowPulse { 0%, 100% { text-shadow: 0 0 0 transparent; } 50% { text-shadow: 0 0 24px rgb(var(--brand) / 0.32); } }
@@ -202,7 +282,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>
             </button>
 
-            @php $cartCount = count(session('cart', [])); @endphp
+            @php $cartCount = auth()->check() ? \App\Support\CartStore::countForUser(auth()->user()) : 0; @endphp
             <a href="{{ route('user.cart.index') }}" class="nav-icon-btn" title="Keranjang">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
                 @if ($cartCount > 0)
@@ -308,10 +388,10 @@
 </div>
 
 {{-- MAIN CONTENT --}}
-<main class="flex-grow flex flex-col relative w-full" style="z-index: 10;">
-    <div class="flex-grow flex items-center justify-center pt-28 pb-16 w-full">
+<main class="min-h-screen flex flex-col relative w-full" style="z-index: 10;">
+    <div class="flex-1 flex items-center justify-center pt-28 pb-20 w-full">
         <div class="w-full max-w-7xl mx-auto px-6 lg:px-12">
-            <div class="grid grid-cols-1 lg:grid-cols-[1fr_450px] gap-12 lg:gap-16 items-center">
+            <div class="grid grid-cols-1 lg:grid-cols-[1fr_minmax(420px,480px)] gap-12 lg:gap-16 items-center">
                 
                 {{-- LEFT: BRANDING --}}
                 <div class="hidden lg:flex flex-col justify-center items-start relative">
@@ -332,14 +412,14 @@
                         </span>
                         <span class="flex items-center gap-1.5">
                             <svg class="w-4 h-4" style="color: rgb(var(--brand));" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            Produk Halal
+                            Produk Organik
                         </span>
                     </div>
                 </div>
 
                 {{-- RIGHT: FORM --}}
                 <div class="flex justify-center lg:justify-end relative w-full">
-                    <div class="w-full max-w-[450px]">
+                    <div class="w-full max-w-[480px]">
                         @yield('form')
                     </div>
                 </div>
@@ -349,7 +429,7 @@
 </main>
 
 {{-- FOOTER --}}
-<footer class="mt-20 relative overflow-hidden" style="border-top: 1px solid rgb(var(--border-soft));">
+<footer class="relative overflow-hidden" style="border-top: 1px solid rgb(var(--border-soft));">
     <div class="absolute inset-0 pointer-events-none" style="background: linear-gradient(180deg, transparent 0%, rgb(var(--brand) / 0.04) 100%);"></div>
     <div class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div class="grid grid-cols-1 md:grid-cols-12 gap-10 mb-10">
@@ -389,17 +469,30 @@
             </div>
             <div class="md:col-span-3">
                 <h4 class="text-xs font-bold uppercase tracking-widest mb-4" style="color: rgb(var(--text-muted));">Kontak</h4>
+                @php
+                    $waUrl = 'https://wa.me/' . config('toko.whatsapp') . '?text=' . urlencode('Halo Admin EcoTahu, saya ingin bertanya seputar produk EcoTahu.');
+                @endphp
                 <ul class="space-y-3 text-sm" style="color: rgb(var(--text-secondary));">
-                    <li class="flex items-start gap-2"><span class="text-base leading-none mt-0.5">📍</span><span>{{ config('toko.alamat') }}</span></li>
-                    <li class="flex items-center gap-2"><span class="text-base leading-none">📞</span><span>(0331) 123-4567</span></li>
-                    <li class="flex items-center gap-2"><span class="text-base leading-none">✉️</span><span>hello@ecotahu.id</span></li>
+                    <li class="flex items-start gap-2"><x-icon name="map-pin" class="w-4 h-4 mt-0.5 shrink-0" style="color: rgb(var(--brand));" /><span>{{ config('toko.alamat') }}</span></li>
+                    <li class="flex items-center gap-2"><x-icon name="chat-bubble" class="w-4 h-4 shrink-0" style="color: rgb(var(--brand));" /><a href="{{ $waUrl }}" target="_blank" rel="noopener noreferrer" class="transition hover:text-emerald-600">{{ config('toko.whatsapp_display') }}</a></li>
+                    <li class="flex items-center gap-2"><x-icon name="mail" class="w-4 h-4 shrink-0" style="color: rgb(var(--brand));" /><a href="mailto:{{ config('toko.email') }}" class="transition hover:text-emerald-600">{{ config('toko.email') }}</a></li>
                 </ul>
                 <div class="flex items-center gap-2 mt-5">
-                    @php $socials = [['icon' => 'instagram', 'label' => 'Instagram'], ['icon' => 'whatsapp', 'label' => 'WhatsApp'], ['icon' => 'facebook', 'label' => 'Facebook']]; @endphp
+                    @php
+                        $socials = [
+                            ['icon' => 'instagram', 'label' => 'Instagram (' . config('toko.sosmed.instagram.label') . ')', 'href' => config('toko.sosmed.instagram.url')],
+                            ['icon' => 'tiktok', 'label' => 'TikTok (' . config('toko.sosmed.tiktok.label') . ')', 'href' => config('toko.sosmed.tiktok.url')],
+                            ['icon' => 'facebook', 'label' => 'Facebook (' . config('toko.sosmed.facebook.label') . ')', 'href' => config('toko.sosmed.facebook.url')],
+                        ];
+                    @endphp
                     @foreach ($socials as $s)
-                        <a href="#" class="w-9 h-9 rounded-xl flex items-center justify-center transition" style="background: rgb(var(--surface-hover)); color: rgb(var(--text-secondary)); border: 1px solid rgb(var(--border-soft));" title="{{ $s['label'] }}">
+                        <a href="{{ $s['href'] }}"
+                           target="_blank" rel="noopener noreferrer"
+                           class="w-9 h-9 rounded-xl flex items-center justify-center transition"
+                           style="background: rgb(var(--surface-hover)); color: rgb(var(--text-secondary)); border: 1px solid rgb(var(--border-soft));"
+                           title="{{ $s['label'] }}">
                             @if ($s['icon'] === 'instagram') <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-                            @elseif ($s['icon'] === 'whatsapp') <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+                            @elseif ($s['icon'] === 'tiktok') <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>
                             @else <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
                             @endif
                         </a>
@@ -423,6 +516,7 @@
         const current = document.documentElement.getAttribute('data-theme');
         const next = current === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', next);
+        document.documentElement.style.colorScheme = next;
         try { localStorage.setItem('theme', next); } catch (e) {}
     };
 

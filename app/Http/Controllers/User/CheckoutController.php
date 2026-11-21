@@ -11,6 +11,8 @@ use App\Models\Pesanan;
 use App\Models\ProdukTahu;
 use App\Models\User; // TAMBAHAN
 use App\Notifications\UpdatePesanan; // TAMBAHAN
+use App\Support\CartStore;
+use App\Support\FirstOrderPromo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +26,7 @@ class CheckoutController extends Controller
 
     public function index()
     {
-        $cart = session('cart', []);
+        $cart = CartStore::getCartForUser(Auth::user());
 
         if (empty($cart)) {
             return redirect()->route('user.cart.index')
@@ -36,13 +38,25 @@ class CheckoutController extends Controller
         $toko = config('toko');
         $kecamatanList = config('toko.kecamatan');
         $minimalDelivery = self::MINIMAL_PEMBELIAN_DELIVERY;
+        $promo = FirstOrderPromo::evaluate($user, $subtotal, old('no_telepon', $user->no_telepon));
 
-        return view('user.checkout.index', compact('cart', 'subtotal', 'user', 'toko', 'kecamatanList', 'minimalDelivery'));
+        return view('user.checkout.index', compact('cart', 'subtotal', 'user', 'toko', 'kecamatanList', 'minimalDelivery', 'promo'));
+    }
+
+    public function cekPromo(Request $request)
+    {
+        $cart = CartStore::getCartForUser(Auth::user());
+        $subtotal = collect($cart)->sum(fn ($i) => $i['harga'] * $i['qty']);
+        $phone = $request->query('no_telepon', Auth::user()?->no_telepon);
+
+        return response()->json(
+            FirstOrderPromo::evaluate(Auth::user(), $subtotal, $phone)
+        );
     }
 
     public function store(Request $request)
     {
-        $cart = session('cart', []);
+        $cart = CartStore::getCartForUser(Auth::user());
 
         if (empty($cart)) {
             return redirect()->route('user.cart.index')->with('error', 'Keranjang kosong.');
@@ -139,7 +153,9 @@ class CheckoutController extends Controller
             $ongkir = Haversine::hitungOngkir($jarak);
         }
 
-        $total = $subtotal + $ongkir;
+        $promo = FirstOrderPromo::evaluate(Auth::user(), $subtotal, $validated['no_telepon']);
+        $diskon = $promo['applied'] ? (int) $promo['diskon'] : 0;
+        $total = max(0, $subtotal - $diskon) + $ongkir;
 
         // Cek stok
         foreach ($cart as $item) {
@@ -165,26 +181,28 @@ class CheckoutController extends Controller
             }
 
             $pesanan = Pesanan::create([
-                'user_id'           => Auth::id(),
-                'kode_pesanan'      => $kodePesanan,
-                'subtotal'          => $subtotal,
-                'ongkir'            => $ongkir,
-                'jarak_km'          => $jarak,
-                'lat_tujuan'        => $latTujuan,
-                'lng_tujuan'        => $lngTujuan,
-                'pakai_pin'         => $pakaiPin,
-                'total_harga'       => $total,
-                'payment_method'    => $validated['payment_method'],
-                'delivery_type'     => $validated['delivery_type'],
-                'bank_tujuan'       => $bankTujuan,
-                'va_number'         => $vaNumber,
-                'payment_status'    => 'pending',
-                'order_status'      => 'pending',
-                'alamat_pengiriman' => $validated['alamat_pengiriman'] . ' | Penerima: ' . $validated['nama_penerima'] . ' | Telp: ' . $validated['no_telepon'],
-                'kecamatan'         => $kecamatan,
-                'catatan'           => $validated['catatan'],
-                'tanggal_order'     => now(),
-                'expired_at'        => $validated['payment_method'] === 'Transfer' ? now()->addHours(24) : null,
+                'user_id'             => Auth::id(),
+                'kode_pesanan'        => $kodePesanan,
+                'subtotal'            => $subtotal,
+                'diskon'              => $diskon,
+                'ongkir'              => $ongkir,
+                'jarak_km'            => $jarak,
+                'lat_tujuan'          => $latTujuan,
+                'lng_tujuan'          => $lngTujuan,
+                'pakai_pin'           => $pakaiPin,
+                'total_harga'         => $total,
+                'payment_method'      => $validated['payment_method'],
+                'delivery_type'       => $validated['delivery_type'],
+                'bank_tujuan'         => $bankTujuan,
+                'va_number'           => $vaNumber,
+                'payment_status'      => 'pending',
+                'order_status'        => 'pending',
+                'alamat_pengiriman'   => $validated['alamat_pengiriman'] . ' | Penerima: ' . $validated['nama_penerima'] . ' | Telp: ' . $validated['no_telepon'],
+                'no_telepon_penerima' => FirstOrderPromo::normalizePhone($validated['no_telepon']),
+                'kecamatan'           => $kecamatan,
+                'catatan'             => $validated['catatan'],
+                'tanggal_order'       => now(),
+                'expired_at'          => $validated['payment_method'] === 'Transfer' ? now()->addHours(24) : null,
             ]);
 
             foreach ($cart as $item) {
@@ -227,6 +245,7 @@ class CheckoutController extends Controller
             }
 
             DB::commit();
+            CartStore::clearUser(Auth::user());
             session()->forget('cart');
 
             return redirect()->route('user.checkout.success', $pesanan->kode_pesanan);

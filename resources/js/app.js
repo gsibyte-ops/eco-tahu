@@ -100,44 +100,13 @@ function initParallax() {
 }
 
 /* ============================================================
-   4) MARQUEE
-   ============================================================ */
-function initMarquee() {
-    const sections = document.querySelectorAll('main > section');
-    let trustBar = null;
-    sections.forEach((s) => {
-        if (s.textContent.includes('100% Halal') && s.textContent.includes('Zero Waste')) {
-            trustBar = s;
-        }
-    });
-    if (!trustBar) return;
-    if (document.querySelector('.marquee-section')) return;
-
-    const items = [
-        '100% Organik', 'Zero Waste', 'Halal & BPOM',
-        'Langsung dari Produsen', 'Same-day Jember', 'SDG 12',
-    ];
-    const doubled = [...items, ...items];
-    const track = doubled
-        .map((t) => `<span class="marquee-item">${t}</span><span class="marquee-dot">·</span>`)
-        .join('');
-
-    const wrap = document.createElement('section');
-    wrap.className = 'marquee-section';
-    wrap.setAttribute('data-no-reveal', '');
-    wrap.innerHTML = `<div class="marquee"><div class="marquee-track">${track}</div></div>`;
-    trustBar.after(wrap);
-}
-
-/* ============================================================
-   5) REVEALS
+   4) REVEALS
    ============================================================ */
 function initReveals() {
     if (REDUCE) return;
 
     gsap.utils.toArray('main > section:not(:first-child)').forEach((section) => {
         if (section.hasAttribute('data-no-reveal')) return;
-        if (section.classList.contains('marquee-section')) return;
 
         const h2 = section.querySelector('h2, h3');
         if (h2) {
@@ -154,7 +123,8 @@ function initReveals() {
             });
         }
 
-        const cards = section.querySelectorAll(CARD_SELECTOR);
+        const cards = Array.from(section.querySelectorAll(CARD_SELECTOR))
+            .filter((el) => !el.closest('[data-no-reveal]'));
         if (cards.length) {
             ScrollTrigger.create({
                 trigger: cards[0],
@@ -262,7 +232,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initLenis();
     initHero();
     initParallax();
-    initMarquee();
     initReveals();
     initMagnetic();
     initTilt();

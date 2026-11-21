@@ -19,7 +19,7 @@
                     <img src="{{ asset('storage/' . $produk->gambar) }}" alt="{{ $produk->nama_produk }}"
                          class="w-full h-full object-cover rounded-2xl">
                 @else
-                    <div class="w-full h-full flex items-center justify-center text-9xl">🥛</div>
+                    <div class="w-full h-full flex items-center justify-center" style="color: rgb(var(--text-muted));"><x-icon name="cube" class="w-24 h-24 opacity-40" /></div>
                 @endif
             </div>
         </div>
@@ -86,16 +86,16 @@
 
             <div class="grid grid-cols-3 gap-3 pt-6" style="border-top: 1px solid rgb(var(--border-soft));">
                 <div class="glass rounded-xl p-3 text-center flex flex-col justify-center items-center">
-                    <div class="text-2xl mb-1">🚚</div>
+                    <x-icon name="truck" class="w-6 h-6 mb-1.5" style="color: rgb(var(--brand));" />
                     <p class="text-[11px] font-semibold leading-tight" style="color: rgb(var(--text-secondary));">Ongkir mulai Rp 5.000</p>
                 </div>
                 <div class="glass rounded-xl p-3 text-center flex flex-col justify-center items-center">
-                    <div class="text-2xl mb-1">🌿</div>
+                    <x-icon name="leaf" class="w-6 h-6 mb-1.5" style="color: rgb(var(--brand));" />
                     <p class="text-[11px] font-semibold leading-tight" style="color: rgb(var(--text-secondary));">100% Organik</p>
                 </div>
                 <div class="glass rounded-xl p-3 text-center flex flex-col justify-center items-center">
-                    <div class="text-2xl mb-1">✅</div>
-                    <p class="text-[11px] font-semibold leading-tight" style="color: rgb(var(--text-secondary));">Halal & BPOM</p>
+                    <x-icon name="check-circle" class="w-6 h-6 mb-1.5" style="color: rgb(var(--brand));" />
+                    <p class="text-[11px] font-semibold leading-tight" style="color: rgb(var(--text-secondary));">Segar Setiap Hari</p>
                 </div>
             </div>
         </div>
@@ -105,21 +105,36 @@
 
     @if ($related->count() > 0)
     <section class="mt-16">
-        <h2 class="text-2xl font-extrabold tracking-tight mb-6" style="color: rgb(var(--text-primary));">Produk Serupa</h2>
+        <div class="flex items-center justify-between gap-4 mb-6">
+            <h2 class="text-2xl font-extrabold tracking-tight" style="color: rgb(var(--text-primary));">Produk Serupa</h2>
+            <a href="{{ route('user.produk.index') }}" class="inline-flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold shrink-0 transition py-2 px-4 sm:py-2.5 sm:px-5 rounded-full hover:opacity-90" style="color: rgb(var(--brand)); background: rgb(var(--brand-soft));">
+                Lihat Semua
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+            </a>
+        </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
             @foreach ($related as $r)
-                <a href="{{ route('user.produk.show', $r->slug) }}" class="surface product-card overflow-hidden block">
+                @php $rAvg = $r->averageRating(); $rCnt = $r->reviewCount(); @endphp
+                <a href="{{ route('user.produk.show', $r->slug) }}" class="surface product-card group overflow-hidden flex flex-col">
                     <div class="aspect-square overflow-hidden" style="background: rgb(var(--bg-secondary));">
                         @if ($r->gambar)
                             <img src="{{ asset('storage/' . $r->gambar) }}" alt="{{ $r->nama_produk }}"
-                                 class="w-full h-full object-cover">
+                                 class="w-full h-full object-cover transition duration-500 group-hover:scale-110">
                         @else
-                            <div class="w-full h-full flex items-center justify-center text-5xl">🥛</div>
+                            <div class="w-full h-full flex items-center justify-center" style="color: rgb(var(--text-muted));"><x-icon name="cube" class="w-12 h-12 opacity-40" /></div>
                         @endif
                     </div>
-                    <div class="p-3">
-                        <h3 class="font-semibold text-sm line-clamp-2 min-h-[40px] mb-1" style="color: rgb(var(--text-primary));">{{ $r->nama_produk }}</h3>
-                        <p class="price text-sm">Rp {{ number_format($r->harga, 0, ',', '.') }}</p>
+                    <div class="p-3 sm:p-4 flex flex-col flex-1">
+                        <h3 class="font-semibold text-sm line-clamp-2 min-h-[40px] mb-1.5" style="color: rgb(var(--text-primary));">{{ $r->nama_produk }}</h3>
+                        <div class="flex flex-wrap items-center gap-0.5 text-[11px] mb-2">
+                            @for ($j = 1; $j <= 5; $j++)
+                                <svg class="w-3.5 h-3.5 {{ $j <= round($rAvg) ? 'text-amber-400 fill-current' : 'fill-current' }}" style="{{ $j > round($rAvg) ? 'color: rgb(var(--text-faint))' : '' }}" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                            @endfor
+                            <span class="ml-1 tabular-nums" style="color: rgb(var(--text-muted));">
+                                @if ($rCnt > 0) {{ number_format($rAvg, 1) }} ({{ $rCnt }}) @else Baru @endif
+                            </span>
+                        </div>
+                        <p class="price text-sm mt-auto">Rp {{ number_format($r->harga, 0, ',', '.') }}</p>
                     </div>
                 </a>
             @endforeach

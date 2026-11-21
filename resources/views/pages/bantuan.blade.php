@@ -14,7 +14,12 @@
     <div class="space-y-4 text-sm auth-hint">
         <p><strong>1. Bagaimana cara memesan tahu?</strong><br>Pilih produk, masukkan ke keranjang, dan lakukan checkout.</p>
         <p><strong>2. Bagaimana cara melacak pesanan?</strong><br>Masuk ke akun Anda dan buka menu "Pesanan".</p>
-        <p><strong>Butuh bantuan lain?</strong><br>Hubungi WhatsApp kami di <a href="https://wa.me/628123456789" class="auth-link">0812-3456-789</a></p>
+        <p><strong>Butuh bantuan lain?</strong><br>
+            WhatsApp: <a href="https://wa.me/{{ config('toko.whatsapp') }}?text={{ urlencode('Halo Admin EcoTahu, saya butuh bantuan.') }}" target="_blank" rel="noopener noreferrer" class="auth-link">{{ config('toko.whatsapp_display') }}</a><br>
+            Email: <a href="mailto:{{ config('toko.email') }}" class="auth-link">{{ config('toko.email') }}</a><br>
+            Jam Operasional: {{ config('toko.jam_operasional') }}<br>
+            Alamat: {{ config('toko.alamat') }}
+        </p>
     </div>
 
     <div class="mt-8">

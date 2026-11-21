@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\PelangganController;
 use App\Http\Controllers\Admin\PesananController as AdminPesananController;
 use App\Http\Controllers\Admin\ProdukTahuController;
 use App\Http\Controllers\Admin\RefundController;
+use App\Http\Controllers\Admin\ResepController as AdminResepController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\User\LimbahController;
 use App\Http\Controllers\User\NotificationController; 
 use App\Http\Controllers\User\PesananController;
 use App\Http\Controllers\User\ProdukController;
+use App\Http\Controllers\User\ResepController;
 use App\Http\Controllers\User\ReviewController;
 use Illuminate\Support\Facades\Route;
 
@@ -44,6 +46,11 @@ Route::prefix('limbah')->name('user.limbah.')->group(function () {
 Route::prefix('edukasi')->name('user.edukasi.')->group(function () {
     Route::get('/', [EdukasiController::class, 'index'])->name('index');
     Route::get('/{slug}', [EdukasiController::class, 'show'])->name('show');
+});
+
+Route::prefix('resep')->name('user.resep.')->group(function () {
+    Route::get('/', [ResepController::class, 'index'])->name('index');
+    Route::get('/{slug}', [ResepController::class, 'show'])->name('show');
 });
 
 // ============================
@@ -78,6 +85,7 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('checkout')->name('user.checkout.')->group(function () {
         Route::get('/', [CheckoutController::class, 'index'])->name('index');
+        Route::get('/cek-promo', [CheckoutController::class, 'cekPromo'])->name('cekPromo');
         Route::post('/', [CheckoutController::class, 'store'])->name('store');
         Route::get('/success/{kode}', [CheckoutController::class, 'success'])->name('success');
         Route::post('/upload-bukti/{kode}', [CheckoutController::class, 'uploadBukti'])->name('uploadBukti');
@@ -95,6 +103,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/pesanan/{pesanan}', [ReviewController::class, 'store'])->name('store');
         Route::delete('/{review}', [ReviewController::class, 'destroy'])->name('destroy');
     });
+
+    Route::post('/edukasi/{edukasi}/like', [EdukasiController::class, 'toggleLike'])->name('user.edukasi.like');
+    Route::post('/resep/{resep}/like', [ResepController::class, 'toggleLike'])->name('user.resep.like');
 });
 
 // ============================
@@ -136,6 +147,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/pelanggan/{pelanggan}', [PelangganController::class, 'show'])->name('pelanggan.show');
 
     Route::resource('edukasi', AdminEdukasiController::class);
+    Route::resource('resep', AdminResepController::class);
 
     Route::get('/laporan/export', [LaporanController::class, 'export'])->name('laporan.export');
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
@@ -152,5 +164,47 @@ Route::view('/faq', 'pages.faq')->name('halaman.faq');
 Route::view('/syarat-ketentuan', 'pages.snk')->name('halaman.snk');
 Route::view('/kebijakan-privasi', 'pages.privasi')->name('halaman.privasi');
 Route::view('/sitemap', 'pages.sitemap')->name('halaman.sitemap');
+
+// Proxy route untuk Flutter Mobile yang memanggil /files/{path} dengan CORS lengkap
+Route::match(['GET', 'OPTIONS'], '/files/{path}', function (\Illuminate\Http\Request $request, $path) {
+    if ($request->isMethod('OPTIONS')) {
+        return response('', 200, [
+            'Access-Control-Allow-Origin' => '*',
+            'Access-Control-Allow-Methods' => 'GET, HEAD, OPTIONS',
+            'Access-Control-Allow-Headers' => '*',
+            'Access-Control-Expose-Headers' => 'Content-Length, Content-Range, Accept-Ranges',
+            'Cross-Origin-Resource-Policy' => 'cross-origin',
+        ]);
+    }
+
+    $cleanPath = ltrim(preg_replace('#^(storage|public)/#', '', $path), '/');
+    $filePath = storage_path('app/public/' . $cleanPath);
+
+    if (!file_exists($filePath)) {
+        $filePath = public_path($path);
+    }
+
+    if (!file_exists($filePath)) {
+        abort(404);
+    }
+
+    $mime = mime_content_type($filePath) ?: 'application/octet-stream';
+
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+
+    return response()->file($filePath, [
+        'Access-Control-Allow-Origin' => '*',
+        'Access-Control-Allow-Methods' => 'GET, HEAD, OPTIONS',
+        'Access-Control-Allow-Headers' => '*',
+        'Access-Control-Expose-Headers' => 'Content-Length, Content-Range, Accept-Ranges',
+        'Cross-Origin-Resource-Policy' => 'cross-origin',
+        'Cross-Origin-Embedder-Policy' => 'unsafe-none',
+        'Content-Type' => $mime,
+        'Cache-Control' => 'public, max-age=86400',
+    ]);
+})->where('path', '.*')
+  ->withoutMiddleware('web');
 
 require __DIR__.'/auth.php';

@@ -17,7 +17,7 @@
             <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
         </div>
         <h1 class="text-3xl font-extrabold tracking-tight mb-2" style="color: rgb(var(--text-primary));">Pesanan Berhasil Dibuat!</h1>
-        <p style="color: rgb(var(--text-secondary));">Terima kasih sudah berbelanja di EcoTahu 🌿</p>
+        <p style="color: rgb(var(--text-secondary));">Terima kasih sudah berbelanja di EcoTahu</p>
     </div>
 
     <div class="glass-card p-6 mb-5">
@@ -60,6 +60,20 @@
                 <span class="font-medium tabular-nums" style="color: rgb(var(--text-primary));">{{ $pesanan->jarak_km > 0 ? $pesanan->jarak_km . ' km' : '-' }}</span>
             </div>
             <div class="flex justify-between pt-3" style="border-top: 1px solid rgb(var(--border-soft));">
+                <span style="color: rgb(var(--text-secondary));">Subtotal</span>
+                <span class="font-medium tabular-nums" style="color: rgb(var(--text-primary));">Rp {{ number_format($pesanan->subtotal, 0, ',', '.') }}</span>
+            </div>
+            @if (($pesanan->diskon ?? 0) > 0)
+                <div class="flex justify-between">
+                    <span class="font-medium" style="color: rgb(var(--brand));">Diskon Order Pertama</span>
+                    <span class="font-semibold tabular-nums" style="color: rgb(var(--brand));">-Rp {{ number_format($pesanan->diskon, 0, ',', '.') }}</span>
+                </div>
+            @endif
+            <div class="flex justify-between">
+                <span style="color: rgb(var(--text-secondary));">Ongkir</span>
+                <span class="font-medium tabular-nums" style="color: rgb(var(--text-primary));">Rp {{ number_format($pesanan->ongkir, 0, ',', '.') }}</span>
+            </div>
+            <div class="flex justify-between pt-3" style="border-top: 1px solid rgb(var(--border-soft));">
                 <span class="font-bold" style="color: rgb(var(--text-primary));">Total</span>
                 <span class="text-xl price text-gradient-green">Rp {{ number_format($pesanan->total_harga, 0, ',', '.') }}</span>
             </div>
@@ -75,7 +89,7 @@
                         <svg class="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                     </div>
                     <div>
-                        <p class="text-xl font-bold">Pembayaran Berhasil! 🎉</p>
+                        <p class="text-xl font-bold">Pembayaran Berhasil!</p>
                         <p class="text-sm opacity-90">Pembayaran Anda sudah kami terima dan terverifikasi.</p>
                     </div>
                 </div>
@@ -109,27 +123,32 @@
                 <div class="glass rounded-2xl p-4 mb-5 text-center" id="countdownBox"
                      data-expired="{{ $pesanan->expired_at->toIso8601String() }}"
                      style="border-color: rgb(var(--danger) / 0.3); background: rgb(var(--danger-soft));">
-                    <p class="text-xs uppercase font-bold mb-1" style="color: rgb(var(--danger));">⏰ Selesaikan Pembayaran Dalam</p>
+                    <p class="text-xs uppercase font-bold mb-1 flex items-center justify-center gap-1.5" style="color: rgb(var(--danger));"><x-icon name="clock" class="w-4 h-4" /> Selesaikan Pembayaran Dalam</p>
                     <p id="countdown" class="text-2xl font-bold font-mono tabular-nums" style="color: rgb(var(--danger));">--:--:--</p>
                 </div>
             @endif
 
             <div class="glass rounded-2xl p-6 mb-5" style="border-color: rgb(var(--info) / 0.3); background: rgb(var(--info-soft));">
-                <h3 class="font-bold mb-2" style="color: rgb(var(--info));">📎 Sudah Transfer? Upload Bukti</h3>
+                <h3 class="font-bold mb-2 flex items-center gap-1.5" style="color: rgb(var(--info));"><x-icon name="paperclip" class="w-4 h-4" /> Sudah Transfer? Upload Bukti</h3>
                 <p class="text-sm mb-4" style="color: rgb(var(--info));">Upload bukti transfer biar admin bisa verifikasi pembayaran Anda.</p>
 
                 @if ($pesanan->pembayaran && $pesanan->pembayaran->bukti_transfer)
                     <div class="glass-card p-4 mb-4">
                         <p class="text-xs mb-2" style="color: rgb(var(--text-muted));">Bukti yang sudah diupload:</p>
                         <img src="{{ asset('storage/' . $pesanan->pembayaran->bukti_transfer) }}" class="w-full max-w-xs rounded-xl" style="border: 1px solid rgb(var(--border));">
-                        <p class="text-xs mt-2 font-medium" style="color: rgb(var(--success));">✓ Menunggu verifikasi admin</p>
+                        <p class="text-xs mt-2 font-medium flex items-center gap-1" style="color: rgb(var(--success));"><x-icon name="check-circle" class="w-3.5 h-3.5" /> Menunggu verifikasi admin</p>
                     </div>
                 @endif
 
                 <form method="POST" action="{{ route('user.checkout.uploadBukti', $pesanan->kode_pesanan) }}" enctype="multipart/form-data">
                     @csrf
-                    <input type="file" name="bukti_transfer" accept="image/*" required
+                    <input type="file" id="buktiTransferSuccessInput" name="bukti_transfer" accept="image/jpeg,image/jpg,image/png,image/webp" required
+                           onchange="validateBuktiTransferSuccess(this)"
                            class="glass-input w-full px-3 py-2 text-sm mb-3 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200">
+                    <div id="buktiSuccessPreviewBox" class="hidden mb-3">
+                        <img id="buktiSuccessPreviewImg" src="" class="w-full max-w-xs rounded-xl" style="border: 1px solid rgb(var(--border));">
+                        <p class="text-xs mt-1 font-medium flex items-center gap-1" style="color: rgb(var(--success));"><x-icon name="check-circle" class="w-3.5 h-3.5" /> File gambar siap diupload</p>
+                    </div>
                     <button type="submit" class="btn-primary w-full py-2.5" style="background: var(--gradient-info);">
                         Upload Bukti Transfer
                     </button>
@@ -140,11 +159,15 @@
     @else
         {{-- BAGIAN COD --}}
         <div class="glass rounded-2xl p-6 mb-5 text-sm" style="color: rgb(var(--success)); border-color: rgb(var(--success) / 0.3); background: rgb(var(--success-soft));">
-            @if ($pesanan->delivery_type === 'delivery')
-                💵 <strong>Metode COD</strong> — Bayar tunai ke kurir saat barang tiba.<br>
-            @else
-                🏪 <strong>Metode COD</strong> — Bayar tunai di toko/pabrik saat pengambilan barang.<br>
-            @endif
+            <div class="flex items-start gap-2 mb-1">
+                @if ($pesanan->delivery_type === 'delivery')
+                    <x-icon name="banknotes" class="w-4 h-4 mt-0.5 shrink-0" />
+                    <span><strong>Metode COD</strong> — Bayar tunai ke kurir saat barang tiba.</span>
+                @else
+                    <x-icon name="store" class="w-4 h-4 mt-0.5 shrink-0" />
+                    <span><strong>Metode COD</strong> — Bayar tunai di toko/pabrik saat pengambilan barang.</span>
+                @endif
+            </div>
             Total yang perlu dibayar: <strong class="tabular-nums">Rp {{ number_format($pesanan->total_harga, 0, ',', '.') }}</strong>
         </div>
     @endif
@@ -162,6 +185,32 @@
 
 @push('scripts')
 <script>
+    function validateBuktiTransferSuccess(input) {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!allowed.includes(file.type)) {
+            alert('Hanya file gambar (JPG, JPEG, PNG, WEBP) yang diperbolehkan.');
+            input.value = '';
+            const pBox = document.getElementById('buktiSuccessPreviewBox');
+            if (pBox) pBox.classList.add('hidden');
+            return;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            alert('Ukuran file bukti transfer maksimal 2MB.');
+            input.value = '';
+            const pBox = document.getElementById('buktiSuccessPreviewBox');
+            if (pBox) pBox.classList.add('hidden');
+            return;
+        }
+        const pBox = document.getElementById('buktiSuccessPreviewBox');
+        const pImg = document.getElementById('buktiSuccessPreviewImg');
+        if (pBox && pImg) {
+            pImg.src = URL.createObjectURL(file);
+            pBox.classList.remove('hidden');
+        }
+    }
+
     function copyVA() {
         const vaEl = document.getElementById('vaNumber');
         if (!vaEl) return;

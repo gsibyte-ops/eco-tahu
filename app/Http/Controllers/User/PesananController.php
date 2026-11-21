@@ -54,11 +54,21 @@ class PesananController extends Controller
             ->firstOrFail();
 
         $request->validate([
-            'alasan_batal' => 'required|string|min:10|max:500',
-            'bukti_transfer' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'alasan_batal'   => 'required|string|min:10|max:500',
+            'bukti_transfer' => \App\Support\MediaGuard::imageRules(false, 2048),
+            'nama_bank'      => 'nullable|regex:/^[a-zA-Z0-9\s\-]+$/|max:50',
+            'nomor_rekening' => 'nullable|regex:/^[0-9]+$/|max:50',
+            'atas_nama'      => 'nullable|regex:/^[a-zA-Z\s]+$/|max:100',
         ], [
-            'alasan_batal.required' => 'Alasan pembatalan wajib diisi.',
-            'alasan_batal.min' => 'Alasan minimal 10 karakter.',
+            'alasan_batal.required'     => 'Alasan pembatalan wajib diisi.',
+            'alasan_batal.min'          => 'Alasan minimal 10 karakter.',
+            'bukti_transfer.image'      => 'Bukti transfer hanya boleh berupa file foto (JPG, PNG, WEBP).',
+            'bukti_transfer.mimes'      => 'Format bukti transfer harus JPG, PNG, atau WEBP.',
+            'bukti_transfer.mimetypes'  => 'Bukti transfer hanya boleh berupa file foto asli.',
+            'bukti_transfer.max'        => 'Ukuran bukti transfer maksimal 2MB.',
+            'nama_bank.regex'           => 'Nama bank/e-wallet hanya boleh berisi huruf, angka, spasi, atau tanda hubung.',
+            'nomor_rekening.regex'      => 'Nomor rekening hanya boleh berisi angka.',
+            'atas_nama.regex'           => 'Nama pemilik rekening hanya boleh berisi huruf dan spasi.',
         ]);
 
         if (!in_array($pesanan->order_status, ['pending', 'diproses'])) {
@@ -113,10 +123,13 @@ class PesananController extends Controller
             }
 
             Refund::create([
-                'pesanan_id' => $pesanan->id,
+                'pesanan_id'     => $pesanan->id,
                 'nominal_refund' => $nominalRefund,
-                'alasan_batal' => $request->alasan_batal,
-                'status_refund' => 'pending',
+                'alasan_batal'   => $request->alasan_batal,
+                'nama_bank'      => $pesanan->payment_method === 'Transfer' ? $request->nama_bank : null,
+                'nomor_rekening' => $pesanan->payment_method === 'Transfer' ? $request->nomor_rekening : null,
+                'atas_nama'      => $pesanan->payment_method === 'Transfer' ? $request->atas_nama : null,
+                'status_refund'  => 'pending',
             ]);
 
             if ($nominalRefund > 0) {
@@ -138,7 +151,13 @@ class PesananController extends Controller
     public function uploadBukti(Request $request, string $kode)
     {
         $request->validate([
-            'bukti_transfer' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'bukti_transfer' => \App\Support\MediaGuard::imageRules(true, 2048),
+        ], [
+            'bukti_transfer.required'  => 'Bukti transfer wajib diunggah.',
+            'bukti_transfer.image'     => 'Bukti transfer hanya boleh berupa file foto (JPG, PNG, WEBP).',
+            'bukti_transfer.mimes'     => 'Format bukti transfer harus JPG, PNG, atau WEBP.',
+            'bukti_transfer.mimetypes' => 'Bukti transfer hanya boleh berupa file foto asli.',
+            'bukti_transfer.max'       => 'Ukuran bukti transfer maksimal 2MB.',
         ]);
 
         $pesanan = Pesanan::with('pembayaran')

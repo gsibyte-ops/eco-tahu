@@ -28,23 +28,28 @@
 @endpush
 
 @section('brand-extra')
+@php
+    $promoPersen = (int) config('toko.promo_order_pertama.persen', 10);
+    $promoMax = number_format((int) config('toko.promo_order_pertama.max_diskon', 5000), 0, ',', '.');
+    $promoMin = number_format((int) config('toko.promo_order_pertama.min_belanja', 20000), 0, ',', '.');
+@endphp
 <div class="brand-stats rounded-2xl p-5 max-w-md" style="background: rgb(var(--surface) / 0.6); backdrop-filter: blur(16px); border: 1px solid rgb(var(--border-soft)); box-shadow: 0 12px 32px -12px rgb(0 0 0 / 0.15);">
     <div class="perk-item flex items-start gap-3 mb-3">
-        <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-lg text-white" style="background: var(--gradient-brand);">🎁</div>
+        <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-white" style="background: var(--gradient-brand);"><x-icon name="gift" class="w-5 h-5" /></div>
         <div>
-            <p class="font-semibold text-sm" style="color: rgb(var(--text-primary));">Diskon 20% First Order</p>
-            <p class="text-xs auth-muted">Berlaku untuk pembelian pertama</p>
+            <p class="font-semibold text-sm" style="color: rgb(var(--text-primary));">Diskon {{ $promoPersen }}% Order Pertama</p>
+            <p class="text-xs auth-muted">Maks. Rp {{ $promoMax }} · Min. belanja Rp {{ $promoMin }}</p>
         </div>
     </div>
     <div class="perk-item flex items-start gap-3 mb-3">
-        <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-lg text-white" style="background: var(--gradient-brand);">🚚</div>
+        <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-white" style="background: var(--gradient-brand);"><x-icon name="truck" class="w-5 h-5" /></div>
         <div>
             <p class="font-semibold text-sm" style="color: rgb(var(--text-primary));">Ongkir Terjangkau</p>
             <p class="text-xs auth-muted">Cuma Rp 2.500/km</p>
         </div>
     </div>
     <div class="perk-item flex items-start gap-3">
-        <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-lg text-white" style="background: var(--gradient-brand);">🌿</div>
+        <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-white" style="background: var(--gradient-brand);"><x-icon name="leaf" class="w-5 h-5" /></div>
         <div>
             <p class="font-semibold text-sm" style="color: rgb(var(--text-primary));">Produk 100% Organik</p>
             <p class="text-xs auth-muted">Tanpa pengawet, tanpa bahan kimia</p>

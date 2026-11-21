@@ -140,17 +140,32 @@
                 @forelse ($edukasi as $e)
                     <tr class="transition" style="border-bottom: 1px solid rgb(var(--border-soft));">
                         <td class="px-6 py-4">
-                            @if ($e->thumbnail)
-                                <img src="{{ asset('storage/' . $e->thumbnail) }}" alt="{{ $e->judul }}"
-                                     class="w-16 h-12 rounded-lg object-cover" style="border: 1px solid rgb(var(--border-soft));">
-                            @else
-                                <div class="w-16 h-12 rounded-lg flex items-center justify-center txt-muted text-xs"
-                                     style="background: rgb(var(--bg-secondary));">No img</div>
-                            @endif
+                            <div class="relative inline-block">
+                                @if ($e->display_thumbnail_url)
+                                    <img src="{{ $e->display_thumbnail_url }}" alt="{{ $e->judul }}"
+                                         class="w-16 h-12 rounded-lg object-cover" style="border: 1px solid rgb(var(--border-soft));">
+                                @else
+                                    <div class="w-16 h-12 rounded-lg flex items-center justify-center txt-muted text-xs"
+                                         style="background: rgb(var(--bg-secondary));">No img</div>
+                                @endif
+                            </div>
+                            <div class="mt-1">
+                                @if (($e->media_type ?? 'image') === 'youtube')
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold"
+                                          style="background: rgb(var(--danger-soft)); color: rgb(var(--danger));">▶ YouTube</span>
+                                @elseif (($e->media_type ?? 'image') === 'video')
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold"
+                                          style="background: rgb(var(--info-soft)); color: rgb(var(--info));"><x-icon name="film" class="w-3 h-3" /> Video</span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold"
+                                          style="background: rgb(var(--brand-soft)); color: rgb(var(--brand-strong));"><x-icon name="photo" class="w-3 h-3" /> Foto</span>
+                                @endif
+                            </div>
                         </td>
                         <td class="px-6 py-4">
                             <p class="text-sm font-semibold txt-primary">{{ $e->judul }}</p>
                             <p class="text-xs txt-secondary">{{ Str::limit($e->konten, 60) }}</p>
+                            <p class="text-[11px] txt-muted mt-1 inline-flex items-center gap-1"><x-icon name="heart-solid" class="w-3 h-3 text-rose-500" /> {{ $e->likes_count ?? 0 }} suka</p>
                         </td>
                         <td class="px-6 py-4 text-sm txt-secondary">{{ $e->user->username ?? '-' }}</td>
                         <td class="px-6 py-4 text-sm txt-secondary">
@@ -245,24 +260,110 @@
                 <div>
                     <label class="block text-sm font-medium txt-primary mb-1">Judul Artikel <span style="color: rgb(var(--danger));">*</span></label>
                     <input type="text" name="judul" value="{{ old('judul') }}"
-                           minlength="5" maxlength="200"
-                           oninput="this.value = this.value.replace(/[^a-zA-Z0-9\s.,:!?\-]/g, '')"
+                           minlength="5" maxlength="200" data-filter="title"
                            class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 glass-input"
                            style="color: rgb(var(--text-primary));"
                            placeholder="Contoh: Manfaat Ampas Tahu untuk Pupuk Organik">
                     <p class="text-xs txt-secondary mt-1">Huruf, angka, spasi & tanda baca umum. Minimal 5 karakter.</p>
                 </div>
 
-                {{-- THUMBNAIL --}}
+                {{-- PILIH MODE MEDIA --}}
+                <div>
+                    <label class="block text-sm font-medium txt-primary mb-2">Jenis Media Artikel <span style="color: rgb(var(--danger));">*</span></label>
+                    <input type="hidden" name="media_type" :value="mediaType">
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" @click="mediaType = 'image'"
+                                class="px-3 py-2.5 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-1.5"
+                                :style="mediaType === 'image' ? 'background: rgb(var(--brand-soft)); border-color: rgb(var(--brand)); color: rgb(var(--brand-strong));' : 'border-color: rgb(var(--border-soft)); color: rgb(var(--text-secondary));'">
+                            <x-icon name="photo" class="w-3.5 h-3.5" /> Foto Manual
+                        </button>
+                        <button type="button" @click="mediaType = 'video'"
+                                class="px-3 py-2.5 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-1.5"
+                                :style="mediaType === 'video' ? 'background: rgb(var(--info-soft)); border-color: rgb(var(--info)); color: rgb(var(--info));' : 'border-color: rgb(var(--border-soft)); color: rgb(var(--text-secondary));'">
+                            <x-icon name="film" class="w-3.5 h-3.5" /> Upload Video
+                        </button>
+                        <button type="button" @click="mediaType = 'youtube'"
+                                class="px-3 py-2.5 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-1.5"
+                                :style="mediaType === 'youtube' ? 'background: rgb(var(--danger-soft)); border-color: rgb(var(--danger)); color: rgb(var(--danger));' : 'border-color: rgb(var(--border-soft)); color: rgb(var(--text-secondary));'">
+                            <span>▶</span> Link YouTube
+                        </button>
+                    </div>
+                </div>
+
+                {{-- UPLOAD VIDEO MANUAL --}}
+                <div x-show="mediaType === 'video'" x-cloak class="p-4 rounded-xl"
+                     style="background: rgb(var(--bg-secondary) / 0.6); border: 1px solid rgb(var(--border-soft));">
+                    <label class="block text-sm font-medium txt-primary mb-2">
+                        Upload Video Edukasi <span style="color: rgb(var(--danger));">*</span>
+                    </label>
+                    <input type="file" name="video_file" accept="video/mp4,video/quicktime,video/webm"
+                           data-filter="video-only" x-ref="videoInput" @change="handleVideoChange($event)" class="hidden">
+
+                    <div x-show="videoPreviewUrl" x-cloak class="mb-3 rounded-xl overflow-hidden bg-black/90 p-2"
+                         style="border: 1px solid rgb(var(--border-soft));">
+                        <video :src="videoPreviewUrl" controls class="w-full max-h-56 rounded-lg"></video>
+                        <div class="flex items-center justify-between gap-2 mt-2 px-1">
+                            <span class="text-xs text-white/80 truncate" x-text="videoFileName"></span>
+                            <button type="button" @click="cancelVideo()" class="text-xs font-bold text-red-400 hover:underline flex-shrink-0">
+                                Batalkan Video
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3 px-3 py-2 rounded-xl border bd-default glass-card">
+                        <button type="button" @click="$refs.videoInput.click()"
+                                class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex-shrink-0"
+                                style="background: rgb(var(--info-soft)); color: rgb(var(--info));">
+                            Pilih Video
+                        </button>
+                        <span class="flex-1 min-w-0 text-xs break-all"
+                              :class="videoFileName ? 'txt-primary font-medium' : 'txt-muted'"
+                              x-text="videoFileName || 'Belum ada video dipilih'"></span>
+                    </div>
+                    <p class="text-xs txt-secondary mt-1.5">Hanya video MP4, MOV, atau WEBM. Maksimal 20MB.</p>
+                </div>
+
+                {{-- LINK YOUTUBE ONLY --}}
+                <div x-show="mediaType === 'youtube'" x-cloak class="p-4 rounded-xl"
+                     style="background: rgb(var(--bg-secondary) / 0.6); border: 1px solid rgb(var(--border-soft));">
+                    <label class="block text-sm font-medium txt-primary mb-1.5">
+                        Link YouTube Resmi <span style="color: rgb(var(--danger));">*</span>
+                    </label>
+                    <input type="url" name="youtube_url" x-model="youtubeUrl"
+                           placeholder="https://www.youtube.com/watch?v=... atau https://youtu.be/..."
+                           class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 glass-input text-sm"
+                           style="color: rgb(var(--text-primary));">
+                    <p class="text-xs txt-muted mt-1">Hanya menerima link YouTube resmi (`youtube.com` / `youtu.be`). TikTok, IG, atau link lain ditolak.</p>
+
+                    <template x-if="youtubeUrl && !getYoutubeId()">
+                        <p class="text-xs font-semibold mt-2 flex items-center gap-1.5" style="color: rgb(var(--danger));">
+                            <x-icon name="alert-triangle" class="w-3.5 h-3.5" />
+                            <span>Hanya link YouTube resmi (youtube.com atau youtu.be) yang diperbolehkan!</span>
+                        </p>
+                    </template>
+                    <template x-if="getYoutubeId()">
+                        <div class="mt-3">
+                            <p class="text-xs font-semibold mb-1.5 flex items-center gap-1.5" style="color: rgb(var(--success));">
+                                <x-icon name="check-circle" class="w-3.5 h-3.5" />
+                                <span>Link YouTube valid — Preview:</span>
+                            </p>
+                            <div class="aspect-video rounded-xl overflow-hidden bg-black" style="border: 1px solid rgb(var(--border-soft));">
+                                <iframe :src="'https://www.youtube.com/embed/' + getYoutubeId()" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                {{-- THUMBNAIL / FOTO --}}
                 <div>
                     <label class="block text-sm font-medium txt-primary mb-1">
-                        Thumbnail
+                        <span x-text="mediaType === 'image' ? 'Foto Artikel / Thumbnail' : 'Cover Thumbnail (Opsional)'"></span>
                         <span class="text-xs px-2 py-0.5 rounded font-medium" style="background: rgb(var(--warning-soft)); color: rgb(var(--warning));">Disarankan</span>
                         <span class="txt-muted font-normal">(opsional)</span>
                     </label>
 
                     <input type="file" name="thumbnail" accept="image/jpeg,image/jpg,image/png,image/webp"
-                           x-ref="fileInput" @change="handleFileChange($event)" class="hidden">
+                           data-filter="image-only" x-ref="fileInput" @change="handleFileChange($event)" class="hidden">
 
                     <div x-show="showUndo" x-cloak
                          class="mb-3 flex items-center gap-3 px-3 py-2 rounded-xl"
@@ -415,17 +516,120 @@
                 <div>
                     <label class="block text-sm font-medium txt-primary mb-1">Judul Artikel <span style="color: rgb(var(--danger));">*</span></label>
                     <input type="text" name="judul" id="editJudul"
-                           minlength="5" maxlength="200"
-                           oninput="this.value = this.value.replace(/[^a-zA-Z0-9\s.,:!?\-]/g, '')"
+                           minlength="5" maxlength="200" data-filter="title"
                            class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 glass-input"
                            style="color: rgb(var(--text-primary));">
                     <p class="text-xs txt-secondary mt-1">Huruf, angka, spasi & tanda baca umum. Minimal 5 karakter.</p>
                 </div>
 
+                {{-- PILIH MODE MEDIA --}}
+                <div>
+                    <label class="block text-sm font-medium txt-primary mb-2">Jenis Media Artikel <span style="color: rgb(var(--danger));">*</span></label>
+                    <input type="hidden" name="media_type" :value="mediaType">
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" @click="mediaType = 'image'"
+                                class="px-3 py-2.5 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-1.5"
+                                :style="mediaType === 'image' ? 'background: rgb(var(--brand-soft)); border-color: rgb(var(--brand)); color: rgb(var(--brand-strong));' : 'border-color: rgb(var(--border-soft)); color: rgb(var(--text-secondary));'">
+                            <x-icon name="photo" class="w-3.5 h-3.5" /> Foto Manual
+                        </button>
+                        <button type="button" @click="mediaType = 'video'"
+                                class="px-3 py-2.5 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-1.5"
+                                :style="mediaType === 'video' ? 'background: rgb(var(--info-soft)); border-color: rgb(var(--info)); color: rgb(var(--info));' : 'border-color: rgb(var(--border-soft)); color: rgb(var(--text-secondary));'">
+                            <x-icon name="film" class="w-3.5 h-3.5" /> Upload Video
+                        </button>
+                        <button type="button" @click="mediaType = 'youtube'"
+                                class="px-3 py-2.5 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-1.5"
+                                :style="mediaType === 'youtube' ? 'background: rgb(var(--danger-soft)); border-color: rgb(var(--danger)); color: rgb(var(--danger));' : 'border-color: rgb(var(--border-soft)); color: rgb(var(--text-secondary));'">
+                            <span>▶</span> Link YouTube
+                        </button>
+                    </div>
+                </div>
+
+                {{-- UPLOAD VIDEO MANUAL --}}
+                <div x-show="mediaType === 'video'" x-cloak class="p-4 rounded-xl"
+                     style="background: rgb(var(--bg-secondary) / 0.6); border: 1px solid rgb(var(--border-soft));">
+                    <label class="block text-sm font-medium txt-primary mb-2">Upload Video Edukasi</label>
+                    <input type="file" name="video_file" accept="video/mp4,video/quicktime,video/webm"
+                           data-filter="video-only" x-ref="videoInput" @change="handleVideoChange($event)" class="hidden">
+                    <input type="hidden" name="hapus_video" :value="hapusVideoLama ? 1 : 0">
+
+                    <div x-show="existingVideoUrl && !hapusVideoLama && !videoPreviewUrl" x-cloak
+                         class="mb-3 rounded-xl overflow-hidden bg-black/90 p-2" style="border: 1px solid rgb(var(--border-soft));">
+                        <video :src="existingVideoUrl" controls class="w-full max-h-56 rounded-lg"></video>
+                        <div class="flex items-center justify-between gap-2 mt-2 px-1">
+                            <span class="text-xs text-white/80">Video saat ini</span>
+                            <button type="button" @click="hapusVideoLama = true" class="text-xs font-bold text-red-400 hover:underline">
+                                Hapus Video Lama
+                            </button>
+                        </div>
+                    </div>
+
+                    <div x-show="hapusVideoLama && !videoPreviewUrl" x-cloak
+                         class="mb-3 flex items-center gap-3 px-3 py-2 rounded-xl"
+                         style="background: rgb(var(--warning-soft) / 0.5); border: 1px solid rgb(var(--warning) / 0.3);">
+                        <span class="flex-1 text-xs" style="color: rgb(var(--warning));">Video lama akan dihapus — upload video baru atau ubah mode.</span>
+                        <button type="button" @click="hapusVideoLama = false" class="text-xs font-bold underline" style="color: rgb(var(--brand));">Urungkan</button>
+                    </div>
+
+                    <div x-show="videoPreviewUrl" x-cloak class="mb-3 rounded-xl overflow-hidden bg-black/90 p-2"
+                         style="border: 1px solid rgb(var(--border-soft));">
+                        <video :src="videoPreviewUrl" controls class="w-full max-h-56 rounded-lg"></video>
+                        <div class="flex items-center justify-between gap-2 mt-2 px-1">
+                            <span class="text-xs text-white/80 truncate" x-text="videoFileName"></span>
+                            <button type="button" @click="cancelVideo()" class="text-xs font-bold text-red-400 hover:underline flex-shrink-0">
+                                Batalkan Video
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3 px-3 py-2 rounded-xl border bd-default glass-card">
+                        <button type="button" @click="$refs.videoInput.click()"
+                                class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex-shrink-0"
+                                style="background: rgb(var(--info-soft)); color: rgb(var(--info));">
+                            <span x-text="existingVideoUrl ? 'Ganti Video' : 'Pilih Video'"></span>
+                        </button>
+                        <span class="flex-1 min-w-0 text-xs break-all"
+                              :class="videoFileName ? 'txt-primary font-medium' : 'txt-muted'"
+                              x-text="videoFileName || 'Belum ada video baru dipilih'"></span>
+                    </div>
+                    <p class="text-xs txt-secondary mt-1.5">Hanya video MP4, MOV, atau WEBM. Maksimal 20MB.</p>
+                </div>
+
+                {{-- LINK YOUTUBE ONLY --}}
+                <div x-show="mediaType === 'youtube'" x-cloak class="p-4 rounded-xl"
+                     style="background: rgb(var(--bg-secondary) / 0.6); border: 1px solid rgb(var(--border-soft));">
+                    <label class="block text-sm font-medium txt-primary mb-1.5">
+                        Link YouTube Resmi <span style="color: rgb(var(--danger));">*</span>
+                    </label>
+                    <input type="url" name="youtube_url" x-model="youtubeUrl"
+                           placeholder="https://www.youtube.com/watch?v=... atau https://youtu.be/..."
+                           class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 glass-input text-sm"
+                           style="color: rgb(var(--text-primary));">
+                    <p class="text-xs txt-muted mt-1">Hanya menerima link YouTube resmi (`youtube.com` / `youtu.be`). TikTok, IG, atau link lain ditolak.</p>
+
+                    <template x-if="youtubeUrl && !getYoutubeId()">
+                        <p class="text-xs font-semibold mt-2 flex items-center gap-1.5" style="color: rgb(var(--danger));">
+                            <x-icon name="alert-triangle" class="w-3.5 h-3.5" />
+                            <span>Hanya link YouTube resmi (youtube.com atau youtu.be) yang diperbolehkan!</span>
+                        </p>
+                    </template>
+                    <template x-if="getYoutubeId()">
+                        <div class="mt-3">
+                            <p class="text-xs font-semibold mb-1.5 flex items-center gap-1.5" style="color: rgb(var(--success));">
+                                <x-icon name="check-circle" class="w-3.5 h-3.5" />
+                                <span>Link YouTube valid — Preview:</span>
+                            </p>
+                            <div class="aspect-video rounded-xl overflow-hidden bg-black" style="border: 1px solid rgb(var(--border-soft));">
+                                <iframe :src="'https://www.youtube.com/embed/' + getYoutubeId()" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
                 {{-- THUMBNAIL --}}
                 <div>
                     <label class="block text-sm font-medium txt-primary mb-1">
-                        Thumbnail
+                        <span x-text="mediaType === 'image' ? 'Foto Artikel / Thumbnail' : 'Cover Thumbnail (Opsional)'"></span>
                         <span class="text-xs px-2 py-0.5 rounded font-medium" style="background: rgb(var(--warning-soft)); color: rgb(var(--warning));">Disarankan</span>
                     </label>
 
@@ -463,7 +667,7 @@
                     </div>
 
                     <input type="file" name="thumbnail" accept="image/jpeg,image/jpg,image/png,image/webp"
-                           x-ref="fileInput" @change="handleFileChange($event)" class="hidden">
+                           data-filter="image-only" x-ref="fileInput" @change="handleFileChange($event)" class="hidden">
                     <input type="hidden" name="hapus_thumbnail" :value="hapusThumbnailLama ? 1 : 0">
 
                     {{-- Undo banner --}}
@@ -658,8 +862,13 @@
         if (form) {
             const state = (form.__x && form.__x.$data) || (form._x_dataStack && form._x_dataStack[0]);
             if (state) {
+                state.mediaType = 'image';
+                state.youtubeUrl = '';
                 state.previewUrl = null;
                 state.fileName = null;
+                if (state.videoPreviewUrl) URL.revokeObjectURL(state.videoPreviewUrl);
+                state.videoPreviewUrl = null;
+                state.videoFileName = null;
                 state.showUndo = false;
                 state.undoFile = null;
                 state.undoFileName = null;
@@ -683,12 +892,17 @@
 
         const fileInput = modal.querySelector('input[name="thumbnail"]');
         if (fileInput) fileInput.value = '';
+        const videoInput = modal.querySelector('input[name="video_file"]');
+        if (videoInput) videoInput.value = '';
         const form = document.getElementById('createForm');
         if (form) {
             const state = (form.__x && form.__x.$data) || (form._x_dataStack && form._x_dataStack[0]);
             if (state) {
                 state.previewUrl = null;
                 state.fileName = null;
+                if (state.videoPreviewUrl) URL.revokeObjectURL(state.videoPreviewUrl);
+                state.videoPreviewUrl = null;
+                state.videoFileName = null;
                 state.showUndo = false;
                 state.undoFile = null;
                 state.undoFileName = null;
@@ -724,10 +938,17 @@
                 state.statusValue = data.status;
                 state.statusLabel = statusLabelText;
                 state.scheduledAt = data.scheduled_at || '';
+                state.mediaType = data.media_type || 'image';
                 state.existingImage = data.thumbnail;
+                state.existingVideoUrl = data.video_url || null;
+                state.youtubeUrl = data.youtube_url || '';
                 state.hapusThumbnailLama = false;
+                state.hapusVideoLama = false;
                 state.previewUrl = null;
                 state.fileName = null;
+                if (state.videoPreviewUrl) URL.revokeObjectURL(state.videoPreviewUrl);
+                state.videoPreviewUrl = null;
+                state.videoFileName = null;
                 state.showUndo = false;
                 state.undoFile = null;
                 state.undoFileName = null;
@@ -751,12 +972,17 @@
 
         const fileInput = modal.querySelector('input[name="thumbnail"]');
         if (fileInput) fileInput.value = '';
+        const videoInput = modal.querySelector('input[name="video_file"]');
+        if (videoInput) videoInput.value = '';
         const form = document.getElementById('editForm');
         if (form) {
             const state = (form.__x && form.__x.$data) || (form._x_dataStack && form._x_dataStack[0]);
             if (state) {
                 state.previewUrl = null;
                 state.fileName = null;
+                if (state.videoPreviewUrl) URL.revokeObjectURL(state.videoPreviewUrl);
+                state.videoPreviewUrl = null;
+                state.videoFileName = null;
                 state.showUndo = false;
                 state.undoFile = null;
                 state.undoFileName = null;
@@ -771,6 +997,10 @@
             statusValue: '{{ old('status', 'publish') }}',
             statusLabel: '{{ old('status') === 'draft' ? 'Draft' : (old('status') === 'scheduled' ? 'Schedule' : 'Publish') }}',
             scheduledAt: '{{ old('scheduled_at') }}',
+            mediaType: '{{ old('media_type', 'image') }}',
+            youtubeUrl: '{{ old('youtube_url', '') }}',
+            videoFileName: null,
+            videoPreviewUrl: null,
             fileName: null,
             previewUrl: null,
             undoFile: null,
@@ -780,6 +1010,10 @@
 
             init() { this.fileName = null; this.previewUrl = null; this.showUndo = false; },
 
+            getYoutubeId() {
+                return window.extractYoutubeId ? window.extractYoutubeId(this.youtubeUrl) : null;
+            },
+
             selectStatus(value, label) {
                 this.statusValue = value;
                 this.statusLabel = label;
@@ -788,16 +1022,40 @@
 
             openLightbox(url) { openGlobalLightbox(url); },
 
+            handleVideoChange(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const allowed = ['video/mp4', 'video/quicktime', 'video/webm'];
+                if (!allowed.includes(file.type)) {
+                    alert('Hanya file VIDEO yang diperbolehkan (MP4, MOV, WEBM).');
+                    e.target.value = ''; this.videoFileName = null; return;
+                }
+                if (file.size > 20 * 1024 * 1024) {
+                    alert('Ukuran video maksimal 20MB.');
+                    e.target.value = ''; this.videoFileName = null; return;
+                }
+                if (this.videoPreviewUrl) URL.revokeObjectURL(this.videoPreviewUrl);
+                this.videoPreviewUrl = URL.createObjectURL(file);
+                this.videoFileName = file.name;
+            },
+
+            cancelVideo() {
+                if (this.$refs.videoInput) this.$refs.videoInput.value = '';
+                if (this.videoPreviewUrl) URL.revokeObjectURL(this.videoPreviewUrl);
+                this.videoPreviewUrl = null;
+                this.videoFileName = null;
+            },
+
             handleFileChange(e) {
                 const file = e.target.files[0];
                 if (!file) return;
                 const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
                 if (!allowed.includes(file.type)) {
-                    alert('⚠️ Hanya file gambar yang diperbolehkan (JPG, PNG, WEBP).');
+                    alert('Hanya file gambar yang diperbolehkan (JPG, PNG, WEBP).');
                     e.target.value = ''; this.fileName = null; return;
                 }
                 if (file.size > 2 * 1024 * 1024) {
-                    alert('⚠️ Ukuran gambar maksimal 2MB.');
+                    alert('Ukuran gambar maksimal 2MB.');
                     e.target.value = ''; this.fileName = null; return;
                 }
                 fileState.currentFile = file;
@@ -846,6 +1104,12 @@
             statusLabel: 'Publish',
             scheduledAt: '',
             currentId: null,
+            mediaType: 'image',
+            existingVideoUrl: null,
+            youtubeUrl: '',
+            hapusVideoLama: false,
+            videoFileName: null,
+            videoPreviewUrl: null,
             existingImage: null,
             hapusThumbnailLama: false,
             fileName: null,
@@ -857,6 +1121,10 @@
 
             init() { this.fileName = null; this.previewUrl = null; this.showUndo = false; },
 
+            getYoutubeId() {
+                return window.extractYoutubeId ? window.extractYoutubeId(this.youtubeUrl) : null;
+            },
+
             selectStatus(value, label) {
                 this.statusValue = value;
                 this.statusLabel = label;
@@ -865,16 +1133,41 @@
 
             openLightbox(url) { openGlobalLightbox(url); },
 
+            handleVideoChange(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const allowed = ['video/mp4', 'video/quicktime', 'video/webm'];
+                if (!allowed.includes(file.type)) {
+                    alert('Hanya file VIDEO yang diperbolehkan (MP4, MOV, WEBM).');
+                    e.target.value = ''; this.videoFileName = null; return;
+                }
+                if (file.size > 20 * 1024 * 1024) {
+                    alert('Ukuran video maksimal 20MB.');
+                    e.target.value = ''; this.videoFileName = null; return;
+                }
+                if (this.videoPreviewUrl) URL.revokeObjectURL(this.videoPreviewUrl);
+                this.videoPreviewUrl = URL.createObjectURL(file);
+                this.videoFileName = file.name;
+                this.hapusVideoLama = false;
+            },
+
+            cancelVideo() {
+                if (this.$refs.videoInput) this.$refs.videoInput.value = '';
+                if (this.videoPreviewUrl) URL.revokeObjectURL(this.videoPreviewUrl);
+                this.videoPreviewUrl = null;
+                this.videoFileName = null;
+            },
+
             handleFileChange(e) {
                 const file = e.target.files[0];
                 if (!file) return;
                 const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
                 if (!allowed.includes(file.type)) {
-                    alert('⚠️ Hanya file gambar yang diperbolehkan (JPG, PNG, WEBP).');
+                    alert('Hanya file gambar yang diperbolehkan (JPG, PNG, WEBP).');
                     e.target.value = ''; this.fileName = null; return;
                 }
                 if (file.size > 2 * 1024 * 1024) {
-                    alert('⚠️ Ukuran gambar maksimal 2MB.');
+                    alert('Ukuran gambar maksimal 2MB.');
                     e.target.value = ''; this.fileName = null; return;
                 }
                 fileState.currentFile = file;

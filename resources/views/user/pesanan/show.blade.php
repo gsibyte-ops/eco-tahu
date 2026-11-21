@@ -40,7 +40,7 @@
                     <svg class="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-lg font-bold mb-1">Pembayaran Berhasil! 🎉</p>
+                    <p class="text-lg font-bold mb-1">Pembayaran Berhasil!</p>
                     <p class="text-sm opacity-90">Pembayaran Anda sudah kami terima dan terverifikasi.</p>
                 </div>
             </div>
@@ -96,8 +96,9 @@
             </div>
 
             @if (!$trackingAktif)
-                <div class="mt-3 glass rounded-xl p-3 text-xs" style="color: rgb(var(--accent)); border-color: rgb(var(--accent) / 0.3); background: rgb(var(--accent-soft));">
-                    ⏳ Pesanan Anda sedang disiapkan untuk pengiriman. Peta akan muncul begitu kurir mulai bergerak.
+                <div class="mt-3 glass rounded-xl p-3 text-xs flex items-center gap-2" style="color: rgb(var(--accent)); border-color: rgb(var(--accent) / 0.3); background: rgb(var(--accent-soft));">
+                    <x-icon name="clock" class="w-4 h-4 shrink-0" />
+                    <span>Pesanan Anda sedang disiapkan untuk pengiriman. Peta akan muncul begitu kurir mulai bergerak.</span>
                 </div>
             @endif
         </div>
@@ -121,7 +122,7 @@
 
             @if ($pesanan->refund)
                 <div class="glass rounded-xl p-4" style="border-color: rgb(var(--danger) / 0.3); background: rgb(var(--danger-soft));">
-                    <p class="text-xs font-bold uppercase mb-3" style="color: rgb(var(--danger));">💰 Info Refund</p>
+                    <p class="text-xs font-bold uppercase mb-3 flex items-center gap-1.5" style="color: rgb(var(--danger));"><x-icon name="banknotes" class="w-4 h-4" /> Info Refund</p>
                     <div class="grid grid-cols-2 gap-3 text-sm">
                         <div>
                             <p class="text-xs" style="color: rgb(var(--danger));">Nominal</p>
@@ -133,20 +134,31 @@
                             {{-- LOGIKA PINTAR: Ngecek apakah pesanan awalnya lunas atau nggak --}}
                             @if($pesanan->refund->status_refund === 'selesai')
                                 @if(in_array($pesanan->payment_status, ['paid', 'success', 'lunas', 'settlement', 'refunded']) || $pesanan->refund->bukti_transfer_balik)
-                                    <p class="font-bold" style="color: rgb(var(--success));">✅ Sudah Ditransfer</p>
+                                    <p class="font-bold flex items-center gap-1" style="color: rgb(var(--success));"><x-icon name="check-circle" class="w-4 h-4" /> Sudah Ditransfer</p>
                                 @else
-                                    <p class="font-bold" style="color: rgb(var(--text-secondary));">✅ Dibatalkan (Belum ada dana masuk)</p>
+                                    <p class="font-bold flex items-center gap-1" style="color: rgb(var(--text-secondary));"><x-icon name="check-circle" class="w-4 h-4" /> Dibatalkan (Belum ada dana masuk)</p>
                                 @endif
                             @elseif($pesanan->refund->status_refund === 'ditolak')
-                                <p class="font-bold" style="color: rgb(var(--danger));">❌ Ditolak</p>
+                                <p class="font-bold flex items-center gap-1" style="color: rgb(var(--danger));"><x-icon name="x-circle" class="w-4 h-4" /> Ditolak</p>
                             @else
-                                <p class="font-bold" style="color: rgb(var(--warning));">⏳ {{ ucfirst($pesanan->refund->status_refund) }}</p>
+                                <p class="font-bold flex items-center gap-1" style="color: rgb(var(--warning));"><x-icon name="clock" class="w-4 h-4" /> {{ ucfirst($pesanan->refund->status_refund) }}</p>
                             @endif
 
                         </div>
+                        @if ($pesanan->refund->nama_bank || $pesanan->refund->nomor_rekening || $pesanan->refund->atas_nama)
+                            <div class="col-span-2">
+                                <p class="text-xs mb-1 flex items-center gap-1" style="color: rgb(var(--danger));"><x-icon name="bank" class="w-3.5 h-3.5" /> Rekening Pengembalian Dana</p>
+                                <div class="glass-card p-3 text-xs">
+                                    <p class="font-semibold" style="color: rgb(var(--text-primary));">
+                                        {{ $pesanan->refund->nama_bank ?: '-' }} · {{ $pesanan->refund->nomor_rekening ?: '-' }}
+                                        @if ($pesanan->refund->atas_nama) (a.n. {{ $pesanan->refund->atas_nama }}) @endif
+                                    </p>
+                                </div>
+                            </div>
+                        @endif
                         @if ($pesanan->refund->catatan_admin)
                             <div class="col-span-2">
-                                <p class="text-xs mb-1" style="color: rgb(var(--danger));">💬 Pesan dari Admin</p>
+                                <p class="text-xs mb-1 flex items-center gap-1" style="color: rgb(var(--danger));"><x-icon name="chat-bubble" class="w-3.5 h-3.5" /> Pesan dari Admin</p>
                                 <div class="glass-card p-3">
                                     <p class="leading-relaxed" style="color: rgb(var(--text-primary));">{{ $pesanan->refund->catatan_admin }}</p>
                                 </div>
@@ -165,7 +177,7 @@
     </div>
 
     <div class="glass-card p-6 mb-5">
-        <h3 class="font-bold mb-3" style="color: rgb(var(--text-primary));">📦 Info Pengiriman</h3>
+        <h3 class="font-bold mb-3 flex items-center gap-2" style="color: rgb(var(--text-primary));"><x-icon name="package" class="w-4 h-4" style="color: rgb(var(--brand));" /> Info Pengiriman</h3>
         <p class="text-sm leading-relaxed" style="color: rgb(var(--text-secondary));">{{ $pesanan->alamat_pengiriman }}</p>
         <p class="text-xs mt-2" style="color: rgb(var(--text-secondary));"><strong style="color: rgb(var(--text-primary));">Tipe:</strong> {{ $pesanan->delivery_label }}</p>
         @if ($pesanan->kecamatan)
@@ -177,12 +189,12 @@
     </div>
 
     <div class="glass-card p-6 mb-5">
-        <h3 class="font-bold mb-4" style="color: rgb(var(--text-primary));">🛒 Item Pesanan</h3>
+        <h3 class="font-bold mb-4 flex items-center gap-2" style="color: rgb(var(--text-primary));"><x-icon name="shopping-cart" class="w-4 h-4" style="color: rgb(var(--brand));" /> Item Pesanan</h3>
         <div class="space-y-3">
             @foreach ($pesanan->detail as $d)
                 <div class="flex items-center gap-3 py-2 last:border-0" style="border-bottom: 1px solid rgb(var(--border-soft));">
-                    <div class="w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0" style="background: rgb(var(--bg-secondary));">
-                        {{ $d->item_type === 'App\\Models\\ProdukTahu' ? '🥛' : '🌾' }}
+                    <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgb(var(--bg-secondary)); color: rgb(var(--{{ $d->item_type === 'App\\Models\\ProdukTahu' ? 'brand' : 'accent' }}));">
+                        <x-icon :name="$d->item_type === 'App\\Models\\ProdukTahu' ? 'cube' : 'recycle'" class="w-5 h-5" />
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-medium truncate" style="color: rgb(var(--text-primary));">{{ $d->nama_item }}</p>
@@ -195,7 +207,7 @@
     </div>
 
     <div class="glass-card p-6 mb-5">
-        <h3 class="font-bold mb-4" style="color: rgb(var(--text-primary));">💳 Pembayaran</h3>
+        <h3 class="font-bold mb-4 flex items-center gap-2" style="color: rgb(var(--text-primary));"><x-icon name="credit-card" class="w-4 h-4" style="color: rgb(var(--brand));" /> Pembayaran</h3>
 
         <div class="space-y-2 text-sm">
             <div class="flex justify-between">
@@ -214,6 +226,12 @@
                 <span style="color: rgb(var(--text-secondary));">Subtotal</span>
                 <span class="font-semibold tabular-nums" style="color: rgb(var(--text-primary));">Rp {{ number_format($pesanan->subtotal, 0, ',', '.') }}</span>
             </div>
+            @if (($pesanan->diskon ?? 0) > 0)
+                <div class="flex justify-between">
+                    <span class="font-medium" style="color: rgb(var(--brand));">Diskon Order Pertama</span>
+                    <span class="font-semibold tabular-nums" style="color: rgb(var(--brand));">-Rp {{ number_format($pesanan->diskon, 0, ',', '.') }}</span>
+                </div>
+            @endif
             <div class="flex justify-between">
                 <span style="color: rgb(var(--text-secondary));">Ongkir ({{ $pesanan->jarak_km > 0 ? $pesanan->jarak_km . ' km' : 'Ambil di Tempat' }})</span>
                 <span class="font-semibold tabular-nums" style="color: rgb(var(--text-primary));">Rp {{ number_format($pesanan->ongkir, 0, ',', '.') }}</span>
@@ -249,8 +267,9 @@
                 </div>
 
                 @if ($pesanan->expired_at)
-                    <div class="glass rounded-xl p-3 text-xs mb-4 tabular-nums" style="color: rgb(var(--danger)); border-color: rgb(var(--danger) / 0.3); background: rgb(var(--danger-soft));">
-                        ⏰ Selesaikan pembayaran sebelum <strong>{{ $pesanan->expired_at->format('d M Y, H:i') }}</strong> WIB
+                    <div class="glass rounded-xl p-3 text-xs mb-4 tabular-nums flex items-center gap-2" style="color: rgb(var(--danger)); border-color: rgb(var(--danger) / 0.3); background: rgb(var(--danger-soft));">
+                        <x-icon name="clock" class="w-4 h-4 shrink-0" />
+                        <span>Selesaikan pembayaran sebelum <strong>{{ $pesanan->expired_at->format('d M Y, H:i') }}</strong> WIB</span>
                     </div>
                 @endif
 
@@ -259,15 +278,20 @@
                 @if ($pesanan->pembayaran && $pesanan->pembayaran->bukti_transfer)
                     <div class="mb-3">
                         <img src="{{ asset('storage/' . $pesanan->pembayaran->bukti_transfer) }}" class="w-full max-w-xs rounded-xl" style="border: 1px solid rgb(var(--border));">
-                        <p class="text-xs mt-2 font-medium" style="color: rgb(var(--success));">✓ Bukti sudah diupload, menunggu verifikasi admin</p>
+                        <p class="text-xs mt-2 font-medium flex items-center gap-1" style="color: rgb(var(--success));"><x-icon name="check-circle" class="w-3.5 h-3.5" /> Bukti sudah diupload, menunggu verifikasi admin</p>
                     </div>
                 @endif
 
                 <form method="POST" action="{{ route('user.pesanan.uploadBukti', $pesanan->kode_pesanan) }}" enctype="multipart/form-data">
                     @csrf
-                    {{-- FIX: accept dibatasi hanya format gambar --}}
-                    <input type="file" name="bukti_transfer" accept="image/jpeg,image/jpg,image/png,image/webp" required
+                    {{-- FIX: accept dibatasi hanya format gambar & divalidasi JS --}}
+                    <input type="file" id="buktiTransferInputShow" name="bukti_transfer" accept="image/jpeg,image/jpg,image/png,image/webp" required
+                           onchange="validateBuktiTransferShow(this)"
                            class="glass-input w-full px-3 py-2 text-sm mb-3 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200">
+                    <div id="buktiShowPreviewBox" class="hidden mb-3">
+                        <img id="buktiShowPreviewImg" src="" class="w-full max-w-xs rounded-xl" style="border: 1px solid rgb(var(--border));">
+                        <p class="text-xs mt-1 font-medium flex items-center gap-1" style="color: rgb(var(--success));"><x-icon name="check-circle" class="w-3.5 h-3.5" /> File gambar siap diupload</p>
+                    </div>
                     <button type="submit" class="btn-primary w-full py-2.5" style="background: var(--gradient-info);">
                         Upload Bukti
                     </button>
@@ -285,7 +309,7 @@
 
     @if ($pesanan->order_status === 'selesai')
         <div class="glass-amber rounded-2xl p-5 mb-5">
-            <p class="font-bold mb-2" style="color: rgb(var(--accent));">⭐ Beri Ulasan</p>
+            <p class="font-bold mb-2 flex items-center gap-1.5" style="color: rgb(var(--accent));"><x-icon name="star-solid" class="w-4 h-4 text-amber-400" /> Beri Ulasan</p>
             <p class="text-sm mb-3" style="color: rgb(var(--accent));">Sudah menerima produk? Bagikan pengalaman Anda dengan memberi ulasan.</p>
             <div class="flex flex-wrap gap-2">
                 @foreach ($pesanan->detail as $d)
@@ -304,7 +328,7 @@
                         <a href="{{ $itemType === 'produk' ? route('user.produk.show', $slug) : route('user.limbah.show', $slug) }}"
                            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition"
                            style="background: rgb(var(--surface)); color: rgb(var(--accent)); border: 1px solid rgb(var(--accent) / 0.3);">
-                            ⭐ Ulas: {{ $d->nama_item }}
+                            <x-icon name="star-solid" class="w-4 h-4 text-amber-400" /> Ulas: {{ $d->nama_item }}
                         </a>
                     @endif
                 @endforeach
@@ -366,8 +390,9 @@
             @csrf
             <input type="hidden" name="batalkan_bukti" id="flagInput" value="0">
 
-            <div class="glass-amber rounded-xl p-3 text-xs" style="color: rgb(var(--accent));">
-                ⚠️ <strong>Setelah dibatalkan, pesanan tidak dapat dikembalikan ke status semula.</strong>
+            <div class="glass-amber rounded-xl p-3 text-xs flex items-start gap-2" style="color: rgb(var(--accent));">
+                <x-icon name="alert-triangle" class="w-4 h-4 mt-0.5 shrink-0" />
+                <span><strong>Setelah dibatalkan, pesanan tidak dapat dikembalikan ke status semula.</strong></span>
             </div>
 
             <div>
@@ -426,6 +451,41 @@
                 </div>
             </div>
 
+            {{-- Kolom Rekening Pengembalian Dana (Opsional, khusus Transfer) --}}
+            <div id="rekeningRefundWrap" class="space-y-3 p-3.5 rounded-xl border border-dashed" style="border-color: rgb(var(--brand) / 0.35); background: rgba(var(--brand) / 0.04);">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4" style="color: rgb(var(--brand));" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                    <label class="block text-xs font-bold uppercase tracking-wider" style="color: rgb(var(--brand));">Rekening Pengembalian Dana (Opsional)</label>
+                </div>
+                <p class="text-[11px]" style="color: rgb(var(--text-secondary));">
+                    Isi jika Anda sudah transfer dan butuh pengembalian dana. Boleh dikosongkan jika belum sempat bayar.
+                </p>
+
+                <div>
+                    <label class="block text-xs font-medium mb-1" style="color: rgb(var(--text-primary));">Nama Bank / E-Wallet</label>
+                    <input type="text" name="nama_bank" id="cancelNamaBank" maxlength="50"
+                           class="glass-input w-full px-3 py-2 text-xs"
+                           placeholder="Contoh: BCA, BRI, Mandiri, GoPay, Dana"
+                           oninput="this.value = this.value.replace(/[^a-zA-Z0-9\s\-]/g, '')">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium mb-1" style="color: rgb(var(--text-primary));">Nomor Rekening / No. E-Wallet</label>
+                    <input type="text" name="nomor_rekening" id="cancelNoRekening" maxlength="30"
+                           class="glass-input w-full px-3 py-2 text-xs"
+                           placeholder="Hanya angka (misal: 1234567890)"
+                           oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium mb-1" style="color: rgb(var(--text-primary));">Atas Nama Pemilik Rekening</label>
+                    <input type="text" name="atas_nama" id="cancelAtasNama" maxlength="100"
+                           class="glass-input w-full px-3 py-2 text-xs"
+                           placeholder="Hanya huruf & spasi"
+                           oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')">
+                </div>
+            </div>
+
             <div class="flex gap-3">
                 <button type="button" onclick="closeCancelModal()" class="glass-btn flex-1 py-2.5">Batal</button>
                 <button type="submit" class="flex-1 py-2.5 text-white font-semibold rounded-xl transition hover:-translate-y-0.5" style="background: var(--gradient-danger); box-shadow: var(--shadow-md);">Ya, Batalkan</button>
@@ -452,12 +512,38 @@
 @push('scripts')
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+    function validateBuktiTransferShow(input) {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!allowed.includes(file.type)) {
+            alert('Hanya file gambar (JPG, JPEG, PNG, WEBP) yang diperbolehkan.');
+            input.value = '';
+            const pBox = document.getElementById('buktiShowPreviewBox');
+            if (pBox) pBox.classList.add('hidden');
+            return;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            alert('Ukuran file bukti transfer maksimal 2MB.');
+            input.value = '';
+            const pBox = document.getElementById('buktiShowPreviewBox');
+            if (pBox) pBox.classList.add('hidden');
+            return;
+        }
+        const pBox = document.getElementById('buktiShowPreviewBox');
+        const pImg = document.getElementById('buktiShowPreviewImg');
+        if (pBox && pImg) {
+            pImg.src = URL.createObjectURL(file);
+            pBox.classList.remove('hidden');
+        }
+    }
+
     function onFileSelected(input) {
         const file = input.files[0];
         if (!file) return;
         const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-        if (!allowed.includes(file.type)) { alert('⚠️ Hanya file gambar (JPG, PNG, WEBP).'); input.value = ''; return; }
-        if (file.size > 2 * 1024 * 1024) { alert('⚠️ Ukuran maksimal 2MB.'); input.value = ''; return; }
+        if (!allowed.includes(file.type)) { alert('Hanya file gambar (JPG, PNG, WEBP).'); input.value = ''; return; }
+        if (file.size > 2 * 1024 * 1024) { alert('Ukuran maksimal 2MB.'); input.value = ''; return; }
         document.getElementById('flagInput').value = '0';
         document.getElementById('previewImg').src = URL.createObjectURL(file);
         document.getElementById('previewBox').classList.remove('hidden');
@@ -531,6 +617,17 @@
         const buktiWrap = document.getElementById('buktiTransferWrap');
         if (buktiWrap) buktiWrap.style.display = (data.payment_method === 'COD') ? 'none' : '';
 
+        const rekWrap = document.getElementById('rekeningRefundWrap');
+        if (rekWrap) {
+            rekWrap.style.display = (data.payment_method === 'COD') ? 'none' : '';
+            const nb = document.getElementById('cancelNamaBank');
+            const nr = document.getElementById('cancelNoRekening');
+            const an = document.getElementById('cancelAtasNama');
+            if (nb) nb.value = '';
+            if (nr) nr.value = '';
+            if (an) an.value = '';
+        }
+
         const input = document.getElementById('cancelBuktiInput');
         if (input) input.value = '';
         document.getElementById('flagInput').value = '0';
@@ -591,7 +688,7 @@
 
             const tokoIcon = L.divIcon({
                 className: 'toko-marker',
-                html: '<div style="background:#10b981; color:white; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; box-shadow: 0 4px 12px rgba(16,185,129,0.5); border: 3px solid white;">🏭</div>',
+                html: '<div style="background:#10b981; color:white; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 12px rgba(16,185,129,0.5); border: 3px solid white;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9v.01M9 12v.01M9 15v.01M9 18v.01"/></svg></div>',
                 iconSize: [34, 34], iconAnchor: [17, 17],
             });
             markerToko = L.marker([latToko, lngToko], { icon: tokoIcon }).addTo(map)
@@ -600,7 +697,7 @@
             if (latTujuan && lngTujuan) {
                 const tujuanIcon = L.divIcon({
                     className: 'tujuan-marker',
-                    html: '<div style="background:#f59e0b; color:white; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; box-shadow: 0 4px 12px rgba(245,158,11,0.5); border: 3px solid white;">🏠</div>',
+                    html: '<div style="background:#f59e0b; color:white; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 12px rgba(245,158,11,0.5); border: 3px solid white;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1v-9.5z"/></svg></div>',
                     iconSize: [34, 34], iconAnchor: [17, 17],
                 });
                 markerTujuan = L.marker([latTujuan, lngTujuan], { icon: tujuanIcon }).addTo(map)
@@ -620,7 +717,7 @@
         function updateKurir(lat, lng) {
             const kurirIcon = L.divIcon({
                 className: 'kurir-marker',
-                html: '<div style="position:relative;"><div style="background:#8b5cf6; color:white; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; box-shadow: 0 4px 16px rgba(139,92,246,0.6); border: 3px solid white;">🛵</div><div style="position:absolute; inset:-8px; border-radius:50%; background:rgba(139,92,246,0.3); animation:pulse-ring 1.5s ease-out infinite; pointer-events:none;"></div></div>',
+                html: '<div style="position:relative;"><div style="background:#8b5cf6; color:white; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 16px rgba(139,92,246,0.6); border: 3px solid white;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L19 21l-7-4-7 4 7-19z"/></svg></div><div style="position:absolute; inset:-8px; border-radius:50%; background:rgba(139,92,246,0.3); animation:pulse-ring 1.5s ease-out infinite; pointer-events:none;"></div></div>',
                 iconSize: [38, 38], iconAnchor: [19, 19],
             });
 

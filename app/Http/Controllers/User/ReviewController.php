@@ -7,8 +7,10 @@ use App\Models\Limbah;
 use App\Models\Pesanan;
 use App\Models\ProdukTahu;
 use App\Models\Review;
+use App\Support\MediaGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class ReviewController extends Controller
 {
@@ -27,6 +29,7 @@ class ReviewController extends Controller
             'reviewable_id'   => 'required|integer',
             'rating'          => 'required|integer|min:1|max:5',
             'komentar'        => 'nullable|string|max:500',
+            'media'           => MediaGuard::photoOrVideoRules(false, 5120, 20480),
         ], [
             'reviewable_type.required' => 'Tipe item tidak valid.',
             'reviewable_type.in'       => 'Tipe item harus produk atau limbah.',
@@ -63,6 +66,14 @@ class ReviewController extends Controller
             return back()->with('error', 'Anda sudah memberi ulasan untuk produk ini.');
         }
 
+        $mediaPath = null;
+        $mediaType = null;
+        if ($request->hasFile('media')) {
+            $file = $request->file('media');
+            $mediaType = MediaGuard::detectMediaType($file);
+            $mediaPath = $file->store('reviews', 'public');
+        }
+
         Review::create([
             'user_id'         => Auth::id(),
             'pesanan_id'      => $pesanan->id,
@@ -70,6 +81,8 @@ class ReviewController extends Controller
             'reviewable_id'   => $item->id,
             'rating'          => $validated['rating'],
             'komentar'        => $validated['komentar'] ?? null,
+            'media_path'      => $mediaPath,
+            'media_type'      => $mediaType,
         ]);
 
         return back()->with('success', 'Ulasan berhasil dikirim. Terima kasih!');
@@ -79,6 +92,10 @@ class ReviewController extends Controller
     {
         if ($review->user_id !== Auth::id()) {
             abort(403, 'Akses ditolak.');
+        }
+
+        if ($review->media_path && Storage::disk('public')->exists($review->media_path)) {
+            Storage::disk('public')->delete($review->media_path);
         }
 
         $review->delete();

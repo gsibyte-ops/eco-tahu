@@ -44,7 +44,10 @@
           data-payment="{{ old('payment_method', 'COD') }}"
           data-delivery="{{ old('delivery_type', 'delivery') }}"
           data-kecamatan-old="{{ old('kecamatan') }}"
-          data-minimal-delivery="{{ $minimalDelivery }}">
+          data-minimal-delivery="{{ $minimalDelivery }}"
+          data-phone-old="{{ old('no_telepon', auth()->user()->no_telepon) }}"
+          data-promo='@json($promo)'
+          data-cek-promo-url="{{ route('user.checkout.cekPromo') }}">
         @csrf
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-2 space-y-5">
@@ -62,7 +65,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1" style="color: rgb(var(--text-primary));">No. Telepon <span style="color: rgb(var(--danger));">*</span></label>
-                            <input type="text" name="no_telepon" required value="{{ old('no_telepon', auth()->user()->no_telepon) }}" class="glass-input w-full px-4 py-2.5 text-sm" style="color: rgb(var(--text-primary));" placeholder="08xxxxxxxxxx">
+                            <input type="text" name="no_telepon" required x-model="noTelepon" @input.debounce.450ms="cekPromo()" class="glass-input w-full px-4 py-2.5 text-sm" style="color: rgb(var(--text-primary));" placeholder="08xxxxxxxxxx">
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium mb-1" style="color: rgb(var(--text-primary));">Alamat Lengkap <span style="color: rgb(var(--danger));">*</span></label>
@@ -88,7 +91,7 @@
                             <input type="radio" name="payment_method" value="COD" x-model="payment" class="sr-only">
                             <div class="radio-card">
                                 <div class="flex items-center gap-3 mb-2">
-                                    <div class="text-3xl">💵</div>
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background: rgb(var(--brand-soft)); color: rgb(var(--brand));"><x-icon name="banknotes" class="w-5 h-5" /></div>
                                     <div>
                                         <p class="font-bold" style="color: rgb(var(--text-primary));">COD</p>
                                         <p class="text-xs" style="color: rgb(var(--text-secondary));">Bayar saat barang datang</p>
@@ -102,7 +105,7 @@
                             <input type="radio" name="payment_method" value="Transfer" x-model="payment" class="sr-only">
                             <div class="radio-card">
                                 <div class="flex items-center gap-3 mb-2">
-                                    <div class="text-3xl">🏦</div>
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background: rgb(var(--info-soft)); color: rgb(var(--info));"><x-icon name="bank" class="w-5 h-5" /></div>
                                     <div>
                                         <p class="font-bold" style="color: rgb(var(--text-primary));">Transfer Bank</p>
                                         <p class="text-xs" style="color: rgb(var(--text-secondary));">Dapat nomor Virtual Account</p>
@@ -120,7 +123,7 @@
                                 <input type="radio" name="delivery_type" value="pickup" x-model="delivery" class="sr-only">
                                 <div class="radio-card">
                                     <div class="flex items-center gap-3">
-                                        <div class="text-2xl">🏪</div>
+                                        <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background: rgb(var(--brand-soft)); color: rgb(var(--brand));"><x-icon name="store" class="w-5 h-5" /></div>
                                         <div>
                                             <p class="font-bold text-sm" style="color: rgb(var(--text-primary));">Ambil di Tempat</p>
                                             <p class="text-xs font-semibold" style="color: rgb(var(--brand));">GRATIS ONGKIR</p>
@@ -134,7 +137,7 @@
                                 <input type="radio" name="delivery_type" value="delivery" x-model="delivery" class="sr-only">
                                 <div class="radio-card">
                                     <div class="flex items-center gap-3">
-                                        <div class="text-2xl">🚚</div>
+                                        <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background: rgb(var(--accent-soft)); color: rgb(var(--accent));"><x-icon name="truck" class="w-5 h-5" /></div>
                                         <div>
                                             <p class="font-bold text-sm" style="color: rgb(var(--text-primary));">Diantar</p>
                                             <p class="text-xs font-semibold" style="color: rgb(var(--accent));">Ongkir otomatis</p>
@@ -163,8 +166,9 @@
                                 </label>
                             @endforeach
                         </div>
-                        <div class="mt-3 glass rounded-xl p-3 text-xs" style="color: rgb(var(--info)); background: rgb(var(--info-soft)); border: 1px solid rgb(var(--info) / 0.3);">
-                            ⏰ Selesaikan pembayaran dalam <strong>24 jam</strong>, atau pesanan otomatis dibatalkan.
+                        <div class="mt-3 glass rounded-xl p-3 text-xs flex items-center gap-2" style="color: rgb(var(--info)); background: rgb(var(--info-soft)); border: 1px solid rgb(var(--info) / 0.3);">
+                            <x-icon name="clock" class="w-4 h-4 shrink-0" />
+                            <span>Selesaikan pembayaran dalam <strong>24 jam</strong>, atau pesanan otomatis dibatalkan.</span>
                         </div>
                     </div>
                 </div>
@@ -187,12 +191,15 @@
                     </div>
 
                     <div x-show="butuhOngkir && subtotal < minimalDelivery" x-cloak
-                         class="glass rounded-xl p-3 mb-4 text-sm"
+                         class="glass rounded-xl p-3 mb-4 text-sm flex items-start gap-2"
                          style="color: rgb(var(--danger)); background: rgb(var(--danger-soft)); border: 1px solid rgb(var(--danger) / 0.3);">
-                        ⚠️ Minimum pembelian untuk pengiriman adalah
+                        <x-icon name="alert-triangle" class="w-4 h-4 mt-0.5 shrink-0" />
+                        <span>
+                        Minimum pembelian untuk pengiriman adalah
                         <strong class="tabular-nums">Rp <span x-text="formatNumber(minimalDelivery)"></span></strong>.
                         Belanja Anda kurang <strong class="tabular-nums">Rp <span x-text="formatNumber(minimalDelivery - subtotal)"></span></strong>.
                         Silakan pilih <strong>"Ambil di Tempat"</strong> atau tambah item.
+                        </span>
                     </div>
 
                     {{-- Custom Dropdown Kecamatan --}}
@@ -292,8 +299,9 @@
                         </div>
                     </div>
 
-                    <p x-show="jarak > 0 && diLuarRadius" class="text-xs font-semibold mt-2" style="color: rgb(var(--danger));">
-                        ⚠️ Lokasi di luar jangkauan (maks. {{ $toko['radius_maks_km'] }} km). Silakan pilih kecamatan lain.
+                    <p x-show="jarak > 0 && diLuarRadius" class="text-xs font-semibold mt-2 flex items-center gap-1.5" style="color: rgb(var(--danger));">
+                        <x-icon name="alert-triangle" class="w-3.5 h-3.5 shrink-0" />
+                        <span>Lokasi di luar jangkauan (maks. {{ $toko['radius_maks_km'] }} km). Silakan pilih kecamatan lain.</span>
                     </p>
                 </div>
             </div>
@@ -310,7 +318,7 @@
                                     @if ($item['gambar'])
                                         <img src="{{ asset('storage/' . $item['gambar']) }}" class="w-full h-full object-cover">
                                     @else
-                                        <div class="w-full h-full flex items-center justify-center text-xl">{{ $item['type'] === 'produk' ? '🥛' : '🌾' }}</div>
+                                        <div class="w-full h-full flex items-center justify-center"><x-icon :name="$item['type'] === 'produk' ? 'cube' : 'recycle'" class="w-5 h-5 opacity-50" style="color: rgb(var(--{{ $item['type'] === 'produk' ? 'brand' : 'accent' }}));" /></div>
                                     @endif
                                 </div>
                                 <div class="flex-1 min-w-0">
@@ -322,10 +330,40 @@
                         @endforeach
                     </div>
 
+                    {{-- Status Promo Pembelian Pertama --}}
+                    <template x-if="promo.applied">
+                        <div class="rounded-xl px-3.5 py-2.5 mb-4 text-xs flex items-start gap-2" style="background: rgb(var(--success-soft)); border: 1px solid rgb(var(--success) / 0.3); color: rgb(var(--success));">
+                            <x-icon name="gift" class="w-4 h-4 shrink-0 mt-0.5" />
+                            <span>
+                                <strong x-text="promo.label + ' aktif!'"></strong>
+                                Hemat <strong class="tabular-nums">Rp <span x-text="formatNumber(diskon)"></span></strong> untuk pesanan pertama ini.
+                            </span>
+                        </div>
+                    </template>
+                    <template x-if="!promo.applied && promo.eligible && promo.kurang_minimal > 0">
+                        <div class="rounded-xl px-3.5 py-2.5 mb-4 text-xs flex items-start gap-2" style="background: rgb(var(--info-soft)); border: 1px solid rgb(var(--info) / 0.3); color: rgb(var(--info));">
+                            <x-icon name="gift" class="w-4 h-4 shrink-0 mt-0.5" />
+                            <span>
+                                Tambah belanja <strong class="tabular-nums">Rp <span x-text="formatNumber(promo.kurang_minimal)"></span></strong> lagi untuk dapat
+                                <strong x-text="promo.label"></strong> (maks. Rp <span x-text="formatNumber(promo.max_diskon)"></span>).
+                            </span>
+                        </div>
+                    </template>
+                    <template x-if="!promo.eligible && promo.blocked_by_phone">
+                        <div class="rounded-xl px-3.5 py-2.5 mb-4 text-xs flex items-start gap-2" style="background: rgb(var(--warning-soft)); border: 1px solid rgb(var(--warning) / 0.3); color: rgb(var(--warning));">
+                            <x-icon name="alert-triangle" class="w-4 h-4 shrink-0 mt-0.5" />
+                            <span x-text="promo.reason"></span>
+                        </div>
+                    </template>
+
                     <div class="space-y-2 mb-4">
                         <div class="flex justify-between text-sm">
                             <span style="color: rgb(var(--text-secondary));">Subtotal</span>
                             <span class="font-semibold tabular-nums" style="color: rgb(var(--text-primary));">Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
+                        </div>
+                        <div x-show="diskon > 0" x-cloak class="flex justify-between text-sm">
+                            <span class="font-medium" style="color: rgb(var(--brand));" x-text="'Diskon Order Pertama (' + (promo.persen || 10) + '%)'"></span>
+                            <span class="font-bold tabular-nums" style="color: rgb(var(--brand));">-Rp <span x-text="formatNumber(diskon)"></span></span>
                         </div>
                         <div class="flex justify-between text-sm">
                             <span style="color: rgb(var(--text-secondary));">
@@ -526,6 +564,9 @@
             lngToko: parseFloat(form.dataset.lngToko),
             kecamatanList: JSON.parse(form.dataset.kecamatan),
             minimalDelivery: parseFloat(form.dataset.minimalDelivery) || 15000,
+            noTelepon: form.dataset.phoneOld || '',
+            cekPromoUrl: form.dataset.cekPromoUrl || '',
+            promo: form.dataset.promo ? JSON.parse(form.dataset.promo) : { eligible: false, applied: false, diskon: 0, kurang_minimal: 0, blocked_by_phone: false, persen: 10, max_diskon: 5000, label: 'Diskon 10% Order Pertama' },
 
             kecamatan: form.dataset.kecamatanOld || '',
             latPin: null,
@@ -540,14 +581,27 @@
             circle: null,
 
             get butuhOngkir() { return this.delivery === 'delivery'; },
+            get diskon() { return this.promo && this.promo.applied ? (Number(this.promo.diskon) || 0) : 0; },
             get ongkir() {
                 if (!this.butuhOngkir) return 0;
                 if (this.jarak <= 0) return 0;
                 const hitung = Math.ceil(this.jarak) * this.ongkirPerKm;
                 return Math.max(hitung, this.ongkirMinimal);
             },
-            get total() { return this.subtotal + this.ongkir; },
+            get total() { return Math.max(0, this.subtotal - this.diskon) + this.ongkir; },
             get diLuarRadius() { return this.jarak > this.radiusMaks; },
+
+            async cekPromo() {
+                if (!this.cekPromoUrl) return;
+                try {
+                    const url = new URL(this.cekPromoUrl, window.location.origin);
+                    url.searchParams.set('no_telepon', this.noTelepon || '');
+                    const res = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
+                    if (res.ok) {
+                        this.promo = await res.json();
+                    }
+                } catch (_) {}
+            },
 
             formatNumber(num) {
                 return Number(Math.round(num)).toLocaleString('id-ID');
@@ -604,7 +658,7 @@
 
                 const tokoIcon = L.divIcon({
                     className: 'toko-marker',
-                    html: '<div style="background:#10b981; color:white; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; box-shadow: 0 4px 12px rgba(16,185,129,0.5); border: 3px solid white;">🏭</div>',
+                    html: '<div style="background:#10b981; color:white; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 12px rgba(16,185,129,0.5); border: 3px solid white;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9v.01M9 12v.01M9 15v.01M9 18v.01"/></svg></div>',
                     iconSize: [32, 32],
                     iconAnchor: [16, 16],
                 });
@@ -647,7 +701,7 @@
                 } else {
                     const userIcon = L.divIcon({
                         className: 'user-marker',
-                        html: '<div style="background:#f59e0b; color:white; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; box-shadow: 0 4px 12px rgba(245,158,11,0.5); border: 3px solid white;">📍</div>',
+                        html: '<div style="background:#f59e0b; color:white; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 12px rgba(245,158,11,0.5); border: 3px solid white;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-4.35-6-10a6 6 0 1112 0c0 5.65-6 10-6 10z"/><circle cx="12" cy="11" r="2.2"/></svg></div>',
                         iconSize: [32, 32],
                         iconAnchor: [16, 16],
                     });

@@ -53,7 +53,7 @@
             Periode: <span class="font-semibold txt-primary">{{ \Carbon\Carbon::parse($dari)->format('d M Y') }} — {{ \Carbon\Carbon::parse($sampai)->format('d M Y') }}</span>
         </div>
     </form>
-    <p class="text-xs txt-muted mt-2">💡 Maksimal rentang filter 1 tahun.</p>
+    <p class="text-xs txt-muted mt-2 flex items-center gap-1.5"><x-icon name="light-bulb" class="w-3.5 h-3.5 shrink-0" /><span>Maksimal rentang filter 1 tahun.</span></p>
 </div>
 
 {{-- Statistik --}}
@@ -136,18 +136,20 @@
                 $hariAdaTransaksi = $grafikHarian->count();
                 $persenAktif = $totalHari > 0 ? round(($hariAdaTransaksi / $totalHari) * 100, 1) : 0;
             @endphp
-            <p class="text-xs txt-secondary mt-1">
-                📅 Periode: <span class="font-semibold txt-primary">{{ $totalHari }} hari</span>
+            <p class="text-xs txt-secondary mt-1 flex flex-wrap items-center gap-1">
+                <x-icon name="calendar" class="w-3.5 h-3.5 inline-block -mt-0.5" />
+                <span>Periode: <span class="font-semibold txt-primary">{{ $totalHari }} hari</span>
                 · Transaksi aktif: <span class="font-semibold txt-brand">{{ $hariAdaTransaksi }} hari</span>
                 <span class="txt-muted">({{ $persenAktif }}%)</span>
                 @if ($modeGrafik === 'bulanan')
                     <span class="ml-1 px-2 py-0.5 rounded font-semibold" style="background: rgb(var(--brand-soft)); color: rgb(var(--brand-strong));">Tampilan Bulanan</span>
                     <span class="ml-1 txt-muted">(periode > 31 hari)</span>
                 @endif
+                </span>
             </p>
         </div>
         <div class="flex items-center gap-2 text-xs">
-            <span class="txt-muted">💡 Scroll untuk zoom, drag untuk pan</span>
+            <span class="txt-muted inline-flex items-center gap-1"><x-icon name="light-bulb" class="w-3.5 h-3.5" /> Scroll untuk zoom, drag untuk pan</span>
             <button type="button" onclick="resetZoom()"
                     class="glass-btn !py-1.5 !px-3 !text-xs">
                 Reset Zoom
@@ -164,7 +166,7 @@
 
     <div class="glass-card p-6">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="font-bold txt-primary">🏆 Produk Tahu Terlaris</h3>
+            <h3 class="font-bold txt-primary flex items-center gap-1.5"><x-icon name="trophy" class="w-4 h-4 text-amber-500" /> Produk Tahu Terlaris</h3>
             <button type="button" onclick="openRankingModal('produk')"
                     class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition"
                     style="background: rgb(var(--brand-soft)); color: rgb(var(--brand-strong));">
@@ -197,7 +199,7 @@
 
     <div class="glass-card p-6">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="font-bold txt-primary">♻️ Produk Limbah Terlaris</h3>
+            <h3 class="font-bold txt-primary flex items-center gap-1.5"><x-icon name="recycle" class="w-4 h-4 text-emerald-500" /> Produk Limbah Terlaris</h3>
             <button type="button" onclick="openRankingModal('limbah')"
                     class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition"
                     style="background: rgb(var(--accent-soft)); color: rgb(var(--accent-hover));">
@@ -232,7 +234,7 @@
 {{-- Top Pelanggan --}}
 <div class="glass-card p-6 mb-6">
     <div class="flex items-center justify-between mb-4">
-        <h3 class="font-bold txt-primary">👑 Top Pelanggan</h3>
+        <h3 class="font-bold txt-primary flex items-center gap-1.5"><x-icon name="award" class="w-4 h-4 text-amber-500" /> Top Pelanggan</h3>
         <a href="{{ route('admin.pelanggan.index') }}"
            class="text-xs font-semibold" style="color: rgb(var(--brand));">
             Lihat Semua Pelanggan →
@@ -329,7 +331,7 @@
                 @endforeach
             </div>
         @else
-            <p class="text-sm text-center py-4" style="color: rgb(var(--success));">Semua stok produk tahu aman ✓</p>
+            <p class="text-sm text-center py-4 flex items-center justify-center gap-1.5" style="color: rgb(var(--success));"><x-icon name="check-circle" class="w-4 h-4" /> Semua stok produk tahu aman</p>
         @endif
     </div>
 
@@ -376,7 +378,7 @@
                 @endforeach
             </div>
         @else
-            <p class="text-sm text-center py-4" style="color: rgb(var(--success));">Semua stok produk limbah aman ✓</p>
+            <p class="text-sm text-center py-4 flex items-center justify-center gap-1.5" style="color: rgb(var(--success));"><x-icon name="check-circle" class="w-4 h-4" /> Semua stok produk limbah aman</p>
         @endif
     </div>
 </div>

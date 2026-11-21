@@ -20,9 +20,14 @@
     <div class="glass-card p-6 mb-6 relative overflow-hidden">
         <div class="absolute top-0 left-0 right-0 h-24" style="background: var(--gradient-brand); opacity: 0.5;"></div>
         <div class="relative flex flex-col sm:flex-row items-center sm:items-end gap-5 pt-8">
-            <div class="w-24 h-24 rounded-2xl flex items-center justify-center text-white font-extrabold text-4xl flex-shrink-0"
+            <div class="w-24 h-24 rounded-2xl flex items-center justify-center text-white font-extrabold text-4xl flex-shrink-0 overflow-hidden relative"
                  style="background: var(--gradient-brand); box-shadow: 0 12px 32px -8px rgb(var(--brand) / 0.6); border: 3px solid rgb(var(--surface));">
-                {{ strtoupper(substr(auth()->user()->username, 0, 1)) }}
+                @if (auth()->user()->avatar_url)
+                    <img id="avatar-preview-header" src="{{ auth()->user()->avatar_url }}" alt="{{ auth()->user()->username }}" class="w-full h-full object-cover">
+                @else
+                    <span id="avatar-initial-header">{{ strtoupper(substr(auth()->user()->username, 0, 1)) }}</span>
+                    <img id="avatar-preview-header" src="" alt="Preview" class="w-full h-full object-cover hidden">
+                @endif
             </div>
             <div class="flex-1 text-center sm:text-left">
                 <h2 class="text-2xl font-extrabold tracking-tight" style="color: rgb(var(--text-primary));">{{ auth()->user()->username }}</h2>
@@ -33,8 +38,8 @@
                         Member EcoTahu
                     </span>
                     @if (auth()->user()->email_verified_at)
-                        <span class="pill" style="background: rgb(var(--success-soft)); color: rgb(var(--success)); border-color: rgb(var(--success) / 0.3);">
-                            ✓ Terverifikasi
+                        <span class="pill inline-flex items-center gap-1" style="background: rgb(var(--success-soft)); color: rgb(var(--success)); border-color: rgb(var(--success) / 0.3);">
+                            <x-icon name="check" class="w-3.5 h-3.5" /> Terverifikasi
                         </span>
                     @endif
                 </div>
@@ -50,13 +55,43 @@
             </div>
             <div>
                 <h3 class="text-lg font-bold" style="color: rgb(var(--text-primary));">Informasi Profil</h3>
-                <p class="text-sm" style="color: rgb(var(--text-secondary));">Update nama, email, dan nomor telepon Anda.</p>
+                <p class="text-sm" style="color: rgb(var(--text-secondary));">Update nama, foto profil, email, dan nomor telepon Anda.</p>
             </div>
         </div>
 
-        <form method="POST" action="{{ route('profile.update') }}" class="space-y-4">
+        <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="space-y-4">
             @csrf
             @method('patch')
+
+            {{-- Foto Profil --}}
+            <div>
+                <label class="block text-sm font-medium mb-1.5" style="color: rgb(var(--text-primary));">Foto Profil</label>
+                <div class="flex items-center gap-4 p-3 rounded-2xl" style="background: rgb(var(--surface-raised) / 0.5); border: 1px dashed rgb(var(--border-soft));">
+                    <div class="w-14 h-14 rounded-xl flex items-center justify-center text-white font-bold text-xl flex-shrink-0 overflow-hidden relative brand-gradient">
+                        @if (auth()->user()->avatar_url)
+                            <img id="avatar-preview-input" src="{{ auth()->user()->avatar_url }}" alt="Avatar" class="w-full h-full object-cover">
+                        @else
+                            <span id="avatar-initial-input">{{ strtoupper(substr(auth()->user()->username, 0, 1)) }}</span>
+                            <img id="avatar-preview-input" src="" alt="Preview" class="w-full h-full object-cover hidden">
+                        @endif
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <label for="avatar" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold glass-btn hover:opacity-90 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            Pilih Foto Baru
+                        </label>
+                        <input id="avatar" type="file" name="avatar" accept="image/png,image/jpeg,image/jpg,image/webp" class="hidden" onchange="previewAvatar(this)">
+                        <p class="text-xs mt-1" style="color: rgb(var(--text-muted));">Format: JPG, PNG, WEBP. Maks 2MB.</p>
+                    </div>
+                    @if (auth()->user()->avatar)
+                        <div>
+                            <button type="button" onclick="document.getElementById('remove_avatar_input').value = '1'; this.closest('form').submit();" class="text-xs px-2.5 py-1.5 rounded-lg text-red-500 hover:bg-red-500/10 transition">Hapus Foto</button>
+                        </div>
+                    @endif
+                    <input type="hidden" name="remove_avatar" id="remove_avatar_input" value="0">
+                </div>
+                @error('avatar')<p class="mt-1.5 text-xs" style="color: rgb(var(--danger));">{{ $message }}</p>@enderror
+            </div>
 
             <div>
                 <label for="username" class="block text-sm font-medium mb-1.5" style="color: rgb(var(--text-primary));">Nama Lengkap</label>
@@ -101,7 +136,7 @@
                     Simpan Perubahan
                 </button>
                 @if (session('status') === 'profile-updated')
-                    <span class="text-sm" style="color: rgb(var(--success));">✓ Tersimpan</span>
+                    <span class="text-sm inline-flex items-center gap-1" style="color: rgb(var(--success));"><x-icon name="check" class="w-3.5 h-3.5" /> Tersimpan</span>
                 @endif
             </div>
         </form>
@@ -119,34 +154,122 @@
             </div>
         </div>
 
-        <form method="POST" action="{{ route('password.update') }}" class="space-y-4">
+        {{-- Alert Notifikasi Server --}}
+        @if (session('status') === 'password-updated')
+            <div class="flex items-center gap-3 p-4 mb-5 rounded-xl text-sm font-semibold" style="background: rgb(var(--success-soft)); border: 1px solid rgb(var(--success) / 0.3); color: rgb(var(--success));">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Password Anda berhasil diperbarui!</span>
+            </div>
+        @endif
+
+        @if ($errors->updatePassword->any())
+            <div class="flex items-start gap-3 p-4 mb-5 rounded-xl text-sm" style="background: rgb(var(--danger-soft)); border: 1px solid rgb(var(--danger) / 0.3); color: rgb(var(--danger));">
+                <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <div class="space-y-1">
+                    <p class="font-bold text-xs uppercase tracking-wider">Periksa Kembali Data Password:</p>
+                    <ul class="list-disc list-inside text-xs space-y-0.5">
+                        @foreach ($errors->updatePassword->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('password.update') }}" 
+              x-data="{
+                  clientError: '',
+                  submitForm(e) {
+                      const cur = document.getElementById('current_password').value.trim();
+                      const pwd = document.getElementById('password').value;
+                      const conf = document.getElementById('password_confirmation').value;
+
+                      if (!cur) {
+                          this.clientError = 'Password saat ini wajib diisi!';
+                          document.getElementById('current_password').focus();
+                          e.preventDefault();
+                          return false;
+                      }
+                      if (!pwd) {
+                          this.clientError = 'Password baru wajib diisi!';
+                          document.getElementById('password').focus();
+                          e.preventDefault();
+                          return false;
+                      }
+                      if (pwd.length < 8) {
+                          this.clientError = 'Password baru minimal harus 8 karakter!';
+                          document.getElementById('password').focus();
+                          e.preventDefault();
+                          return false;
+                      }
+                      if (!conf) {
+                          this.clientError = 'Konfirmasi password baru wajib diisi!';
+                          document.getElementById('password_confirmation').focus();
+                          e.preventDefault();
+                          return false;
+                      }
+                      if (pwd !== conf) {
+                          this.clientError = 'Konfirmasi password baru tidak cocok dengan password baru!';
+                          document.getElementById('password_confirmation').focus();
+                          e.preventDefault();
+                          return false;
+                      }
+                      this.clientError = '';
+                  }
+              }"
+              @submit="submitForm($event)"
+              class="space-y-4" novalidate>
             @csrf
             @method('put')
 
+            {{-- Client-side Alert Message --}}
+            <div x-show="clientError" x-cloak class="flex items-center gap-3 p-3.5 rounded-xl text-xs font-semibold" style="background: rgb(var(--danger-soft)); border: 1px solid rgb(var(--danger) / 0.3); color: rgb(var(--danger));">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <span x-text="clientError"></span>
+            </div>
+
+            {{-- 1. Password Saat Ini --}}
             <div x-data="{ show: false }">
                 <label for="current_password" class="block text-sm font-medium mb-1.5" style="color: rgb(var(--text-primary));">Password Saat Ini</label>
                 <div style="position: relative;">
-                    <input id="current_password" :type="show ? 'text' : 'password'" name="current_password" required autocomplete="current-password"
+                    <input id="current_password" :type="show ? 'text' : 'password'" name="current_password" autocomplete="current-password"
+                           placeholder="Masukkan password saat ini"
                            class="glass-input w-full px-4 py-3 pr-12 text-sm" style="color: rgb(var(--text-primary));">
-                    <button type="button" @click="show = !show" class="absolute right-3.5 top-1/2 -translate-y-1/2" style="color: rgb(var(--text-muted));">
+                    <button type="button" @click="show = !show" class="absolute right-3.5 top-1/2 -translate-y-1/2 focus:outline-none" style="color: rgb(var(--text-muted));" title="Lihat/Sembunyikan Password">
                         <svg x-show="!show" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                         <svg x-show="show" x-cloak class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
                     </button>
                 </div>
-                @error('current_password', 'updatePassword')<p class="mt-1.5 text-xs" style="color: rgb(var(--danger));">{{ $message }}</p>@enderror
+                @error('current_password', 'updatePassword')<p class="mt-1.5 text-xs font-semibold" style="color: rgb(var(--danger));">{{ $message }}</p>@enderror
             </div>
 
-            <div>
+            {{-- 2. Password Baru --}}
+            <div x-data="{ show: false }">
                 <label for="password" class="block text-sm font-medium mb-1.5" style="color: rgb(var(--text-primary));">Password Baru</label>
-                <input id="password" type="password" name="password" required autocomplete="new-password"
-                       class="glass-input w-full px-4 py-3 text-sm" style="color: rgb(var(--text-primary));">
-                @error('password', 'updatePassword')<p class="mt-1.5 text-xs" style="color: rgb(var(--danger));">{{ $message }}</p>@enderror
+                <div style="position: relative;">
+                    <input id="password" :type="show ? 'text' : 'password'" name="password" autocomplete="new-password"
+                           placeholder="Minimal 8 karakter"
+                           class="glass-input w-full px-4 py-3 pr-12 text-sm" style="color: rgb(var(--text-primary));">
+                    <button type="button" @click="show = !show" class="absolute right-3.5 top-1/2 -translate-y-1/2 focus:outline-none" style="color: rgb(var(--text-muted));" title="Lihat/Sembunyikan Password">
+                        <svg x-show="!show" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <svg x-show="show" x-cloak class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                    </button>
+                </div>
+                @error('password', 'updatePassword')<p class="mt-1.5 text-xs font-semibold" style="color: rgb(var(--danger));">{{ $message }}</p>@enderror
             </div>
 
-            <div>
+            {{-- 3. Konfirmasi Password Baru --}}
+            <div x-data="{ show: false }">
                 <label for="password_confirmation" class="block text-sm font-medium mb-1.5" style="color: rgb(var(--text-primary));">Konfirmasi Password Baru</label>
-                <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password"
-                       class="glass-input w-full px-4 py-3 text-sm" style="color: rgb(var(--text-primary));">
+                <div style="position: relative;">
+                    <input id="password_confirmation" :type="show ? 'text' : 'password'" name="password_confirmation" autocomplete="new-password"
+                           placeholder="Ulangi password baru"
+                           class="glass-input w-full px-4 py-3 pr-12 text-sm" style="color: rgb(var(--text-primary));">
+                    <button type="button" @click="show = !show" class="absolute right-3.5 top-1/2 -translate-y-1/2 focus:outline-none" style="color: rgb(var(--text-muted));" title="Lihat/Sembunyikan Password">
+                        <svg x-show="!show" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <svg x-show="show" x-cloak class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                    </button>
+                </div>
             </div>
 
             <div class="flex items-center gap-3 pt-2">
@@ -154,9 +277,6 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                     Update Password
                 </button>
-                @if (session('status') === 'password-updated')
-                    <span class="text-sm" style="color: rgb(var(--success));">✓ Tersimpan</span>
-                @endif
             </div>
         </form>
     </div>
@@ -206,4 +326,43 @@
         </form>
     </div>
 </div>
+
+<script>
+function previewAvatar(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!allowed.includes(file.type)) {
+            alert('Hanya file gambar (JPG, JPEG, PNG, WEBP) yang diperbolehkan.');
+            input.value = '';
+            return;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            alert('Ukuran foto profil maksimal 2MB.');
+            input.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const hImg = document.getElementById('avatar-preview-header');
+            const hInit = document.getElementById('avatar-initial-header');
+            if (hImg) {
+                hImg.src = e.target.result;
+                hImg.classList.remove('hidden');
+            }
+            if (hInit) hInit.classList.add('hidden');
+
+            const iImg = document.getElementById('avatar-preview-input');
+            const iInit = document.getElementById('avatar-initial-input');
+            if (iImg) {
+                iImg.src = e.target.result;
+                iImg.classList.remove('hidden');
+            }
+            if (iInit) iInit.classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+}
+</script>
 @endsection

@@ -71,6 +71,12 @@
                         <td colspan="3" class="py-2 text-right txt-secondary">Subtotal</td>
                         <td class="py-2 text-right font-semibold txt-primary">Rp {{ number_format($pesanan->subtotal, 0, ',', '.') }}</td>
                     </tr>
+                    @if (($pesanan->diskon ?? 0) > 0)
+                        <tr>
+                            <td colspan="3" class="py-2 text-right font-medium txt-brand">Diskon Order Pertama</td>
+                            <td class="py-2 text-right font-semibold txt-brand">-Rp {{ number_format($pesanan->diskon, 0, ',', '.') }}</td>
+                        </tr>
+                    @endif
                     <tr>
                         <td colspan="3" class="py-2 text-right txt-secondary">
                             Ongkir
@@ -103,7 +109,7 @@
         {{-- Info Refund (kalau ada) --}}
         @if ($pesanan->refund)
             <div class="bg-red-50 border border-red-200 rounded-2xl p-6">
-                <h3 class="font-bold text-red-800 mb-3">⚠️ Pengajuan Refund</h3>
+                <h3 class="font-bold text-red-800 mb-3 flex items-center gap-1.5"><x-icon name="alert-triangle" class="w-4 h-4" /> Pengajuan Refund</h3>
                 <div class="grid grid-cols-2 gap-4 text-sm">
                     <div>
                         <p class="txt-danger text-xs">Nominal</p>
@@ -117,6 +123,15 @@
                         <p class="txt-danger text-xs">Alasan</p>
                         <p class="text-red-800">{{ $pesanan->refund->alasan_batal }}</p>
                     </div>
+                    @if ($pesanan->refund->nama_bank || $pesanan->refund->nomor_rekening || $pesanan->refund->atas_nama)
+                        <div class="col-span-2 bg-white/80 rounded-xl p-3 border border-red-200">
+                            <p class="txt-danger text-xs font-bold mb-1 flex items-center gap-1"><x-icon name="bank" class="w-3.5 h-3.5" /> Rekening Pengembalian Dana</p>
+                            <p class="text-red-900 text-xs font-semibold">
+                                {{ $pesanan->refund->nama_bank ?: '-' }} · {{ $pesanan->refund->nomor_rekening ?: '-' }}
+                                @if ($pesanan->refund->atas_nama) (a.n. {{ $pesanan->refund->atas_nama }}) @endif
+                            </p>
+                        </div>
+                    @endif
                     @if ($pesanan->refund->catatan_admin)
                         <div class="col-span-2">
                             <p class="txt-danger text-xs mb-1">Catatan Admin</p>
@@ -202,8 +217,8 @@
             @if ($pesanan->payment_method === 'Transfer' && $pesanan->payment_status !== 'paid')
                 <form action="{{ route('admin.pesanan.verifikasi', $pesanan->id) }}" method="POST" class="mt-4">
                     @csrf
-                    <button class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition">
-                        ✓ Verifikasi Pembayaran
+                    <button class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition flex items-center justify-center gap-1.5">
+                        <x-icon name="check-circle" class="w-4 h-4" /> Verifikasi Pembayaran
                     </button>
                 </form>
             @endif

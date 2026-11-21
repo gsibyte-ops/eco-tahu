@@ -43,7 +43,7 @@
                             @if ($item['gambar'])
                                 <img src="{{ asset('storage/' . $item['gambar']) }}" alt="{{ $item['nama'] }}" class="w-full h-full object-cover">
                             @else
-                                <div class="w-full h-full flex items-center justify-center text-3xl">{{ $item['type'] === 'produk' ? '🥛' : '🌾' }}</div>
+                                <div class="w-full h-full flex items-center justify-center"><x-icon :name="$item['type'] === 'produk' ? 'cube' : 'recycle'" class="w-8 h-8 opacity-50" style="color: rgb(var(--{{ $item['type'] === 'produk' ? 'brand' : 'accent' }}));" /></div>
                             @endif
                         </div>
 
@@ -199,7 +199,7 @@
         </div>
     @else
         <div class="glass-card p-16 text-center max-w-md mx-auto">
-            <div class="text-7xl mb-4">🛒</div>
+            <div class="w-20 h-20 mx-auto mb-5 rounded-2xl flex items-center justify-center" style="background: rgb(var(--brand-soft)); color: rgb(var(--brand));"><x-icon name="shopping-cart" class="w-10 h-10" /></div>
             <h2 class="text-xl font-extrabold mb-2" style="color: rgb(var(--text-primary));">Keranjang Kosong</h2>
             <p class="text-sm mb-6" style="color: rgb(var(--text-secondary));">Yuk mulai belanja tahu segar dan ampas tahu bermanfaat!</p>
             <div class="flex gap-3 justify-center flex-wrap">

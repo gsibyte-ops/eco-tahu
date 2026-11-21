@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Edukasi;
+use App\Models\Resep;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -16,35 +17,51 @@ class PublishScheduledEdukasi extends Command
     /**
      * Deskripsi command.
      */
-    protected $description = 'Publish artikel edukasi yang sudah waktunya tayang';
+    protected $description = 'Publish artikel edukasi dan resep yang sudah waktunya tayang';
 
     /**
      * Eksekusi command.
      */
     public function handle(): int
     {
-        $count = 0;
+        $edukasiCount = 0;
+        $resepCount = 0;
 
-        DB::transaction(function () use (&$count) {
-            $due = Edukasi::where('status', 'scheduled')
+        DB::transaction(function () use (&$edukasiCount, &$resepCount) {
+            $dueEdukasi = Edukasi::where('status', 'scheduled')
                 ->whereNotNull('scheduled_at')
                 ->where('scheduled_at', '<=', now())
                 ->lockForUpdate()
                 ->get();
 
-            foreach ($due as $item) {
+            foreach ($dueEdukasi as $item) {
                 $item->update([
                     'status'       => 'publish',
                     'published_at' => now(),
                 ]);
-                $count++;
+                $edukasiCount++;
+            }
+
+            $dueResep = Resep::where('status', 'scheduled')
+                ->whereNotNull('scheduled_at')
+                ->where('scheduled_at', '<=', now())
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($dueResep as $item) {
+                $item->update([
+                    'status'       => 'publish',
+                    'published_at' => now(),
+                ]);
+                $resepCount++;
             }
         });
 
-        if ($count > 0) {
-            $this->info("✅ {$count} artikel dipublish otomatis.");
+        $total = $edukasiCount + $resepCount;
+        if ($total > 0) {
+            $this->info("{$edukasiCount} artikel edukasi dan {$resepCount} resep dipublish otomatis.");
         } else {
-            $this->line('Tidak ada artikel yang perlu dipublish.');
+            $this->line('Tidak ada artikel atau resep yang perlu dipublish.');
         }
 
         return self::SUCCESS;

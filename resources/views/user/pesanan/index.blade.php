@@ -97,7 +97,7 @@
                         <div class="flex flex-wrap gap-3 mb-4">
                             @foreach ($p->detail->take(3) as $d)
                                 <div class="glass-input flex items-center gap-2 px-3 py-1.5 text-sm">
-                                    <span class="text-xs">{{ $d->item_type === 'App\\Models\\ProdukTahu' ? '🥛' : '🌾' }}</span>
+                                    <x-icon :name="$d->item_type === 'App\\Models\\ProdukTahu' ? 'cube' : 'recycle'" class="w-3.5 h-3.5 shrink-0 opacity-70" />
                                     <span style="color: rgb(var(--text-primary));">{{ $d->nama_item }}</span>
                                     <span style="color: rgb(var(--text-muted));">×{{ $d->jumlah }}</span>
                                 </div>
@@ -133,8 +133,8 @@
                             <div class="flex flex-wrap gap-2">
                                 @if ($p->order_status === 'selesai')
                                     <a href="{{ route('user.pesanan.show', $p->kode_pesanan) }}#ulasan"
-                                       class="glass-btn px-4 py-2" style="color: rgb(var(--accent)); border-color: rgb(var(--accent) / 0.3);">
-                                        ⭐ Beri Ulasan
+                                       class="glass-btn px-4 py-2 inline-flex items-center gap-1.5" style="color: rgb(var(--accent)); border-color: rgb(var(--accent) / 0.3);">
+                                        <x-icon name="star-solid" class="w-4 h-4 text-amber-400" /> Beri Ulasan
                                     </a>
                                 @endif
 
@@ -173,7 +173,7 @@
         <div class="mt-6">{{ $pesanan->links() }}</div>
     @else
         <div class="glass-card p-16 text-center max-w-md mx-auto">
-            <div class="text-7xl mb-4">📦</div>
+            <div class="w-20 h-20 mx-auto mb-5 rounded-2xl flex items-center justify-center" style="background: rgb(var(--brand-soft)); color: rgb(var(--brand));"><x-icon name="package" class="w-10 h-10" /></div>
             <h3 class="text-xl font-extrabold mb-2" style="color: rgb(var(--text-primary));">Belum Ada Pesanan</h3>
             <p class="text-sm mb-6" style="color: rgb(var(--text-secondary));">Yuk mulai belanja tahu & ampas tahu berkualitas!</p>
             <a href="{{ route('user.produk.index') }}" class="btn-primary inline-block">Mulai Belanja</a>
@@ -192,12 +192,14 @@
             @csrf
             <input type="hidden" name="batalkan_bukti" id="flagInput" value="0">
 
-            <div class="glass-amber rounded-xl p-3 text-xs" style="color: rgb(var(--accent));">
-                ⚠️ <strong>Setelah dibatalkan, pesanan tidak dapat dikembalikan ke status semula.</strong> Pastikan Anda yakin sebelum melanjutkan.
+            <div class="glass-amber rounded-xl p-3 text-xs flex items-start gap-2" style="color: rgb(var(--accent));">
+                <x-icon name="alert-triangle" class="w-4 h-4 mt-0.5 shrink-0" />
+                <span><strong>Setelah dibatalkan, pesanan tidak dapat dikembalikan ke status semula.</strong> Pastikan Anda yakin sebelum melanjutkan.</span>
             </div>
 
-            <div id="refundInfo" class="hidden glass rounded-xl p-3 text-xs" style="color: rgb(var(--info)); border-color: rgb(var(--info) / 0.3); background: rgb(var(--info-soft));">
-                💰 Dana sebesar <strong class="tabular-nums">Rp <span id="cTotal"></span></strong> akan dikembalikan ke rekening Anda dalam 1x24 jam setelah diverifikasi admin.
+            <div id="refundInfo" class="hidden glass rounded-xl p-3 text-xs flex items-start gap-2" style="color: rgb(var(--info)); border-color: rgb(var(--info) / 0.3); background: rgb(var(--info-soft));">
+                <x-icon name="banknotes" class="w-4 h-4 mt-0.5 shrink-0" />
+                <span>Dana sebesar <strong class="tabular-nums">Rp <span id="cTotal"></span></strong> akan dikembalikan ke rekening Anda dalam 1x24 jam setelah diverifikasi admin.</span>
             </div>
 
             <div>
@@ -289,8 +291,8 @@
         const file = input.files[0];
         if (!file) return;
         const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-        if (!allowed.includes(file.type)) { alert('⚠️ Hanya file gambar (JPG, PNG, WEBP).'); input.value = ''; return; }
-        if (file.size > 2 * 1024 * 1024) { alert('⚠️ Ukuran maksimal 2MB.'); input.value = ''; return; }
+        if (!allowed.includes(file.type)) { alert('Hanya file gambar (JPG, PNG, WEBP).'); input.value = ''; return; }
+        if (file.size > 2 * 1024 * 1024) { alert('Ukuran maksimal 2MB.'); input.value = ''; return; }
 
         document.getElementById('flagInput').value = '0';
         document.getElementById('previewImg').src = URL.createObjectURL(file);

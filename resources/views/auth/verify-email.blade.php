@@ -27,7 +27,9 @@
         </div>
 
         <div class="relative z-10">
-            <div class="text-7xl mb-6">✉️</div>
+            <div class="w-16 h-16 mb-6 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center text-white border border-white/20">
+                <x-icon name="mail" class="w-8 h-8" />
+            </div>
             <h1 class="text-4xl font-display text-white leading-tight mb-4">
                 Verifikasi
                 <br>Email Anda.
@@ -68,8 +70,9 @@
                 </div>
 
                 @if (session('status') == 'verification-link-sent')
-                    <div class="glass rounded-xl px-4 py-3 mb-4 text-sm text-emerald-700 border-emerald-300/50">
-                        ✓ Link verifikasi baru sudah dikirim ke email Anda.
+                    <div class="glass rounded-xl px-4 py-3 mb-4 text-sm text-emerald-700 border-emerald-300/50 flex items-center gap-2">
+                        <x-icon name="check-circle" class="w-4 h-4 shrink-0" />
+                        <span>Link verifikasi baru sudah dikirim ke email Anda.</span>
                     </div>
                 @endif
 

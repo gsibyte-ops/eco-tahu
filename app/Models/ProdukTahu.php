@@ -12,6 +12,30 @@ class ProdukTahu extends Model
         'harga', 'satuan', 'stok', 'gambar', 'status',
     ];
 
+    protected $appends = ['rating', 'reviews_count', 'gambar_url'];
+
+    public function getGambarUrlAttribute(): ?string
+    {
+        if (!$this->gambar) {
+            return null;
+        }
+        if (str_starts_with($this->gambar, 'http://') || str_starts_with($this->gambar, 'https://')) {
+            return $this->gambar;
+        }
+        $clean = ltrim(str_replace('storage/', '', $this->gambar), '/');
+        return url('/files/' . $clean);
+    }
+
+    public function getRatingAttribute(): float
+    {
+        return $this->averageRating();
+    }
+
+    public function getReviewsCountAttribute(): int
+    {
+        return $this->reviewCount();
+    }
+
     public function kategori()
     {
         return $this->belongsTo(Kategori::class, 'kategori_id');

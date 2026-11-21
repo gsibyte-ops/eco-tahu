@@ -16,7 +16,7 @@ return new class extends Migration
             $table->text('deskripsi')->nullable();
             $table->decimal('harga', 12, 2);
             $table->integer('stok')->default(0);
-            $table->string('satuan')->default('pcs'); // 👈 BARU
+            $table->string('satuan')->default('pcs'); // BARU
             $table->string('gambar')->nullable();
             $table->enum('status', ['aktif', 'nonaktif'])->default('aktif');
             $table->timestamps();

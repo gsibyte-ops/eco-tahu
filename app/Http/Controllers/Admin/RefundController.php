@@ -59,7 +59,12 @@ class RefundController extends Controller
         $request->validate([
             'status_refund' => 'required|in:pending,diproses,selesai,ditolak',
             'catatan_admin' => 'nullable|string|max:1000',
-            'bukti_transfer_balik' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'bukti_transfer_balik' => \App\Support\MediaGuard::imageRules(false, 5120),
+        ], [
+            'bukti_transfer_balik.image'     => 'Bukti transfer balik harus berupa file foto (JPG, PNG, WEBP).',
+            'bukti_transfer_balik.mimes'     => 'Format bukti transfer balik harus JPG, PNG, atau WEBP.',
+            'bukti_transfer_balik.mimetypes' => 'Hanya file gambar asli (JPG, PNG, WEBP) yang diperbolehkan.',
+            'bukti_transfer_balik.max'       => 'Ukuran bukti transfer balik maksimal 5MB.',
         ]);
 
         try {

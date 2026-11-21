@@ -5,6 +5,14 @@
 @section('brand-subtitle', 'Pilih password yang kuat dan mudah Anda ingat untuk mengamankan akun.')
 
 @section('form')
+<div class="mb-6 p-3 rounded-xl flex items-center justify-between text-xs" style="background: rgb(var(--brand-soft)); border: 1px solid rgb(var(--brand) / 0.3);">
+    <div class="flex items-center gap-2">
+        <x-icon name="device-phone" class="w-4 h-4 shrink-0" style="color: rgb(var(--brand));" />
+        <span style="color: rgb(var(--text-primary));">Mereset dari Aplikasi Mobile?</span>
+    </div>
+    <a href="ecotahu://reset-password?token={{ $request->route('token') }}&email={{ urlencode($request->email) }}" class="font-bold underline" style="color: rgb(var(--brand));">Buka di Aplikasi</a>
+</div>
+
 <div class="mb-8">
     <h2 class="text-3xl font-extrabold tracking-tight mb-2" style="color: rgb(var(--text-primary));">Password Baru</h2>
     <p class="text-sm auth-hint">Isi password baru Anda di bawah ini.</p>

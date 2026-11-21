@@ -10,8 +10,8 @@
         <span class="font-medium" style="color: rgb(var(--text-primary));">Limbah Ampas Tahu</span>
     </nav>
 
-    <div class="glass-amber rounded-xl sm:rounded-2xl p-3 sm:p-5 mb-6 sm:mb-8 flex items-start gap-2 sm:gap-4">
-        <div class="text-xl sm:text-3xl">♻️</div>
+    <div class="glass-amber rounded-xl sm:rounded-2xl p-3 sm:p-5 mb-6 sm:mb-8 flex items-start gap-3 sm:gap-4">
+        <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0" style="background: rgb(var(--accent-soft)); color: rgb(var(--accent));"><x-icon name="recycle" class="w-5 h-5 sm:w-6 sm:h-6" /></div>
         <div>
             <h2 class="font-bold mb-1 text-xs sm:text-base" style="color: rgb(var(--accent));">Zero Waste Movement</h2>
             <p class="text-[10px] sm:text-sm leading-relaxed" style="color: rgb(var(--text-secondary));">Membeli ampas tahu = ikut mengurangi limbah industri & mendukung ekonomi sirkular. Cocok untuk pakan ternak, pupuk, dan olahan pangan.</p>
@@ -66,19 +66,21 @@
                 <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
                     {{-- FIX: Foreach diganti jadi $limbah as $l --}}
                     @foreach ($limbah as $l)
-                        <div class="surface flex flex-col rounded-xl sm:rounded-2xl overflow-hidden">
-                            <a href="{{ route('user.limbah.show', $l->slug) }}" class="block relative overflow-hidden aspect-square">
+                        <div class="surface relative group flex flex-col rounded-xl sm:rounded-2xl overflow-hidden">
+                            <div class="block relative overflow-hidden aspect-square">
                                 <div class="w-full h-full flex items-center justify-center" style="background: rgb(var(--bg-secondary));">
                                     @if ($l->gambar)
-                                        <img src="{{ asset('storage/' . $l->gambar) }}" alt="{{ $l->nama_limbah }}" class="w-full h-full object-cover">
+                                        <img src="{{ asset('storage/' . $l->gambar) }}" alt="{{ $l->nama_limbah }}" class="w-full h-full object-cover transition duration-500 group-hover:scale-110">
                                     @else
-                                        <div class="text-4xl sm:text-6xl">🌾</div>
+                                        <x-icon name="recycle" class="w-12 h-12 opacity-40" style="color: rgb(var(--accent));" />
                                     @endif
                                 </div>
-                            </a>
+                            </div>
                             <div class="p-2.5 sm:p-4 flex flex-col flex-1">
                                 <span class="pill-accent text-[8px] sm:text-[10px] self-start mb-1.5">{{ $l->kategori->nama_kategori ?? 'Limbah' }}</span>
-                                <h3 class="font-bold text-[15px] sm:text-base line-clamp-2 min-h-[42px] sm:min-h-[48px] mb-1.5 leading-snug" style="color: rgb(var(--text-primary));">{{ $l->nama_limbah }}</h3>
+                                <h3 class="font-bold text-[15px] sm:text-base line-clamp-2 min-h-[42px] sm:min-h-[48px] mb-1.5 leading-snug" style="color: rgb(var(--text-primary));">
+                                    <a href="{{ route('user.limbah.show', $l->slug) }}" class="after:absolute after:inset-0 after:z-[1] focus:outline-none">{{ $l->nama_limbah }}</a>
+                                </h3>
 
                                 @php $avg = $l->averageRating(); $cnt = $l->reviewCount(); @endphp
                                 <div class="flex flex-wrap items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs mb-2">
@@ -96,17 +98,17 @@
                                 </p>
 
                                 @if(auth()->check() && auth()->user()->isAdmin())
-                                    <button type="button" onclick="window.showAdminNotif()" class="glass-btn-amber w-full !text-[10px] sm:!text-xs flex items-center justify-center gap-1 opacity-80 py-1.5 sm:py-2">
+                                    <button type="button" onclick="window.showAdminNotif()" class="glass-btn-amber relative z-10 w-full !text-[10px] sm:!text-xs flex items-center justify-center gap-1 opacity-80 py-1.5 sm:py-2">
                                         <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                                         Tambah
                                     </button>
                                 @elseif(auth()->check())
-                                    <button type="button" onclick="window.addToCart('limbah', {{ $l->id }})" class="glass-btn-amber w-full !text-[10px] sm:!text-xs flex items-center justify-center gap-1 py-1.5 sm:py-2">
+                                    <button type="button" onclick="window.addToCart('limbah', {{ $l->id }})" class="glass-btn-amber relative z-10 w-full !text-[10px] sm:!text-xs flex items-center justify-center gap-1 py-1.5 sm:py-2">
                                         <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                                         Tambah
                                     </button>
                                 @else
-                                    <a href="{{ route('login') }}" class="glass-btn-amber w-full !text-[10px] sm:!text-xs flex items-center justify-center gap-1 py-1.5 sm:py-2">
+                                    <a href="{{ route('login') }}" class="glass-btn-amber relative z-10 w-full !text-[10px] sm:!text-xs flex items-center justify-center gap-1 py-1.5 sm:py-2">
                                         <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                                         Tambah
                                     </a>
@@ -118,7 +120,7 @@
                 <div class="mt-6">{{ $limbah->links() }}</div>
             @else
                 <div class="glass-card p-10 sm:p-12 text-center">
-                    <div class="text-4xl sm:text-6xl mb-4">🔍</div>
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style="background: rgb(var(--accent-soft)); color: rgb(var(--accent));"><x-icon name="search" class="w-8 h-8" /></div>
                     <h3 class="font-bold text-base sm:text-lg mb-2" style="color: rgb(var(--text-primary));">Belum ada limbah</h3>
                 </div>
             @endif

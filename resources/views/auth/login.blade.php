@@ -114,7 +114,7 @@
         </div>
         <div class="flex items-center gap-1.5 text-xs auth-muted">
             <svg class="w-3.5 h-3.5" style="color: rgb(var(--brand));" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            Halal
+            Organik
         </div>
         <div class="flex items-center gap-1.5 text-xs auth-muted">
             <svg class="w-3.5 h-3.5" style="color: rgb(var(--brand));" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>

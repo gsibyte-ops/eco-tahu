@@ -26,7 +26,7 @@ class LaporanController extends Controller
         $dariCarbon = Carbon::parse($dari);
         $sampaiCarbon = Carbon::parse($sampai);
 
-        // 👈 TAMBAH: gak boleh masa depan
+        // TAMBAH: gak boleh masa depan
         if ($dariCarbon->isFuture()) {
             $dariCarbon = now();
             $dari = $dariCarbon->format('Y-m-d');
@@ -262,7 +262,7 @@ class LaporanController extends Controller
         $dariCarbon = Carbon::parse($dari);
         $sampaiCarbon = Carbon::parse($sampai);
 
-        // 👈 TAMBAH: gak boleh masa depan
+        // TAMBAH: gak boleh masa depan
         if ($dariCarbon->isFuture()) {
             $dariCarbon = now();
             $dari = $dariCarbon->format('Y-m-d');

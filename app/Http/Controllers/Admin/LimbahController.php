@@ -58,7 +58,7 @@ class LimbahController extends Controller
             'stok' => 'required|integer|min:1|max:999999',
             'satuan' => 'required|string|max:20',
             'deskripsi' => 'nullable|string|max:1000',
-            'gambar' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'gambar' => \App\Support\MediaGuard::imageRules(false, 2048),
             'status' => 'required|in:aktif,nonaktif',
         ], [
             'nama_limbah.required' => 'Nama limbah wajib diisi.',
@@ -123,7 +123,7 @@ class LimbahController extends Controller
             'stok' => 'required|integer|min:0|max:999999',
             'satuan' => 'required|string|max:20',
             'deskripsi' => 'nullable|string|max:1000',
-            'gambar' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'gambar' => \App\Support\MediaGuard::imageRules(false, 2048),
             'status' => 'required|in:aktif,nonaktif',
             'hapus_gambar' => 'nullable|in:0,1',
         ], [

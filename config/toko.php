@@ -6,9 +6,26 @@ return [
     | Kontak Toko
     |--------------------------------------------------------------------------
     */
-    'nama'   => 'Pabrik Tahu EcoTahu',
-    'alamat' => 'Lingkungan Panji, Tegalgede, Kec. Sumbersari, Kabupaten Jember, Jawa Timur 68124',
-    'whatsapp' => '6283833722986', // <--- Nomor WA Admin (tanpa tanda +)
+    'nama'             => 'Pabrik Tahu EcoTahu',
+    'alamat'           => 'Lingkungan Panji, Tegalgede, Kec. Sumbersari, Kabupaten Jember, Jawa Timur 68124',
+    'whatsapp'         => '6283833722986', // <--- Nomor WA Admin (tanpa tanda +)
+    'whatsapp_display' => '0838-3372-2986',
+    'email'            => 'hello@ecotahu.id',
+    'jam_operasional'  => 'Setiap Hari, 06.00 – 17.00 WIB',
+    'sosmed'           => [
+        'instagram' => [
+            'label' => '@jbr.iel',
+            'url'   => 'https://www.instagram.com/jbr.iel',
+        ],
+        'tiktok' => [
+            'label' => '@jbr.iel',
+            'url'   => 'https://www.tiktok.com/@jbr.iel',
+        ],
+        'facebook' => [
+            'label' => 'Zeki Zaki',
+            'url'   => 'https://www.facebook.com/share/19vBvyrxDe/',
+        ],
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -24,8 +41,9 @@ return [
     |--------------------------------------------------------------------------
     | ongkir = max(ceil(jarak_km) * per_km, minimal)
     */
-    'ongkir_per_km'  => 2500,
-    'ongkir_minimal' => 5000,
+    'ongkir_per_km'    => 2500,
+    'ongkir_minimal'   => 5000,
+    'minimal_delivery' => 15000,
 
     /*
     |--------------------------------------------------------------------------
@@ -33,6 +51,18 @@ return [
     |--------------------------------------------------------------------------
     */
     'radius_maks_km' => 10,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Promo Pembelian Pertama (Anti-Abuse + Batas Aman Margin)
+    |--------------------------------------------------------------------------
+    */
+    'promo_order_pertama' => [
+        'aktif'       => true,
+        'persen'      => 10,
+        'max_diskon'  => 5000,
+        'min_belanja' => 20000,
+    ],
 
     /*
     |--------------------------------------------------------------------------
