@@ -12,6 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'admin'                    => \App\Http\Middleware\IsAdmin::class,
             'no-admin-customer-action' => \App\Http\Middleware\ForbidAdminCustomerAction::class,
