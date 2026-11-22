@@ -16,16 +16,16 @@ class UserSeeder extends Seeder
             'username' => 'admin',
             'email' => 'admin@ecotahu.id',
             'password' => Hash::make('password'),
-            'alamat' => 'Jl. Tahu No. 1, Bandung',
+            'alamat' => 'Jl. Mastrip No. 45, Sumbersari, Jember',
             'no_telepon' => '081234567890',
         ]);
 
-        // Pelanggan dummy (role_id = 2)
+        // Pelanggan (role_id = 2)
         $pelanggan = [
-            ['budi',  'budi@test.com',  '081111111111', 'Jl. Merdeka No. 10, Bandung'],
-            ['rina',  'rina@test.com',  '082222222222', 'Jl. Sudirman No. 25, Bandung'],
-            ['siti',  'siti@test.com',  '083333333333', 'Jl. Asia Afrika No. 5, Bandung'],
-            ['andi',  'andi@test.com',  '084444444444', 'Jl. Riau No. 88, Bandung'],
+            ['budi', 'budi@test.com', '081234560101', 'Jl. Kalimantan No. 18, Sumbersari, Jember'],
+            ['rina', 'rina@test.com', '081234560102', 'Jl. Jawa No. 24, Sumbersari, Jember'],
+            ['siti', 'siti@test.com', '081234560103', 'Jl. Karimata No. 12, Sumbersari, Jember'],
+            ['andi', 'andi@test.com', '081234560104', 'Jl. Gajah Mada No. 88, Kaliwates, Jember'],
         ];
 
         foreach ($pelanggan as $p) {
