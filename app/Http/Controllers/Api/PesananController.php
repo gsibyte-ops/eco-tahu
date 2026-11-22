@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class PesananController extends Controller
 {
@@ -106,83 +107,117 @@ class PesananController extends Controller
             ? 'pickup'
             : 'delivery';
 
-        // Cek stok item & hitung subtotal otoritatif di server
-        $serverSubtotal = 0;
-        $resolvedItems = [];
-        foreach ($validated['items'] as $item) {
-            $isLimbah = (isset($item['item_type']) && in_array(strtolower($item['item_type']), ['limbah', 'app\\models\\limbah']));
-            $modelClass = $isLimbah ? Limbah::class : ProdukTahu::class;
-            $model = $modelClass::find($item['produk_id']);
-
-            if (!$model) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Item dengan ID ' . $item['produk_id'] . ' tidak ditemukan.',
-                ], 404);
-            }
-
-            if ($model->stok < $item['qty']) {
-                $nama = $isLimbah ? ($model->nama_limbah ?? 'Limbah') : ($model->nama_produk ?? 'Produk');
-                return response()->json([
-                    'status' => 'error',
-                    'message' => "Stok {$nama} tidak mencukupi (sisa: {$model->stok}).",
-                ], 422);
-            }
-
-            $hargaUnit = (int) round((float) $model->harga);
-            $qty = (int) $item['qty'];
-            $serverSubtotal += $hargaUnit * $qty;
-            $resolvedItems[] = [
-                'model_class' => $modelClass,
-                'model'       => $model,
-                'is_limbah'   => $isLimbah,
-                'qty'         => $qty,
-                'harga_unit'  => $hargaUnit,
-            ];
-        }
-
-        // Cek minimum pembelian untuk delivery
-        if ($deliveryTypeClean === 'delivery' && $serverSubtotal < self::MINIMAL_PEMBELIAN_DELIVERY) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Minimum pembelian untuk pengiriman adalah Rp ' . number_format(self::MINIMAL_PEMBELIAN_DELIVERY, 0, ',', '.') . '.',
-            ], 422);
-        }
-
-        // Hitung jarak & ongkir jika ada koordinat
+        // Hitung jarak & ongkir otoritatif di server — jangan percaya angka ongkir dari client
         $latTujuan = $request->lat_pin ?? null;
         $lngTujuan = $request->lng_pin ?? null;
         $pakaiPin = !empty($latTujuan) && !empty($lngTujuan);
         $jarak = 0;
-        $ongkir = (int) ($validated['ongkir'] ?? 0);
+        $ongkir = 0;
 
         if ($deliveryTypeClean === 'delivery') {
             $latToko = (float) config('toko.lat', -8.161482);
             $lngToko = (float) config('toko.lng', 113.724290);
+            $radiusMaks = (float) config('toko.radius_maks_km', 10);
+            $kecamatanList = config('toko.kecamatan', []);
+            $kecInput = trim((string) ($request->kecamatan ?? ''));
 
             if ($pakaiPin) {
                 $jarak = Haversine::distance($latToko, $lngToko, (float) $latTujuan, (float) $lngTujuan);
-                $radiusMaks = (float) config('toko.radius_maks_km', 10);
                 if ($jarak > $radiusMaks) {
                     return response()->json([
                         'status' => 'error',
                         'message' => "Lokasi di luar jangkauan pengiriman. Maksimal {$radiusMaks} km dari toko (jarak: {$jarak} km).",
                     ], 422);
                 }
+                if ($jarak < 0.1) {
+                    $jarak = 0.1;
+                }
                 $ongkir = Haversine::hitungOngkir($jarak);
+            } elseif ($kecInput !== '' && array_key_exists($kecInput, $kecamatanList)) {
+                $kecData = $kecamatanList[$kecInput];
+                $latTujuan = (float) $kecData['lat'];
+                $lngTujuan = (float) $kecData['lng'];
+                $jarak = Haversine::distance($latToko, $lngToko, $latTujuan, $lngTujuan);
+                if ($jarak > $radiusMaks) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => "Lokasi di luar jangkauan pengiriman. Maksimal {$radiusMaks} km dari toko (jarak: {$jarak} km).",
+                    ], 422);
+                }
+                if ($jarak < 0.1) {
+                    $jarak = 0.1;
+                }
+                $ongkir = Haversine::hitungOngkir($jarak);
+            } else {
+                $ongkirMinimal = (int) config('toko.ongkir_minimal', 5000);
+                $ongkir = max($ongkirMinimal, (int) ($validated['ongkir'] ?? 0));
             }
         } else {
             $ongkir = 0;
         }
 
-        $recipientPhoneRaw = $validated['no_telepon'] ?? $request->user()->no_telepon;
-        $promo = FirstOrderPromo::evaluate($request->user(), $serverSubtotal, $recipientPhoneRaw);
-        $diskon = $promo['applied'] ? (int) $promo['diskon'] : 0;
-        $totalHarga = max(0, $serverSubtotal - $diskon) + $ongkir;
+        // Urutkan item secara deterministik untuk mencegah deadlock saat row-level locking
+        $sortedItems = collect($validated['items'])->sortBy(function ($item) {
+            $isLimbah = (isset($item['item_type']) && in_array(strtolower($item['item_type']), ['limbah', 'app\\models\\limbah']));
+            return ($isLimbah ? 'limbah' : 'produk') . '-' . str_pad((string) $item['produk_id'], 10, '0', STR_PAD_LEFT);
+        })->values()->all();
 
         DB::beginTransaction();
         try {
-            $kodePesanan = $validated['kode_pesanan'] ?: ('ETI' . date('ymdHis') . rand(10, 99));
+            // Kunci baris produk/limbah & hitung subtotal otoritatif di server agar bebas race condition
+            $serverSubtotal = 0;
+            $resolvedItems = [];
+            foreach ($sortedItems as $item) {
+                $isLimbah = (isset($item['item_type']) && in_array(strtolower($item['item_type']), ['limbah', 'app\\models\\limbah']));
+                $modelClass = $isLimbah ? Limbah::class : ProdukTahu::class;
+                $model = $modelClass::where('id', $item['produk_id'])->lockForUpdate()->first();
+
+                if (!$model) {
+                    DB::rollBack();
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Item dengan ID ' . $item['produk_id'] . ' tidak ditemukan.',
+                    ], 404);
+                }
+
+                if ($model->stok < $item['qty']) {
+                    DB::rollBack();
+                    $nama = $isLimbah ? ($model->nama_limbah ?? 'Limbah') : ($model->nama_produk ?? 'Produk');
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => "Stok {$nama} tidak mencukupi (sisa: {$model->stok}).",
+                    ], 422);
+                }
+
+                $hargaUnit = (int) round((float) $model->harga);
+                $qty = (int) $item['qty'];
+                $serverSubtotal += $hargaUnit * $qty;
+                $resolvedItems[] = [
+                    'model_class' => $modelClass,
+                    'model'       => $model,
+                    'is_limbah'   => $isLimbah,
+                    'qty'         => $qty,
+                    'harga_unit'  => $hargaUnit,
+                ];
+            }
+
+            // Cek minimum pembelian untuk delivery
+            if ($deliveryTypeClean === 'delivery' && $serverSubtotal < self::MINIMAL_PEMBELIAN_DELIVERY) {
+                DB::rollBack();
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Minimum pembelian untuk pengiriman adalah Rp ' . number_format(self::MINIMAL_PEMBELIAN_DELIVERY, 0, ',', '.') . '.',
+                ], 422);
+            }
+
+            $recipientPhoneRaw = $validated['no_telepon'] ?? $request->user()->no_telepon;
+            $promo = FirstOrderPromo::evaluate($request->user(), $serverSubtotal, $recipientPhoneRaw);
+            $diskon = $promo['applied'] ? (int) $promo['diskon'] : 0;
+            $totalHarga = max(0, $serverSubtotal - $diskon) + $ongkir;
+
+            $kodePesanan = !empty($validated['kode_pesanan'])
+                ? $validated['kode_pesanan']
+                : ('ETI' . date('ymdHis') . strtoupper(Str::random(4)));
 
             // Generate VA bila metode Transfer
             $vaNumber = null;

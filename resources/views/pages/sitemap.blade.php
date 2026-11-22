@@ -10,9 +10,15 @@
                 <li><a href="{{ route('home') }}" class="hover:text-emerald-600 hover:underline">Beranda</a></li>
                 <li><a href="{{ route('user.produk.index') }}" class="hover:text-emerald-600 hover:underline">Katalog Produk Tahu</a></li>
                 <li><a href="{{ route('user.limbah.index') }}" class="hover:text-emerald-600 hover:underline">Katalog Produk Limbah</a></li>
+                <li><a href="{{ route('user.resep.index') }}" class="hover:text-emerald-600 hover:underline">Resep Tahu</a></li>
                 <li><a href="{{ route('user.edukasi.index') }}" class="hover:text-emerald-600 hover:underline">Artikel Edukasi</a></li>
+                <li><a href="{{ route('halaman.bantuan') }}" class="hover:text-emerald-600 hover:underline">Pusat Bantuan</a></li>
                 <li><a href="{{ route('halaman.cara-pesan') }}" class="hover:text-emerald-600 hover:underline">Cara Pesan</a></li>
+                <li><a href="{{ route('halaman.pengiriman') }}" class="hover:text-emerald-600 hover:underline">Info Pengiriman</a></li>
+                <li><a href="{{ route('halaman.refund') }}" class="hover:text-emerald-600 hover:underline">Kebijakan Refund</a></li>
                 <li><a href="{{ route('halaman.faq') }}" class="hover:text-emerald-600 hover:underline">FAQ</a></li>
+                <li><a href="{{ route('halaman.snk') }}" class="hover:text-emerald-600 hover:underline">Syarat & Ketentuan</a></li>
+                <li><a href="{{ route('halaman.privasi') }}" class="hover:text-emerald-600 hover:underline">Kebijakan Privasi</a></li>
             </ul>
         </div>
     </div>

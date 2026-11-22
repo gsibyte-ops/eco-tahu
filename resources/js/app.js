@@ -250,6 +250,7 @@ document.addEventListener('alpine:init', () => {
         notifOpen: false,
         unreadCount: 0,
         notifications: [],
+        readUrl: config.readUrl || '',
         
         init() {
             this.fetchNotifs();

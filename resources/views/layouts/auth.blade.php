@@ -257,12 +257,13 @@
         </a>
 
         {{-- Desktop Menu --}}
-        <div class="hidden md:flex items-center gap-0.5 relative z-10">
+        <div class="hidden lg:flex items-center gap-0.5 relative z-10">
             @php
                 $navItems = [
                     ['route' => 'home', 'pattern' => 'home', 'label' => 'Beranda', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/>'],
                     ['route' => 'user.produk.index', 'pattern' => 'user.produk.*', 'label' => 'Produk Tahu', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>'],
                     ['route' => 'user.limbah.index', 'pattern' => 'user.limbah.*', 'label' => 'Produk Limbah', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 0015 0m-15 0a7.5 7.5 0 1115 0m-15 0H3m16.5 0H21m-1.5 0H12m-8.457 3.077l1.41-.513m14.095-5.13l1.41-.513M5.106 17.785l1.15-.964m11.49-9.642l1.149-.964M7.501 19.795l.75-1.3m7.5-12.99l.75-1.3m-6.063 16.658l.26-1.477m2.605-14.772l.26-1.477m0 17.726l-.26-1.477M10.698 4.614l-.26-1.477M16.5 19.794l-.75-1.3M7.5 4.205l-.75 1.3M5.106 6.215l-1.15.964M18.894 17.785l-1.15.964M4.543 12.923l-1.41.513M20.868 11.077l-1.41.513"/>'],
+                    ['route' => 'user.resep.index', 'pattern' => 'user.resep.*', 'label' => 'Resep', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18m-4-15v6a4 4 0 004 4 4 4 0 004-4V6m-4-3h.01M19 6v15"/>'],
                     ['route' => 'user.edukasi.index', 'pattern' => 'user.edukasi.*', 'label' => 'Edukasi', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>'],
                 ];
             @endphp
@@ -290,7 +291,7 @@
                 @endif
             </a>
 
-            <div class="md:hidden">
+            <div class="lg:hidden">
                 <button @click="mobileMenu = true" class="nav-icon-btn" title="Menu">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
@@ -300,7 +301,7 @@
                 <div class="relative hidden sm:block" x-data="{ open: false }" @click.away="open = false" style="z-index: 100;">
                     <button type="button" @click.prevent="open = !open" class="nav-profile-btn" :aria-expanded="open">
                         <div class="w-7 h-7 rounded-lg flex items-center justify-center text-white font-bold text-[11px] brand-gradient">{{ strtoupper(substr(auth()->user()->username, 0, 1)) }}</div>
-                        <span class="hidden md:block text-xs font-semibold max-w-[80px] truncate" style="color: rgb(var(--text-primary));">{{ auth()->user()->username }}</span>
+                        <span class="hidden lg:block text-xs font-semibold max-w-[80px] truncate" style="color: rgb(var(--text-primary));">{{ auth()->user()->username }}</span>
                         <svg class="w-3 h-3 opacity-60 transition-transform duration-200" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
                     </button>
                     <div x-show="open" x-cloak x-transition.origin.top.right class="absolute right-0 mt-3 w-60 glass-overlay rounded-2xl overflow-hidden" style="z-index: 200;">
@@ -345,7 +346,7 @@
 </div>
 
 {{-- MOBILE SLIDE-OVER MENU (Floating Card, Right Side) --}}
-<div x-show="mobileMenu" x-cloak class="fixed inset-0 z-[999] md:hidden" role="dialog" aria-modal="true">
+<div x-show="mobileMenu" x-cloak class="fixed inset-0 z-[999] lg:hidden" role="dialog" aria-modal="true">
     <div x-show="mobileMenu" x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="mobileMenu = false"></div>
     
     <div x-show="mobileMenu" x-transition:enter="transition ease-in-out duration-300 transform" x-transition:enter-start="translate-x-[120%]" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in-out duration-300 transform" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-[120%]" class="mobile-user-sidebar w-64 flex flex-col fixed h-[calc(100vh-2rem)] top-4 right-4 z-[1000] rounded-3xl">
@@ -365,6 +366,7 @@
                     ['route' => 'home', 'pattern' => 'home', 'label' => 'Beranda', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/>'],
                     ['route' => 'user.produk.index', 'pattern' => 'user.produk.*', 'label' => 'Produk Tahu', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>'],
                     ['route' => 'user.limbah.index', 'pattern' => 'user.limbah.*', 'label' => 'Produk Limbah', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 0015 0m-15 0a7.5 7.5 0 1115 0m-15 0H3m16.5 0H21m-1.5 0H12m-8.457 3.077l1.41-.513m14.095-5.13l1.41-.513M5.106 17.785l1.15-.964m11.49-9.642l1.149-.964M7.501 19.795l.75-1.3m7.5-12.99l.75-1.3m-6.063 16.658l.26-1.477m2.605-14.772l.26-1.477m0 17.726l-.26-1.477M10.698 4.614l-.26-1.477M16.5 19.794l-.75-1.3M7.5 4.205l-.75 1.3M5.106 6.215l-1.15.964M18.894 17.785l-1.15.964M4.543 12.923l-1.41.513M20.868 11.077l-1.41.513"/>'],
+                    ['route' => 'user.resep.index', 'pattern' => 'user.resep.*', 'label' => 'Resep', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18m-4-15v6a4 4 0 004 4 4 4 0 004-4V6m-4-3h.01M19 6v15"/>'],
                     ['route' => 'user.edukasi.index', 'pattern' => 'user.edukasi.*', 'label' => 'Edukasi', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>'],
                 ];
             @endphp
@@ -375,14 +377,44 @@
                     <span class="flex-1 text-left">{{ $item['label'] }}</span>
                 </a>
             @endforeach
+
+            @if(auth()->check() && !auth()->user()->isAdmin())
+                @php $activePesanan = request()->routeIs('user.pesanan.*'); @endphp
+                <a href="{{ route('user.pesanan.index') }}" class="admin-nav-item {{ $activePesanan ? 'is-active' : '' }}">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/></svg>
+                    <span class="flex-1 text-left">Pesanan Saya</span>
+                </a>
+            @endif
+
+            @if(auth()->check() && auth()->user()->isAdmin())
+                <a href="{{ route('admin.dashboard') }}" class="admin-nav-item" style="color: rgb(var(--brand-hover)); background: rgb(var(--brand-soft));">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                    <span class="flex-1 text-left">Dashboard Admin</span>
+                </a>
+            @endif
         </nav>
 
         {{-- Footer --}}
         <div class="p-3 space-y-1" style="border-top: 1px solid rgb(var(--border-soft));">
-            <div class="flex gap-2">
-                <a href="{{ route('login') }}" class="flex-1 text-center py-2.5 rounded-xl font-bold transition" style="background: rgb(var(--bg-secondary)); color: rgb(var(--text-primary)); font-size: 0.8rem;">Masuk</a>
-                <a href="{{ route('register') }}" class="flex-1 text-center py-2.5 rounded-xl font-bold btn-daftar-gradient" style="font-size: 0.8rem;">Daftar</a>
-            </div>
+            @auth
+                @php $activeProfile = request()->routeIs('profile.*'); @endphp
+                <a href="{{ route('profile.edit') }}" class="admin-nav-item {{ $activeProfile ? 'is-active' : '' }}">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    <span class="flex-1 text-left">Profil Saya</span>
+                </a>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="admin-nav-item w-full" style="color: rgb(var(--danger));">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                        <span class="flex-1 text-left font-semibold">Logout</span>
+                    </button>
+                </form>
+            @else
+                <div class="flex gap-2">
+                    <a href="{{ route('login') }}" class="flex-1 text-center py-2.5 rounded-xl font-bold transition" style="background: rgb(var(--bg-secondary)); color: rgb(var(--text-primary)); font-size: 0.8rem;">Masuk</a>
+                    <a href="{{ route('register') }}" class="flex-1 text-center py-2.5 rounded-xl font-bold btn-daftar-gradient" style="font-size: 0.8rem;">Daftar</a>
+                </div>
+            @endauth
         </div>
     </div>
 </div>
@@ -452,19 +484,21 @@
             <div class="md:col-span-2">
                 <h4 class="text-xs font-bold uppercase tracking-widest mb-4" style="color: rgb(var(--text-muted));">Halaman</h4>
                 <ul class="space-y-2.5 text-sm">
-                    <li><a href="{{ route('home') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Beranda</a></li>
-                    <li><a href="{{ route('user.produk.index') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Produk Tahu</a></li>
-                    <li><a href="{{ route('user.limbah.index') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Produk Limbah</a></li>
-                    <li><a href="{{ route('user.edukasi.index') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Edukasi</a></li>
+                    <li><a href="{{ route('home') }}" class="inline-block transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Beranda</a></li>
+                    <li><a href="{{ route('user.produk.index') }}" class="inline-block transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Produk Tahu</a></li>
+                    <li><a href="{{ route('user.limbah.index') }}" class="inline-block transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Produk Limbah</a></li>
+                    <li><a href="{{ route('user.resep.index') }}" class="inline-block transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Resep Tahu</a></li>
+                    <li><a href="{{ route('user.edukasi.index') }}" class="inline-block transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Edukasi</a></li>
                 </ul>
             </div>
             <div class="md:col-span-2">
                 <h4 class="text-xs font-bold uppercase tracking-widest mb-4" style="color: rgb(var(--text-muted));">Bantuan</h4>
                 <ul class="space-y-2.5 text-sm">
-                    <li><a href="{{ route('halaman.cara-pesan') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Cara Pesan</a></li>
-                    <li><a href="{{ route('halaman.pengiriman') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Info Pengiriman</a></li>
-                    <li><a href="{{ route('halaman.refund') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Kebijakan Refund</a></li>
-                    <li><a href="{{ route('halaman.faq') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">FAQ</a></li>
+                    <li><a href="{{ route('halaman.bantuan') }}" class="inline-block transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Pusat Bantuan</a></li>
+                    <li><a href="{{ route('halaman.cara-pesan') }}" class="inline-block transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Cara Pesan</a></li>
+                    <li><a href="{{ route('halaman.pengiriman') }}" class="inline-block transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Info Pengiriman</a></li>
+                    <li><a href="{{ route('halaman.refund') }}" class="inline-block transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Kebijakan Refund</a></li>
+                    <li><a href="{{ route('halaman.faq') }}" class="inline-block transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">FAQ</a></li>
                 </ul>
             </div>
             <div class="md:col-span-3">

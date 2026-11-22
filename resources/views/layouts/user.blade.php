@@ -99,7 +99,7 @@
         </a>
 
         {{-- Desktop Menu --}}
-        <div class="hidden md:flex items-center gap-0.5 relative z-10">
+        <div class="hidden lg:flex items-center gap-0.5 relative z-10">
             @php
                 $navItems = [
                     ['route' => 'home', 'pattern' => 'home', 'label' => 'Beranda', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/>'],
@@ -176,7 +176,7 @@
                 @endif
             </a>
 
-            <div class="md:hidden">
+            <div class="lg:hidden">
                 <button @click="mobileMenu = true" class="nav-icon-btn" title="Menu">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
@@ -192,7 +192,7 @@
                                 {{ strtoupper(substr(auth()->user()->username, 0, 1)) }}
                             @endif
                         </div>
-                        <span class="hidden md:block text-xs font-semibold max-w-[80px] truncate" style="color: rgb(var(--text-primary));">{{ auth()->user()->username }}</span>
+                        <span class="hidden lg:block text-xs font-semibold max-w-[80px] truncate" style="color: rgb(var(--text-primary));">{{ auth()->user()->username }}</span>
                         <svg class="w-3 h-3 opacity-60 transition-transform duration-200" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
                     </button>
                     <div x-show="open" x-cloak x-transition.origin.top.right class="absolute right-0 mt-3 w-60 glass-overlay rounded-2xl overflow-hidden" style="z-index: 200;">
@@ -243,7 +243,7 @@
 </div>
 
 {{-- MOBILE SLIDE-OVER MENU (Floating Card, Right Side) --}}
-<div x-show="mobileMenu" x-cloak class="fixed inset-0 z-[999] md:hidden" role="dialog" aria-modal="true">
+<div x-show="mobileMenu" x-cloak class="fixed inset-0 z-[999] lg:hidden" role="dialog" aria-modal="true">
     <div x-show="mobileMenu" x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="mobileMenu = false"></div>
     
     <div x-show="mobileMenu" x-transition:enter="transition ease-in-out duration-300 transform" x-transition:enter-start="translate-x-[120%]" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in-out duration-300 transform" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-[120%]" class="mobile-user-sidebar w-64 flex flex-col fixed h-[calc(100vh-2rem)] top-4 right-4 z-[1000] rounded-3xl">
@@ -382,20 +382,21 @@
             <div class="md:col-span-2">
                 <h4 class="text-xs font-bold uppercase tracking-widest mb-4" style="color: rgb(var(--text-muted));">Halaman</h4>
                 <ul class="space-y-2.5 text-sm">
-                    <li><a href="{{ route('home') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Beranda</a></li>
-                    <li><a href="{{ route('user.produk.index') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Produk Tahu</a></li>
-                    <li><a href="{{ route('user.limbah.index') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Produk Limbah</a></li>
-                    <li><a href="{{ route('user.resep.index') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Resep Tahu</a></li>
-                    <li><a href="{{ route('user.edukasi.index') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Edukasi</a></li>
+                    <li><a href="{{ route('home') }}" class="inline-block transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Beranda</a></li>
+                    <li><a href="{{ route('user.produk.index') }}" class="inline-block transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Produk Tahu</a></li>
+                    <li><a href="{{ route('user.limbah.index') }}" class="inline-block transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Produk Limbah</a></li>
+                    <li><a href="{{ route('user.resep.index') }}" class="inline-block transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Resep Tahu</a></li>
+                    <li><a href="{{ route('user.edukasi.index') }}" class="inline-block transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Edukasi</a></li>
                 </ul>
             </div>
             <div class="md:col-span-2">
                 <h4 class="text-xs font-bold uppercase tracking-widest mb-4" style="color: rgb(var(--text-muted));">Bantuan</h4>
                 <ul class="space-y-2.5 text-sm">
-                    <li><a href="{{ route('halaman.cara-pesan') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Cara Pesan</a></li>
-                    <li><a href="{{ route('halaman.pengiriman') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Info Pengiriman</a></li>
-                    <li><a href="{{ route('halaman.refund') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Kebijakan Refund</a></li>
-                    <li><a href="{{ route('halaman.faq') }}" class="transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">FAQ</a></li>
+                    <li><a href="{{ route('halaman.bantuan') }}" class="inline-block transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Pusat Bantuan</a></li>
+                    <li><a href="{{ route('halaman.cara-pesan') }}" class="inline-block transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Cara Pesan</a></li>
+                    <li><a href="{{ route('halaman.pengiriman') }}" class="inline-block transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Info Pengiriman</a></li>
+                    <li><a href="{{ route('halaman.refund') }}" class="inline-block transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">Kebijakan Refund</a></li>
+                    <li><a href="{{ route('halaman.faq') }}" class="inline-block transition hover:text-emerald-600" style="color: rgb(var(--text-secondary));">FAQ</a></li>
                 </ul>
             </div>
             <div class="md:col-span-3">

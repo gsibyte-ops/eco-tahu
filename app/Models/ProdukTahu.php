@@ -54,11 +54,19 @@ class ProdukTahu extends Model
 
     public function averageRating(): float
     {
+        if (array_key_exists('reviews_avg_rating', $this->attributes)) {
+            return round((float) ($this->attributes['reviews_avg_rating'] ?? 0), 1);
+        }
+
         return round((float) ($this->reviews()->avg('rating') ?? 0), 1);
     }
 
     public function reviewCount(): int
     {
+        if (array_key_exists('reviews_count', $this->attributes)) {
+            return (int) ($this->attributes['reviews_count'] ?? 0);
+        }
+
         return $this->reviews()->count();
     }
 }

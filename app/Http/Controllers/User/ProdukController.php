@@ -10,7 +10,10 @@ class ProdukController extends Controller
 {
     public function index()
     {
-        $query = ProdukTahu::with('kategori')->where('status', 'aktif');
+        $query = ProdukTahu::with('kategori')
+            ->withCount('reviews')
+            ->withAvg('reviews', 'rating')
+            ->where('status', 'aktif');
 
         if (request('kategori')) {
             $query->where('kategori_id', request('kategori'));
@@ -37,11 +40,15 @@ class ProdukController extends Controller
     public function show($slug)
     {
         $produk = ProdukTahu::with('kategori')
+            ->withCount('reviews')
+            ->withAvg('reviews', 'rating')
             ->where('slug', $slug)
             ->where('status', 'aktif')
             ->firstOrFail();
 
-        $related = ProdukTahu::where('status', 'aktif')
+        $related = ProdukTahu::withCount('reviews')
+            ->withAvg('reviews', 'rating')
+            ->where('status', 'aktif')
             ->where('id', '!=', $produk->id)
             ->where('kategori_id', $produk->kategori_id)
             ->limit(4)

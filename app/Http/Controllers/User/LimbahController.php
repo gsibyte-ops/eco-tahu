@@ -10,7 +10,10 @@ class LimbahController extends Controller
 {
     public function index()
     {
-        $query = Limbah::with('kategori')->where('status', 'aktif');
+        $query = Limbah::with('kategori')
+            ->withCount('reviews')
+            ->withAvg('reviews', 'rating')
+            ->where('status', 'aktif');
 
         if (request('kategori')) {
             $query->where('kategori_id', request('kategori'));
@@ -37,11 +40,15 @@ class LimbahController extends Controller
     public function show($slug)
     {
         $limbah = Limbah::with('kategori')
+            ->withCount('reviews')
+            ->withAvg('reviews', 'rating')
             ->where('slug', $slug)
             ->where('status', 'aktif')
             ->firstOrFail();
 
-        $related = Limbah::where('status', 'aktif')
+        $related = Limbah::withCount('reviews')
+            ->withAvg('reviews', 'rating')
+            ->where('status', 'aktif')
             ->where('id', '!=', $limbah->id)
             ->limit(4)
             ->get();

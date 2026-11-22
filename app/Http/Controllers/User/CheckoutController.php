@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Notification; // TAMBAHAN
+use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
 {
@@ -157,21 +158,31 @@ class CheckoutController extends Controller
         $diskon = $promo['applied'] ? (int) $promo['diskon'] : 0;
         $total = max(0, $subtotal - $diskon) + $ongkir;
 
-        // Cek stok
-        foreach ($cart as $item) {
-            $produk = $item['type'] === 'produk'
-                ? ProdukTahu::find($item['id'])
-                : Limbah::find($item['id']);
-
-            if (!$produk || $produk->stok < $item['qty']) {
-                return back()->with('error', "Stok {$item['nama']} tidak mencukupi.");
-            }
-        }
+        // Urutkan item secara deterministik untuk mencegah deadlock saat row-level locking
+        $sortedCart = collect($cart)->sortBy(function ($item) {
+            return ($item['type'] ?? 'produk') . '-' . str_pad((string) ($item['id'] ?? 0), 10, '0', STR_PAD_LEFT);
+        })->values()->all();
 
         DB::beginTransaction();
 
         try {
-            $kodePesanan = 'ETI' . date('ymdHis') . rand(10, 99);
+            // Kunci baris produk/limbah di dalam transaksi agar tidak terjadi race condition / overselling
+            $lockedItems = [];
+            foreach ($sortedCart as $item) {
+                $locked = ($item['type'] ?? 'produk') === 'produk'
+                    ? ProdukTahu::where('id', $item['id'])->lockForUpdate()->first()
+                    : Limbah::where('id', $item['id'])->lockForUpdate()->first();
+
+                if (!$locked || $locked->stok < $item['qty']) {
+                    DB::rollBack();
+                    $sisa = $locked->stok ?? 0;
+                    return back()->with('error', "Stok {$item['nama']} tidak mencukupi (sisa: {$sisa}).");
+                }
+
+                $lockedItems[] = ['cart' => $item, 'model' => $locked];
+            }
+
+            $kodePesanan = 'ETI' . date('ymdHis') . strtoupper(Str::random(4));
 
             $vaNumber = null;
             $bankTujuan = null;
@@ -205,7 +216,9 @@ class CheckoutController extends Controller
                 'expired_at'          => $validated['payment_method'] === 'Transfer' ? now()->addHours(24) : null,
             ]);
 
-            foreach ($cart as $item) {
+            foreach ($lockedItems as $entry) {
+                $item = $entry['cart'];
+                $locked = $entry['model'];
                 $model = $item['type'] === 'produk' ? ProdukTahu::class : Limbah::class;
 
                 DetailPesanan::create([
@@ -218,11 +231,7 @@ class CheckoutController extends Controller
                     'subtotal'     => $item['harga'] * $item['qty'],
                 ]);
 
-                if ($item['type'] === 'produk') {
-                    ProdukTahu::where('id', $item['id'])->decrement('stok', $item['qty']);
-                } else {
-                    Limbah::where('id', $item['id'])->decrement('stok', $item['qty']);
-                }
+                $locked->decrement('stok', $item['qty']);
             }
 
             Pembayaran::create([

@@ -15,7 +15,8 @@ class HomeController extends Controller
     public function index()
     {
         // Produk pilihan (tahu) - Urutkan berdasarkan yang paling banyak di-review
-        $produkPilihan = ProdukTahu::where('status', 'aktif')
+        $produkPilihan = ProdukTahu::with('kategori')
+            ->where('status', 'aktif')
             ->withCount('reviews')
             ->withAvg('reviews', 'rating')
             ->orderByDesc('reviews_count')
@@ -25,7 +26,8 @@ class HomeController extends Controller
             ->get();
 
         // Limbah pilihan - Sama, urutkan berdasarkan review terbanyak
-        $limbahPilihan = Limbah::where('status', 'aktif')
+        $limbahPilihan = Limbah::with('kategori')
+            ->where('status', 'aktif')
             ->withCount('reviews')
             ->withAvg('reviews', 'rating')
             ->orderByDesc('reviews_count')
