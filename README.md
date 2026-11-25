@@ -1,58 +1,121 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+﻿# Panduan Pengguna (User Guide) â€” Aplikasi Web & Mobile EcoTahu
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Panduan lengkap cara mengakses dan menggunakan ekosistem **EcoTahu** (Website & Aplikasi Android) untuk **Pengunjung (Guest)**, **Pelanggan (User Biasa)**, dan **Administrator (Admin)**.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 1. Cara Akses Website & Instalasi Aplikasi Android
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### A. Akses Website (Browser Laptop / HP)
+Buka browser (Chrome, Brave, Edge, atau Safari), lalu kunjungi alamat berikut (**pastikan TIDAK ada tanda titik `.` di akhir alamat**):
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Website Utama:** https://eco-tahu-production.up.railway.app
+- **Halaman Login / Daftar:** https://eco-tahu-production.up.railway.app/login
+- **Katalog Produk Tahu:** https://eco-tahu-production.up.railway.app/produk
+- **Katalog Produk Limbah (Okara):** https://eco-tahu-production.up.railway.app/limbah
+- **Resep Olahan Tahu:** https://eco-tahu-production.up.railway.app/resep
+- **Edukasi Lingkungan:** https://eco-tahu-production.up.railway.app/edukasi
 
-## Learning Laravel
+### B. Download & Install Aplikasi Android (APK Resmi v1.0.0)
+1. Buka halaman rilis di HP Android: https://github.com/gsibyte-ops/eco-tahu-mobile/releases/tag/v1.0.0
+2. Pilih file APK sesuai perangkat:
+   - **HP Android modern 64-bit (Rekomendasi â€” 22,66 MB):** [EcoTahu-v1.0.0-arm64-v8a.apk](https://github.com/gsibyte-ops/eco-tahu-mobile/releases/download/v1.0.0/EcoTahu-v1.0.0-arm64-v8a.apk)
+   - **HP Android lawas 32-bit (20,13 MB):** [EcoTahu-v1.0.0-armeabi-v7a.apk](https://github.com/gsibyte-ops/eco-tahu-mobile/releases/download/v1.0.0/EcoTahu-v1.0.0-armeabi-v7a.apk)
+3. Setelah selesai diunduh, ketuk file `.apk`. Jika muncul peringatan *"Sumber tidak dikenal / Install unknown apps"*, aktifkan izin untuk browser/File Manager Anda lalu ketuk **Install**.
+4. Buka aplikasi **EcoTahu** â€” aplikasi sudah otomatis terhubung aman (HTTPS) ke server produksi dan langsung sinkron dengan Website!
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### C. Akun Uji Coba / Demo
+| Peran | Email | Password | Catatan |
+| :--- | :--- | :--- | :--- |
+| **Pelanggan (Demo)** | `budi@test.com` | `password` | Bisa langsung dipakai simulasi belanja, keranjang, checkout, & ulasan |
+| **Administrator** | `admin@ecotahu.id` | *(gunakan password admin aktif)* | Akses penuh Dashboard Admin di Web & mode pantau Read-Only di Mobile |
+| **Pelanggan Baru** | Daftar bebas / Login Google | Minimal 8 karakter | Klik **Daftar** atau **Lanjutkan dengan Google** |
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## 2. Panduan Pengunjung (Guest â€” Tanpa Login)
 
-## Agentic Development
+Pengunjung yang belum memiliki akun tetap bisa menjelajahi informasi dan katalog produk secara lengkap:
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+1. **Beranda:** Melihat pengenalan produk tahu organik & ramah lingkungan, ringkasan ulasan pelanggan, produk unggulan, serta fitur ganti tema **Mode Gelap / Terang** (ikon bulan/matahari di navbar).
+2. **Eksplorasi Katalog Produk Tahu & Limbah:**
+   - Buka menu **Produk Tahu** atau **Produk Limbah** (ampas tahu basah, kering, fermentasi).
+   - Gunakan kotak pencarian, filter kategori, dan pengurutan harga.
+   - Klik salah satu produk untuk melihat detail deskripsi, harga, stok tersedia, dan ulasan pembeli sebelumnya.
+3. **Membaca Resep & Edukasi:**
+   - Buka menu **Resep** untuk melihat bahan, langkah memasak, tingkat kesulitan, dan estimasi waktu.
+   - Buka menu **Edukasi** untuk membaca artikel pengelolaan limbah & proses higienis beserta video tutorial YouTube.
+4. **Pusat Informasi:** Mengakses halaman *Cara Pesan*, *Pengiriman*, *Kebijakan Refund*, *FAQ*, *Bantuan*, *Syarat & Ketentuan*, dan *Kebijakan Privasi* di footer website.
+5. **Mendaftar Akun:** Saat mencoba menekan tombol **Tambah ke Keranjang**, **Like**, atau **Checkout**, sistem akan mengarahkan pengunjung ke halaman **Login / Daftar** (bisa registrasi manual atau 1-klik **Lanjutkan dengan Google**).
 
-```bash
-composer require laravel/boost --dev
+---
 
-php artisan boost:install
-```
+## 3. Panduan Pengguna Biasa (Pelanggan â€” Web & Mobile)
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Setelah masuk menggunakan akun pelanggan, seluruh aktivitas belanja tersinkronisasi antara **Website** dan **Aplikasi Android**:
 
-## Contributing
+### A. Autentikasi & Profil
+- **Masuk / Daftar:** Melalui Email & Password (minimal 8 karakter) atau **Lanjutkan dengan Google**.
+- **Lupa Password:** Klik **Lupa password?**, masukkan email terdaftar, lalu cek inbox Gmail untuk menerima link dan kode reset password.
+- **Kelola Profil (`/profile`):** Perbarui foto profil (JPG/PNG/WEBP maks 2 MB), nama, nomor HP, alamat, ganti password, atau hapus akun permanen.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### B. Belanja & Checkout
+1. **Keranjang Belanja:** Tambahkan produk tahu atau produk limbah ke keranjang, atur jumlah item, atau hapus item. Keranjang tersimpan di database sehingga tidak hilang saat berpindah perangkat (Web â†” HP).
+2. **Proses Checkout:**
+   - Isi **Nama Penerima**, **Nomor HP**, dan **Alamat Lengkap**.
+   - Pilih metode pengiriman:
+     - **Ambil di Tempat (Pickup):** Tanpa ongkir dan tanpa minimal belanja.
+     - **Diantar (Delivery):** Minimal belanja Rp 15.000, pilih kecamatan atau tandai titik koordinat di peta â€” jarak (Haversine) dan ongkir dihitung otomatis oleh sistem (radius maksimal 10 km).
+   - **Promo Pesanan Pertama:** Diskon otomatis terpasang bila akun & nomor HP memenuhi syarat pesanan pertama.
+   - Pilih metode pembayaran: **COD (Bayar di Tempat)** atau **Transfer Bank (BCA / BRI / Mandiri / BNI)** yang menghasilkan nomor Virtual Account dan batas waktu 24 jam.
+3. **Upload Bukti Transfer:** Untuk metode Transfer, unggah foto bukti transfer pada halaman sukses checkout atau detail pesanan agar segera diverifikasi Admin.
 
-## Code of Conduct
+### C. Lacak Pesanan, Refund, & Ulasan
+- **Pesanan Saya (`/pesanan`):** Memantau status pesanan secara bertahap: `Pending` â†’ `Diproses` â†’ `Dikirim` â†’ `Selesai` (atau `Dibatalkan`).
+- **Live Tracking Kurir:** Saat pesanan berstatus `Dikirim`, buka detail pesanan untuk melihat posisi kurir secara langsung di peta.
+- **Pembatalan & Refund:** Pesanan berstatus `Pending` atau `Diproses` dapat dibatalkan dengan mengisi alasan pembatalan (dan data rekening bank bila sudah dibayar via Transfer untuk pengajuan refund).
+- **Ulasan & Interaksi:** Setelah pesanan berstatus `Selesai`, pelanggan dapat memberi **rating bintang (1â€“5)**, komentar, serta melampirkan **foto atau video ulasan**. Pelanggan juga bisa menyukai (**Like**) artikel Edukasi dan Resep.
+- **Notifikasi:** Klik ikon **lonceng** di pojok kanan atas untuk melihat update status pesanan & pembayaran.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
+## 4. Panduan Administrator (Admin)
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### A. Dashboard Web Admin (`/admin/dashboard`)
+Login menggunakan akun Admin (`admin@ecotahu.id`) di website akan otomatis mengarahkan Anda ke panel **Admin EcoTahu**:
 
-## License
+1. **Dashboard & Notifikasi:**
+   - Melihat ringkasan statistik pendapatan, pesanan masuk, pengajuan refund tertunda, dan peringatan stok menipis (`<= 10`).
+   - Ikon lonceng admin menampilkan notifikasi real-time setiap ada pesanan baru, unggahan bukti transfer, atau pembatalan.
+2. **Manajemen Katalog & Konten (CRUD):**
+   - **Kategori:** Tambah, ubah, dan hapus kategori produk.
+   - **Produk Tahu & Produk Limbah:** Kelola nama, harga, stok, deskripsi, dan foto produk.
+   - **Edukasi & Resep:** Publikasikan artikel edukasi lingkungan, resep olahan tahu, thumbnail, serta tautan video YouTube resmi.
+3. **Manajemen Pesanan & Kurir:**
+   - **Verifikasi Pembayaran:** Periksa foto bukti transfer pelanggan lalu setujui pembayaran menjadi lunas (`paid`).
+   - **Update Status Pesanan:** Ubah alur pesanan (`pending` â†’ `diproses` â†’ `dikirim` â†’ `selesai`) atau batalkan pesanan bila diperlukan.
+   - **Tracking Kurir:** Aktifkan **Mulai Tracking**, perbarui lokasi koordinat kurir selama pengantaran, lalu klik **Hentikan Tracking** setelah pesanan sampai.
+4. **Manajemen Refund:** Tinjau detail pembatalan, nominal pengembalian, serta rekening tujuan pelanggan, lalu perbarui status pengembalian dana.
+5. **Data Pelanggan & Laporan Penjualan:**
+   - **Pelanggan:** Melihat daftar seluruh pelanggan terdaftar, riwayat transaksi per pelanggan, dan **Export CSV** (sudah dilengkapi proteksi anti formula injection).
+   - **Laporan Penjualan:** Analisis pendapatan dengan filter rentang tanggal (grafik harian otomatis beralih ke bulanan untuk rentang > 31 hari) beserta fitur **Export Laporan**.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### B. Mode Admin di Aplikasi Android (Read-Only Monitoring)
+Jika akun Admin login melalui aplikasi **EcoTahu Android**, aplikasi secara otomatis masuk ke **Mode Pemantauan Admin (Read-Only)**:
+- Admin dapat memantau ringkasan operasional (`/api/admin/overview`) langsung dari HP.
+- Seluruh aksi khusus pelanggan (keranjang, checkout, pembatalan, ulasan, like, dan hapus akun) otomatis diblokir oleh middleware keamanan server (`no-admin-customer-action`) demi menjaga integritas data transaksi.
+
+---
+
+## 5. Skenario Demo Cepat 5 Menit (Siap Presentasi)
+
+1. **Menit 1 â€” Tampilan Guest (Web):** Buka `https://eco-tahu-production.up.railway.app` â†’ tunjukkan Beranda, toggle Dark/Light Mode, Katalog Produk Tahu, Produk Limbah, Resep, dan Edukasi.
+2. **Menit 2 â€” Login & Belanja Pelanggan (HP Android / Web):** Login sebagai `budi@test.com` (atau pakai **Lanjutkan dengan Google**) â†’ tambah 2 produk ke keranjang â†’ tunjukkan sinkronisasi keranjang antara Web & Aplikasi Android.
+3. **Menit 3 â€” Checkout & Upload Bukti:** Lakukan checkout metode Transfer (tunjukkan kalkulasi jarak & ongkir otomatis) â†’ unggah foto bukti transfer.
+4. **Menit 4 â€” Panel Admin (Web):** Login sebagai `admin@ecotahu.id` di browser berbeda/Incognito â†’ tunjukkan notifikasi pesanan baru â†’ verifikasi bukti transfer â†’ ubah status pesanan ke `Diproses` â†’ `Dikirim` â†’ `Selesai` â†’ buka grafik **Laporan** & **Data Pelanggan**.
+5. **Menit 5 â€” Penutup & Keamanan:** Kembali ke akun pelanggan â†’ lihat status pesanan sudah `Selesai` â†’ kirim ulasan produk, lalu tutup dengan menyoroti keamanan produksi (HTTPS penuh, TiDB Cloud TLS, Enkripsi Token Android Keystore AES-256, Bcrypt, & verifikasi OAuth Google).
+
+---
+
+> Untuk dokumentasi teknis instalasi lokal, arsitektur sistem, dan deployment cloud, lihat [README_PENGEMBANG.md](./README_PENGEMBANG.md).
+
