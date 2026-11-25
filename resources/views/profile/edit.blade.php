@@ -16,6 +16,27 @@
         <p class="mt-2" style="color: rgb(var(--text-secondary));">Kelola informasi akun, password, dan preferensi Anda.</p>
     </div>
 
+    {{-- Top Global Feedback Banner (selalu langsung terlihat setelah redirect) --}}
+    @if (session('status') === 'password-updated' || session('status') === 'profile-updated' || session('success'))
+        <div class="flex items-center gap-3 p-4 mb-6 rounded-2xl text-sm font-semibold shadow-lg" style="background: rgb(var(--success-soft)); border: 1px solid rgb(var(--success) / 0.35); color: rgb(var(--success));">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>{{ session('success') ?? (session('status') === 'password-updated' ? 'Password Anda berhasil diperbarui!' : 'Perubahan profil berhasil disimpan!') }}</span>
+        </div>
+    @endif
+    @if ($errors->updatePassword->any())
+        <div class="flex items-start gap-3 p-4 mb-6 rounded-2xl text-sm shadow-lg" style="background: rgb(var(--danger-soft)); border: 1px solid rgb(var(--danger) / 0.35); color: rgb(var(--danger));">
+            <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <div>
+                <p class="font-bold">Gagal memperbarui password:</p>
+                <ul class="list-disc list-inside text-xs mt-1 space-y-0.5">
+                    @foreach ($errors->updatePassword->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+    @endif
+
     {{-- Profile Header Card --}}
     <div class="glass-card p-6 mb-6 relative overflow-hidden">
         <div class="absolute top-0 left-0 right-0 h-24" style="background: var(--gradient-brand); opacity: 0.5;"></div>

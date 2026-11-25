@@ -30,7 +30,10 @@ class PasswordController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        return back()
+        // Cabut token API mobile lama jika ada agar sesi lama ikut aman
+        $request->user()->tokens()->delete();
+
+        return redirect()->route('profile.edit')
             ->with('status', 'password-updated')
             ->with('success', 'Password Anda berhasil diperbarui!');
     }
