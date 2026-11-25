@@ -9,8 +9,11 @@ if [ "${PORT}" != "7860" ]; then
     sed -i "s/listen \[::\]:7860/listen [::]:${PORT}/g" /etc/nginx/sites-enabled/ecotahu.conf
 fi
 
-# Ensure runtime directories & permissions
+# Ensure runtime directories & sync seeded catalog/article images into storage/app/public
 mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache/data storage/logs storage/app/public bootstrap/cache
+if [ -d "public/images/seed" ]; then
+    cp -rn public/images/seed/. storage/app/public/ || true
+fi
 chown -R www-data:www-data storage bootstrap/cache
 chmod -R 775 storage bootstrap/cache
 
