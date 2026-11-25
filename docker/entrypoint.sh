@@ -1,18 +1,14 @@
 #!/usr/bin/env bash
 set -e
 
-export PORT="${PORT:-10000}"
+export PORT="${PORT:-7860}"
+mkdir -p /tmp/apache2 storage/framework/sessions storage/framework/views storage/framework/cache/data storage/logs storage/app/public bootstrap/cache
 
-# Configure Apache to listen on Render's dynamic $PORT
-sed -i "s/Listen 80/Listen ${PORT}/g" /etc/apache2/ports.conf || true
-if ! grep -q "Listen ${PORT}" /etc/apache2/ports.conf; then
+# If host specifies a non-7860 PORT, update Apache config cleanly (writable by uid=1000)
+if [ "${PORT}" != "7860" ]; then
     echo "Listen ${PORT}" > /etc/apache2/ports.conf
+    sed -i "s/<VirtualHost \*:[0-9]*>/<VirtualHost *:${PORT}>/g" /etc/apache2/sites-available/000-default.conf
 fi
-sed -i "s/\${PORT}/${PORT}/g" /etc/apache2/sites-available/000-default.conf
-
-# Ensure runtime directories & permissions
-mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache/data storage/logs storage/app/public bootstrap/cache
-chown -R www-data:www-data storage bootstrap/cache
 
 # Symlink public storage
 php artisan storage:link --force || true

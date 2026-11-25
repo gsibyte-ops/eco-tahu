@@ -15,7 +15,7 @@ COPY public ./public
 RUN npm run build
 
 # ==============================================================================
-# Stage 2: Production PHP 8.4 + Apache (Laravel 13)
+# Stage 2: Production PHP 8.4 + Apache (Laravel 13, non-root uid=1000 HF-ready)
 # ==============================================================================
 FROM php:8.4-apache
 
@@ -48,20 +48,33 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && a2enmod rewrite headers \
     && rm -rf /var/lib/apt/lists/*
 
-# Recommended PHP production + OPcache tuning for 512MB container
+# Create non-root user (uid=1000) required by Hugging Face Spaces
+RUN useradd -m -u 1000 user
+
+# PHP production + OPcache config
 RUN { \
-    echo 'memory_limit=256M'; \
+    echo 'memory_limit=512M'; \
     echo 'upload_max_filesize=20M'; \
     echo 'post_max_size=25M'; \
     echo 'max_execution_time=60'; \
     echo 'opcache.enable=1'; \
-    echo 'opcache.memory_consumption=96'; \
+    echo 'opcache.memory_consumption=128'; \
     echo 'opcache.interned_strings_buffer=16'; \
     echo 'opcache.max_accelerated_files=10000'; \
     echo 'opcache.validate_timestamps=0'; \
 } > /usr/local/etc/php/conf.d/ecotahu.ini
 
-# Configure Apache DocumentRoot -> /var/www/html/public
+# Configure Apache for non-root port 7860 (HF Spaces default)
+ENV PORT=7860
+ENV APACHE_RUN_USER=user
+ENV APACHE_RUN_GROUP=user
+ENV APACHE_PID_FILE=/tmp/apache2.pid
+ENV APACHE_RUN_DIR=/tmp/apache2
+ENV APACHE_LOCK_DIR=/tmp/apache2
+ENV APACHE_LOG_DIR=/tmp/apache2
+
+RUN echo "Listen 7860" > /etc/apache2/ports.conf \
+    && echo "ServerName localhost" >> /etc/apache2/apache2.conf
 COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
 
 WORKDIR /var/www/html
@@ -81,15 +94,17 @@ COPY --from=assets /app/public/build ./public/build
 RUN composer dump-autoload --optimize --no-dev \
     && php artisan package:discover --ansi || true
 
-# Prepare writable directories
-RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache/data storage/logs bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
-
 # Entrypoint (strip any Windows CRLF line endings cleanly)
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh && chmod +x /usr/local/bin/entrypoint.sh
 
-EXPOSE 10000
+# Prepare writable directories for non-root uid=1000
+RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache/data storage/logs storage/app/public bootstrap/cache /tmp/apache2 \
+    && chown -R user:user /var/www/html /tmp/apache2 /etc/apache2/ports.conf /etc/apache2/sites-available/000-default.conf \
+    && chmod -R 775 storage bootstrap/cache /tmp/apache2
+
+USER user
+
+EXPOSE 7860
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
