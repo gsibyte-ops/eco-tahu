@@ -144,56 +144,64 @@ class LaporanController extends Controller
         }
 
         // ============ SEMUA PRODUK ============
+        // Gunakan leftJoinSub (bukan subquery di dalam klausa ON) agar kompatibel penuh dengan TiDB Cloud & MySQL 8
+        $produkSalesSub = DB::table('detail_pesanan')
+            ->join('pesanan', 'pesanan.id', '=', 'detail_pesanan.pesanan_id')
+            ->where('detail_pesanan.item_type', '=', 'App\\Models\\ProdukTahu')
+            ->where('pesanan.payment_status', '=', 'paid')
+            ->whereBetween('pesanan.tanggal_order', [$periode['dari'], $periode['sampai']])
+            ->select(
+                'detail_pesanan.item_id',
+                DB::raw('SUM(detail_pesanan.jumlah) as total_qty'),
+                DB::raw('SUM(detail_pesanan.subtotal) as total_omzet')
+            )
+            ->groupBy('detail_pesanan.item_id');
+
         $semuaProduk = DB::table('produk_tahu')
-            ->leftJoin('detail_pesanan', function ($join) use ($periode) {
-                $join->on('produk_tahu.id', '=', 'detail_pesanan.item_id')
-                     ->where('detail_pesanan.item_type', '=', 'App\\Models\\ProdukTahu')
-                     ->whereIn('detail_pesanan.pesanan_id', function ($sub) use ($periode) {
-                         $sub->select('id')
-                             ->from('pesanan')
-                             ->where('payment_status', 'paid')
-                             ->whereBetween('tanggal_order', [$periode['dari'], $periode['sampai']]);
-                     });
-            })
+            ->leftJoinSub($produkSalesSub, 'sales', 'produk_tahu.id', '=', 'sales.item_id')
             ->select(
                 'produk_tahu.id',
                 'produk_tahu.nama_produk',
                 'produk_tahu.harga',
                 'produk_tahu.stok',
-                DB::raw('COALESCE(SUM(detail_pesanan.jumlah), 0) as total_qty'),
-                DB::raw('COALESCE(SUM(detail_pesanan.subtotal), 0) as total_omzet')
+                DB::raw('COALESCE(sales.total_qty, 0) as total_qty'),
+                DB::raw('COALESCE(sales.total_omzet, 0) as total_omzet')
             )
-            ->groupBy('produk_tahu.id', 'produk_tahu.nama_produk', 'produk_tahu.harga', 'produk_tahu.stok')
             ->orderByDesc('total_qty')
             ->get();
 
         // ============ SEMUA LIMBAH ============
+        $limbahSalesSub = DB::table('detail_pesanan')
+            ->join('pesanan', 'pesanan.id', '=', 'detail_pesanan.pesanan_id')
+            ->where('detail_pesanan.item_type', '=', 'App\\Models\\Limbah')
+            ->where('pesanan.payment_status', '=', 'paid')
+            ->whereBetween('pesanan.tanggal_order', [$periode['dari'], $periode['sampai']])
+            ->select(
+                'detail_pesanan.item_id',
+                DB::raw('SUM(detail_pesanan.jumlah) as total_qty'),
+                DB::raw('SUM(detail_pesanan.subtotal) as total_omzet')
+            )
+            ->groupBy('detail_pesanan.item_id');
+
         $semuaLimbah = DB::table('limbah')
-            ->leftJoin('detail_pesanan', function ($join) use ($periode) {
-                $join->on('limbah.id', '=', 'detail_pesanan.item_id')
-                     ->where('detail_pesanan.item_type', '=', 'App\\Models\\Limbah')
-                     ->whereIn('detail_pesanan.pesanan_id', function ($sub) use ($periode) {
-                         $sub->select('id')
-                             ->from('pesanan')
-                             ->where('payment_status', 'paid')
-                             ->whereBetween('tanggal_order', [$periode['dari'], $periode['sampai']]);
-                     });
-            })
+            ->leftJoinSub($limbahSalesSub, 'sales', 'limbah.id', '=', 'sales.item_id')
             ->select(
                 'limbah.id',
                 'limbah.nama_limbah as nama_produk',
                 'limbah.harga',
                 'limbah.stok',
                 'limbah.satuan',
-                DB::raw('COALESCE(SUM(detail_pesanan.jumlah), 0) as total_qty'),
-                DB::raw('COALESCE(SUM(detail_pesanan.subtotal), 0) as total_omzet')
+                DB::raw('COALESCE(sales.total_qty, 0) as total_qty'),
+                DB::raw('COALESCE(sales.total_omzet, 0) as total_omzet')
             )
-            ->groupBy('limbah.id', 'limbah.nama_limbah', 'limbah.harga', 'limbah.stok', 'limbah.satuan')
             ->orderByDesc('total_qty')
             ->get();
 
         // ============ TOP PELANGGAN ============
         $topPelanggan = User::where('role_id', 2)
+            ->whereHas('pesanan', function ($q) use ($periode) {
+                $q->whereBetween('tanggal_order', [$periode['dari'], $periode['sampai']]);
+            })
             ->withCount(['pesanan as total_pesanan' => function ($q) use ($periode) {
                 $q->whereBetween('tanggal_order', [$periode['dari'], $periode['sampai']]);
             }])
@@ -207,7 +215,6 @@ class LaporanController extends Controller
                   ->orderByDesc('tanggal_order')
                   ->limit(20);
             }])
-            ->having('total_pesanan', '>', 0)
             ->orderByDesc('total_belanja')
             ->limit(10)
             ->get();
