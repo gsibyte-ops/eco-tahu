@@ -38,9 +38,9 @@ class FileProxyController extends Controller
             abort(404);
         }
 
-        // Only allow safe static media extensions
+        // Only allow safe non-executable static media extensions (exclude SVG to prevent inline XSS)
         $ext = strtolower(pathinfo($cleanPath, PATHINFO_EXTENSION));
-        $allowedExt = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg', 'mp4', 'webm', 'mov', 'pdf'];
+        $allowedExt = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'mp4', 'webm', 'mov', 'pdf'];
         if (!in_array($ext, $allowedExt, true)) {
             abort(403, 'Tipe file tidak diizinkan.');
         }
@@ -87,6 +87,7 @@ class FileProxyController extends Controller
             'Access-Control-Expose-Headers' => 'Content-Length, Content-Range, Accept-Ranges',
             'Cross-Origin-Resource-Policy'  => 'cross-origin',
             'Cross-Origin-Embedder-Policy'  => 'unsafe-none',
+            'X-Content-Type-Options'        => 'nosniff',
             'Content-Type'                  => $mime,
             'Cache-Control'                 => 'public, max-age=86400',
         ]);

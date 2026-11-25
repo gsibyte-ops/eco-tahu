@@ -314,11 +314,12 @@ class PesananController extends Controller
                 'data' => $pesanan,
             ], 201);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('API order store failed', ['user_id' => $request->user()?->id, 'error' => $e->getMessage()]);
             return response()->json([
                 'status' => 'error',
-                'message' => 'Gagal membuat pesanan: ' . $e->getMessage(),
+                'message' => 'Gagal membuat pesanan. Silakan coba beberapa saat lagi.',
             ], 500);
         }
     }
@@ -427,11 +428,12 @@ class PesananController extends Controller
                 'message' => 'Pesanan berhasil dibatalkan. Pengajuan pengembalian telah dikirim.',
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('API order cancel failed', ['user_id' => $request->user()?->id, 'order_id' => $id, 'error' => $e->getMessage()]);
             return response()->json([
                 'status' => 'error',
-                'message' => 'Gagal membatalkan pesanan: ' . $e->getMessage(),
+                'message' => 'Gagal membatalkan pesanan. Silakan coba beberapa saat lagi.',
             ], 500);
         }
     }

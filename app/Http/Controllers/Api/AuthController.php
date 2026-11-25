@@ -8,7 +8,10 @@ use App\Models\User;
 use App\Notifications\ResetPasswordMobileNotification;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -34,7 +37,7 @@ class AuthController extends Controller
             'name'                  => 'required|string|max:100',
             'email'                 => 'required|string|email|max:150|unique:users,email',
             'no_telepon'            => 'nullable|string|max:20',
-            'password'              => 'required|string|min:6|confirmed',
+            'password'              => 'required|string|min:8|confirmed',
         ]);
 
         if ($validator->fails()) {
@@ -85,7 +88,7 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$user || empty($user->password) || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Email atau password salah',
@@ -110,43 +113,74 @@ class AuthController extends Controller
     /**
      * POST /api/auth/google
      * Login / Registrasi via Google OAuth (Mobile / Web App).
+     * Wajib menyertakan token terverifikasi (id_token / access_token Google, atau firebase_id_token).
      */
     public function googleAuth(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email'     => 'required|email|max:150',
-            'name'      => 'nullable|string|max:100',
-            'google_id' => 'nullable|string|max:100',
-            'avatar'    => 'nullable|string|max:500',
+            'id_token'          => 'nullable|string|max:4096',
+            'access_token'      => 'nullable|string|max:4096',
+            'firebase_id_token' => 'nullable|string|max:4096',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Data Google tidak valid.',
+                'message' => 'Token Google tidak valid.',
                 'errors'  => $validator->errors(),
             ], 422);
         }
 
-        $email = $request->email;
-        $user  = User::where('email', $email)->first();
+        $verified = $this->verifyGoogleIdentity(
+            $request->input('id_token'),
+            $request->input('access_token'),
+            $request->input('firebase_id_token')
+        );
+
+        if (!$verified || empty($verified['email'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Verifikasi token Google gagal atau sudah kedaluwarsa. Silakan login ulang.',
+            ], 401);
+        }
+
+        $email    = strtolower(trim($verified['email']));
+        $googleId = $verified['sub'] ?? null;
+        $name     = $verified['name'] ?? null;
+        $avatar   = $verified['picture'] ?? null;
+
+        $user = User::where('email', $email)->first();
 
         if ($user) {
-            // Update google_id & avatar jika belum ada
+            // Lindungi akun admin agar tidak bisa di-link otomatis dari Google mobile kecuali sudah terdaftar google_id yang cocok
+            if ($user->isAdmin() && (empty($user->google_id) || $user->google_id !== $googleId)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Akun admin wajib login menggunakan email dan kata sandi.',
+                ], 403);
+            }
+
             $user->update([
-                'google_id' => $user->google_id ?: $request->google_id,
-                'avatar'    => $user->avatar ?: $request->avatar,
+                'google_id'         => $user->google_id ?: $googleId,
+                'avatar'            => $user->avatar ?: $avatar,
                 'email_verified_at' => $user->email_verified_at ?: now(),
             ]);
         } else {
-            // Buat user baru dengan default role pelanggan
             $defaultRoleId = Role::where('nama_role', 'pelanggan')->value('id')
-                          ?? Role::where('nama_role', 'user')->value('id')
-                          ?? 2;
+                          ?? Role::where('nama_role', 'user')->value('id');
 
-            $baseUsername = $request->name ?: explode('@', $email)[0];
+            if (!$defaultRoleId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Konfigurasi role pelanggan tidak ditemukan.',
+                ], 500);
+            }
+
+            $baseUsername = $name ?: explode('@', $email)[0];
             $username = Str::slug($baseUsername, '_');
-            if (empty($username)) $username = 'user_' . rand(1000, 9999);
+            if (empty($username)) {
+                $username = 'user_' . random_int(1000, 9999);
+            }
             $cleanUsername = $username;
             $counter = 1;
             while (User::where('username', $cleanUsername)->exists()) {
@@ -157,8 +191,8 @@ class AuthController extends Controller
             $user = User::create([
                 'username'          => $cleanUsername,
                 'email'             => $email,
-                'google_id'         => $request->google_id,
-                'avatar'            => $request->avatar,
+                'google_id'         => $googleId,
+                'avatar'            => $avatar,
                 'password'          => null,
                 'no_telepon'        => null,
                 'role_id'           => $defaultRoleId,
@@ -166,7 +200,6 @@ class AuthController extends Controller
             ]);
         }
 
-        // Bikin token baru
         $user->tokens()->delete();
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -187,8 +220,145 @@ class AuthController extends Controller
     }
 
     /**
+     * Verifikasi kriptografis token Google / Firebase agar email tidak bisa dipalsukan client.
+     */
+    private function verifyGoogleIdentity(?string $idToken, ?string $accessToken, ?string $firebaseToken): ?array
+    {
+        // 1. Verifikasi Google OAuth id_token via tokeninfo resmi Google
+        if (!empty($idToken)) {
+            try {
+                $resp = Http::timeout(8)->get('https://oauth2.googleapis.com/tokeninfo', [
+                    'id_token' => $idToken,
+                ]);
+                if ($resp->successful()) {
+                    $data = $resp->json();
+                    $emailVerified = ($data['email_verified'] ?? false) === true || ($data['email_verified'] ?? '') === 'true';
+                    $exp = (int) ($data['exp'] ?? 0);
+                    $expectedAud = config('services.google.client_id');
+                    $audOk = empty($expectedAud)
+                        || ($data['aud'] ?? '') === $expectedAud
+                        || ($data['azp'] ?? '') === $expectedAud;
+
+                    if ($emailVerified && $exp > time() && $audOk && !empty($data['email'])) {
+                        return [
+                            'email'   => $data['email'],
+                            'sub'     => $data['sub'] ?? null,
+                            'name'    => $data['name'] ?? null,
+                            'picture' => $data['picture'] ?? null,
+                        ];
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Google id_token verification failed', ['error' => $e->getMessage()]);
+            }
+        }
+
+        // 2. Verifikasi Google OAuth access_token via userinfo endpoint resmi Google
+        if (!empty($accessToken)) {
+            try {
+                $resp = Http::timeout(8)->withToken($accessToken)
+                    ->get('https://www.googleapis.com/oauth2/v3/userinfo');
+                if ($resp->successful()) {
+                    $data = $resp->json();
+                    $emailVerified = ($data['email_verified'] ?? false) === true || ($data['email_verified'] ?? '') === 'true';
+                    if ($emailVerified && !empty($data['email'])) {
+                        return [
+                            'email'   => $data['email'],
+                            'sub'     => $data['sub'] ?? null,
+                            'name'    => $data['name'] ?? null,
+                            'picture' => $data['picture'] ?? null,
+                        ];
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Google access_token verification failed', ['error' => $e->getMessage()]);
+            }
+        }
+
+        // 3. Verifikasi Firebase ID Token (RS256) langsung terhadap sertifikat publik x509 Google
+        if (!empty($firebaseToken)) {
+            return $this->verifyFirebaseJwt($firebaseToken);
+        }
+
+        return null;
+    }
+
+    /**
+     * Verifikasi signature RS256 dan klaim Firebase ID Token terhadap sertifikat publik Google.
+     */
+    private function verifyFirebaseJwt(string $jwt): ?array
+    {
+        $parts = explode('.', $jwt);
+        if (count($parts) !== 3) {
+            return null;
+        }
+
+        $b64Decode = static function (string $input): string {
+            $rem = strlen($input) % 4;
+            if ($rem > 0) {
+                $input .= str_repeat('=', 4 - $rem);
+            }
+            return (string) base64_decode(strtr($input, '-_', '+/'), true);
+        };
+
+        $header = json_decode($b64Decode($parts[0]), true);
+        $payload = json_decode($b64Decode($parts[1]), true);
+        $signature = $b64Decode($parts[2]);
+
+        if (!is_array($header) || !is_array($payload) || ($header['alg'] ?? '') !== 'RS256' || empty($header['kid'])) {
+            return null;
+        }
+
+        $projectId = (string) env('FIREBASE_PROJECT_ID', 'ecotahu-ed1e0');
+        $now = time();
+        if (
+            ($payload['aud'] ?? '') !== $projectId
+            || ($payload['iss'] ?? '') !== "https://securetoken.google.com/{$projectId}"
+            || empty($payload['sub'])
+            || (int) ($payload['exp'] ?? 0) <= $now
+            || (int) ($payload['iat'] ?? 0) > $now + 60
+            || empty($payload['email'])
+            || ($payload['email_verified'] ?? false) !== true
+        ) {
+            return null;
+        }
+
+        try {
+            $certs = Cache::remember('firebase_x509_certs', 3600, function () {
+                $res = Http::timeout(8)->get('https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com');
+                return $res->successful() ? $res->json() : [];
+            });
+
+            $certPem = $certs[$header['kid']] ?? null;
+            if (!$certPem) {
+                return null;
+            }
+
+            $pubKey = openssl_pkey_get_public($certPem);
+            if ($pubKey === false) {
+                return null;
+            }
+
+            $valid = openssl_verify($parts[0] . '.' . $parts[1], $signature, $pubKey, OPENSSL_ALGO_SHA256);
+            if ($valid !== 1) {
+                return null;
+            }
+
+            return [
+                'email'   => $payload['email'],
+                'sub'     => $payload['sub'],
+                'name'    => $payload['name'] ?? null,
+                'picture' => $payload['picture'] ?? null,
+            ];
+        } catch (\Throwable $e) {
+            Log::warning('Firebase JWT verification failed', ['error' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    /**
      * POST /api/forgot-password
-     * Kirim link & token reset password ke email.
+     * Kirim link & token reset password ke email (TIDAK pernah mengembalikan token ke response JSON).
      */
     public function forgotPassword(Request $request)
     {
@@ -204,35 +374,27 @@ class AuthController extends Controller
             ], 422);
         }
 
+        $genericMessage = 'Jika email terdaftar dalam sistem EcoTahu, link dan kode reset password telah dikirim ke inbox email Anda.';
+
         $user = User::where('email', $request->email)->first();
         if (!$user) {
             return response()->json([
-                'success' => false,
-                'message' => 'Email tidak terdaftar dalam sistem EcoTahu.',
-            ], 404);
+                'success' => true,
+                'message' => $genericMessage,
+            ], 200);
         }
 
         try {
-            // Generate token reset password
             $token = Password::createToken($user);
-
-            // Kirim notifikasi email kustom yang menyertakan deep link aplikasi mobile
             $user->notify(new ResetPasswordMobileNotification($token));
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Link dan kode reset password telah dikirim ke email Anda.',
-                'token'   => $token,
-                'email'   => $user->email,
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Permintaan reset password berhasil dikirim. Silakan periksa inbox email Anda.',
-                'token'   => isset($token) ? $token : null,
-                'email'   => $user->email,
-            ], 200);
+        } catch (\Throwable $e) {
+            Log::error('Failed to send mobile password reset email', ['user_id' => $user->id, 'error' => $e->getMessage()]);
         }
+
+        return response()->json([
+            'success' => true,
+            'message' => $genericMessage,
+        ], 200);
     }
 
     /**
@@ -262,6 +424,9 @@ class AuthController extends Controller
                     'password'       => Hash::make($request->password),
                     'remember_token' => Str::random(60),
                 ])->save();
+
+                // Cabut semua token lama setelah reset password
+                $user->tokens()->delete();
 
                 event(new PasswordReset($user));
             }
@@ -373,7 +538,7 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'current_password'      => 'required|string',
-            'password'              => 'required|string|min:6|confirmed',
+            'password'              => 'required|string|min:8|confirmed',
         ]);
 
         if ($validator->fails()) {
@@ -386,7 +551,7 @@ class AuthController extends Controller
 
         $user = $request->user();
 
-        if (!Hash::check($request->current_password, $user->password)) {
+        if (empty($user->password) || !Hash::check($request->current_password, $user->password)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Password saat ini salah.',
@@ -396,6 +561,10 @@ class AuthController extends Controller
         $user->update([
             'password' => Hash::make($request->password),
         ]);
+
+        // Cabut semua token perangkat lain (sisakan token sesi aktif saat ini)
+        $currentTokenId = $request->user()->currentAccessToken()?->id;
+        $user->tokens()->when($currentTokenId, fn ($q) => $q->where('id', '!=', $currentTokenId))->delete();
 
         return response()->json([
             'success' => true,
@@ -423,7 +592,7 @@ class AuthController extends Controller
 
         $user = $request->user();
 
-        if (!Hash::check($request->password, $user->password)) {
+        if (empty($user->password) || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Password salah. Akun tidak dapat dihapus.',

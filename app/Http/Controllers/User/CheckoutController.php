@@ -259,9 +259,10 @@ class CheckoutController extends Controller
 
             return redirect()->route('user.checkout.success', $pesanan->kode_pesanan);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Checkout store failed', ['user_id' => Auth::id(), 'error' => $e->getMessage()]);
+            return back()->with('error', 'Terjadi kesalahan saat memproses pesanan. Silakan coba lagi.');
         }
     }
 

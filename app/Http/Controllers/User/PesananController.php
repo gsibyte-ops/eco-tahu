@@ -142,9 +142,10 @@ class PesananController extends Controller
             DB::commit();
             return redirect()->route('user.pesanan.show', $pesanan->kode_pesanan)->with('success', $msg);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal membatalkan pesanan: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Order cancel failed', ['user_id' => Auth::id(), 'kode' => $kode, 'error' => $e->getMessage()]);
+            return back()->with('error', 'Gagal membatalkan pesanan. Silakan coba lagi.');
         }
     }
 

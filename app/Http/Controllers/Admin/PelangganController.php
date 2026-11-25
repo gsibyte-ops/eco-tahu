@@ -104,13 +104,21 @@ class PelangganController extends Controller
                 'Tanggal Daftar',
             ]);
 
+            $safeCsv = static function ($value): string {
+                $str = (string) ($value ?? '-');
+                if ($str !== '' && in_array($str[0], ['=', '+', '-', '@', "\t", "\r"], true)) {
+                    return "'" . $str;
+                }
+                return $str;
+            };
+
             foreach ($pelanggan as $i => $p) {
                 fputcsv($file, [
                     $i + 1,
-                    $p->username,
-                    $p->email,
-                    $p->no_telepon ?? '-',
-                    $p->alamat ?? '-',
+                    $safeCsv($p->username),
+                    $safeCsv($p->email),
+                    $safeCsv($p->no_telepon ?? '-'),
+                    $safeCsv($p->alamat ?? '-'),
                     $p->pesanan_count,
                     $p->total_belanja ?? 0,
                     $p->created_at->format('d M Y'),
