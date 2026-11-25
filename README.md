@@ -9,12 +9,12 @@ Panduan lengkap cara mengakses dan menggunakan ekosistem **EcoTahu** (Website & 
 ### A. Akses Website (Browser Laptop / HP)
 Buka browser (Chrome, Brave, Edge, atau Safari), lalu kunjungi alamat berikut (**pastikan TIDAK ada tanda titik `.` di akhir alamat**):
 
-- **Website Utama:** https://eco-tahu-production.up.railway.app
-- **Halaman Login / Daftar:** https://eco-tahu-production.up.railway.app/login
-- **Katalog Produk Tahu:** https://eco-tahu-production.up.railway.app/produk
-- **Katalog Produk Limbah (Okara):** https://eco-tahu-production.up.railway.app/limbah
-- **Resep Olahan Tahu:** https://eco-tahu-production.up.railway.app/resep
-- **Edukasi Lingkungan:** https://eco-tahu-production.up.railway.app/edukasi
+- **Website Utama:** https://ecotahu.wstif-polije.com
+- **Halaman Login / Daftar:** https://ecotahu.wstif-polije.com/login
+- **Katalog Produk Tahu:** https://ecotahu.wstif-polije.com/produk
+- **Katalog Produk Limbah (Okara):** https://ecotahu.wstif-polije.com/limbah
+- **Resep Olahan Tahu:** https://ecotahu.wstif-polije.com/resep
+- **Edukasi Lingkungan:** https://ecotahu.wstif-polije.com/edukasi
 
 ### B. Download & Install Aplikasi Android (APK Resmi v1.0.0)
 1. Buka halaman rilis di HP Android: https://github.com/gsibyte-ops/eco-tahu-mobile/releases/tag/v1.0.0
@@ -109,7 +109,7 @@ Jika akun Admin login melalui aplikasi **EcoTahu Android**, aplikasi secara otom
 
 ## 5. Skenario Demo Cepat 5 Menit (Siap Presentasi)
 
-1. **Menit 1 â€” Tampilan Guest (Web):** Buka `https://eco-tahu-production.up.railway.app` â†’ tunjukkan Beranda, toggle Dark/Light Mode, Katalog Produk Tahu, Produk Limbah, Resep, dan Edukasi.
+1. **Menit 1 â€” Tampilan Guest (Web):** Buka `https://ecotahu.wstif-polije.com` â†’ tunjukkan Beranda, toggle Dark/Light Mode, Katalog Produk Tahu, Produk Limbah, Resep, dan Edukasi.
 2. **Menit 2 â€” Login & Belanja Pelanggan (HP Android / Web):** Login sebagai `budi@test.com` (atau pakai **Lanjutkan dengan Google**) â†’ tambah 2 produk ke keranjang â†’ tunjukkan sinkronisasi keranjang antara Web & Aplikasi Android.
 3. **Menit 3 â€” Checkout & Upload Bukti:** Lakukan checkout metode Transfer (tunjukkan kalkulasi jarak & ongkir otomatis) â†’ unggah foto bukti transfer.
 4. **Menit 4 â€” Panel Admin (Web):** Login sebagai `admin@ecotahu.id` di browser berbeda/Incognito â†’ tunjukkan notifikasi pesanan baru â†’ verifikasi bukti transfer â†’ ubah status pesanan ke `Diproses` â†’ `Dikirim` â†’ `Selesai` â†’ buka grafik **Laporan** & **Data Pelanggan**.

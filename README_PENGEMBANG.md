@@ -8,8 +8,8 @@ Dokumentasi teknis lengkap untuk arsitektur, pengembangan lokal, keamanan, deplo
 
 | Komponen | URL / Lokasi | Keterangan |
 | :--- | :--- | :--- |
-| **Website & REST API Live** | https://eco-tahu-production.up.railway.app | HTTPS aktif (Railway Docker: Nginx + PHP 8.4 FPM) |
-| **Health Check Server** | https://eco-tahu-production.up.railway.app/up | Endpoint health check bawaan Laravel 13 |
+| **Website & REST API Live** | https://ecotahu.wstif-polije.com | HTTPS aktif (Railway Docker: Nginx + PHP 8.4 FPM) |
+| **Health Check Server** | https://ecotahu.wstif-polije.com/up | Endpoint health check bawaan Laravel 13 |
 | **Repositori Web & API** | https://github.com/gsibyte-ops/eco-tahu | Laravel 13, Blade, Tailwind CSS, Vite, Sanctum, Socialite |
 | **Repositori Mobile** | https://github.com/gsibyte-ops/eco-tahu-mobile | Flutter Android + Firebase Auth + Google Sign-In |
 | **Rilis APK Android** | https://github.com/gsibyte-ops/eco-tahu-mobile/releases/tag/v1.0.0 | APK Release signed, R8 minified, Dart obfuscated |
@@ -75,7 +75,7 @@ cd eco-tahu-mobile
 flutter pub get
 ```
 
-- **Default produksi:** `lib/config/app_config.dart` sudah diarahkan ke `https://eco-tahu-production.up.railway.app`.
+- **Default produksi:** `lib/config/app_config.dart` sudah diarahkan ke `https://ecotahu.wstif-polije.com`.
 - **Override saat testing lokal (emulator Android):**
   ```bash
   flutter run --dart-define=API_HOST=http://10.0.2.2:8000
@@ -92,7 +92,7 @@ Semua rahasia disimpan di tab **Variables** Railway (bukan di Git). Variabel int
 | `PORT` | `7860` | Port internal container Nginx ↔ Railway Public Networking |
 | `APP_ENV` / `APP_DEBUG` | `production` / `false` | Wajib `false` di produksi agar stack trace tidak bocor |
 | `APP_KEY` | `base64:...` | Kunci enkripsi sesi & cookie Laravel |
-| `APP_URL` | `https://eco-tahu-production.up.railway.app` | Memicu `URL::forceScheme('https')` dan cookie `Secure` otomatis |
+| `APP_URL` | `https://ecotahu.wstif-polije.com` | Memicu `URL::forceScheme('https')` dan cookie `Secure` otomatis |
 | `DB_CONNECTION` | `mysql` | Driver PDO MySQL |
 | `DB_HOST` / `DB_PORT` | `gateway01.ap-southeast-1.prod.aws.tidbcloud.com` / `4000` | Endpoint TiDB Cloud Singapore |
 | `DB_DATABASE` | `test` | Nama database aktif di TiDB Cloud |
@@ -102,7 +102,7 @@ Semua rahasia disimpan di tab **Variables** Railway (bukan di Git). Variabel int
 | `SANCTUM_EXPIRATION` | `43200` *(default 30 hari)* | Masa berlaku token Bearer API mobile (menit) |
 | `MAIL_*` | `smtp.gmail.com` / `587` / `tls` | SMTP Gmail App Password untuk email reset password |
 | `GOOGLE_CLIENT_ID` / `SECRET` | *(dari Google Cloud Console)* | OAuth 2.0 Web Client (`EcoTahu Web`) |
-| `GOOGLE_REDIRECT_URI` | `https://eco-tahu-production.up.railway.app/auth/google/callback` | Wajib terdaftar di Google Cloud Console |
+| `GOOGLE_REDIRECT_URI` | `https://ecotahu.wstif-polije.com/auth/google/callback` | Wajib terdaftar di Google Cloud Console |
 
 > [!NOTE]
 > **Penyimpanan File pada Container Stateless:** File gambar katalog awal (`public/images/seed/*`) otomatis disalin ke `storage/app/public/` setiap container boot oleh `docker/entrypoint.sh`. Untuk unggahan user baru (foto profil, bukti transfer, media ulasan) yang bersifat permanen jangka panjang di masa depan, disarankan menambahkan Railway Volume atau Object Storage S3/R2.
@@ -135,7 +135,7 @@ flutter analyze lib/
 flutter build apk --release --split-per-abi \
   --obfuscate \
   --split-debug-info=build/app/outputs/symbols \
-  --dart-define=API_HOST=https://eco-tahu-production.up.railway.app
+  --dart-define=API_HOST=https://ecotahu.wstif-polije.com
 ```
 
 Output siap rilis ada di `build/app/outputs/flutter-apk/`:
