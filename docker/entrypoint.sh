@@ -2,13 +2,17 @@
 set -e
 
 export PORT="${PORT:-7860}"
-mkdir -p /tmp/apache2 storage/framework/sessions storage/framework/views storage/framework/cache/data storage/logs storage/app/public bootstrap/cache
 
-# If host specifies a non-7860 PORT, update Apache config cleanly (writable by uid=1000)
+# Update Nginx listen port if container PORT differs from 7860
 if [ "${PORT}" != "7860" ]; then
-    echo "Listen ${PORT}" > /etc/apache2/ports.conf
-    sed -i "s/<VirtualHost \*:[0-9]*>/<VirtualHost *:${PORT}>/g" /etc/apache2/sites-available/000-default.conf
+    sed -i "s/listen 7860/listen ${PORT}/g" /etc/nginx/sites-enabled/ecotahu.conf
+    sed -i "s/listen \[::\]:7860/listen [::]:${PORT}/g" /etc/nginx/sites-enabled/ecotahu.conf
 fi
+
+# Ensure runtime directories & permissions
+mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache/data storage/logs storage/app/public bootstrap/cache
+chown -R www-data:www-data storage bootstrap/cache
+chmod -R 775 storage bootstrap/cache
 
 # Symlink public storage
 php artisan storage:link --force || true
@@ -22,9 +26,8 @@ php artisan view:cache || true
 # Run database migrations automatically (when DB_HOST is configured)
 if [ -n "${DB_HOST:-}" ]; then
     echo "[EcoTahu] Running database migrations..."
-    php artisan migrate --force || echo "[EcoTahu] Warning: migrate failed (check DB credentials/SSL)"
+    php artisan migrate --force || echo "[EcoTahu] Warning: migrate failed"
 
-    # Auto-seed once if users table is empty (100% idempotent)
     USER_COUNT=$(php -r '
         require "vendor/autoload.php";
         $app = require "bootstrap/app.php";
@@ -44,5 +47,6 @@ if [ -n "${DB_HOST:-}" ]; then
     fi
 fi
 
-echo "[EcoTahu] Starting Apache on port ${PORT}..."
-exec apache2-foreground
+echo "[EcoTahu] Starting PHP-FPM and Nginx on port ${PORT}..."
+php-fpm -D
+exec nginx -g "daemon off;"

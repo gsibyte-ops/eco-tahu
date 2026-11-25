@@ -15,12 +15,13 @@ COPY public ./public
 RUN npm run build
 
 # ==============================================================================
-# Stage 2: Production PHP 8.4 + Apache (Laravel 13, non-root uid=1000 HF-ready)
+# Stage 2: Production PHP 8.4 FPM + Nginx (Laravel 13)
 # ==============================================================================
-FROM php:8.4-apache
+FROM php:8.4-fpm
 
-# Install system dependencies, CA certificates (for TiDB Cloud TLS), & PHP extensions
+# Install Nginx, CA certificates (for TiDB Cloud TLS), & PHP extensions
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    nginx \
     ca-certificates \
     curl \
     git \
@@ -45,12 +46,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         zip \
         intl \
         opcache \
-    && a2dismod mpm_event mpm_worker || true \
-    && a2enmod mpm_prefork rewrite headers \
     && rm -rf /var/lib/apt/lists/*
-
-# Create non-root user (uid=1000) required by Hugging Face Spaces
-RUN useradd -m -u 1000 user
 
 # PHP production + OPcache config
 RUN { \
@@ -65,18 +61,13 @@ RUN { \
     echo 'opcache.validate_timestamps=0'; \
 } > /usr/local/etc/php/conf.d/ecotahu.ini
 
-# Configure Apache for non-root port 7860 (HF Spaces default)
-ENV PORT=7860
-ENV APACHE_RUN_USER=user
-ENV APACHE_RUN_GROUP=user
-ENV APACHE_PID_FILE=/tmp/apache2.pid
-ENV APACHE_RUN_DIR=/tmp/apache2
-ENV APACHE_LOCK_DIR=/tmp/apache2
-ENV APACHE_LOG_DIR=/tmp/apache2
+# Ensure PHP-FPM preserves container environment variables
+RUN sed -i 's/;clear_env = no/clear_env = no/g' /usr/local/etc/php-fpm.d/www.conf \
+    && grep -q '^clear_env = no' /usr/local/etc/php-fpm.d/www.conf || echo 'clear_env = no' >> /usr/local/etc/php-fpm.d/www.conf
 
-RUN echo "Listen 7860" > /etc/apache2/ports.conf \
-    && echo "ServerName localhost" >> /etc/apache2/apache2.conf
-COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
+# Configure Nginx
+RUN rm -f /etc/nginx/sites-enabled/default
+COPY docker/nginx.conf /etc/nginx/sites-enabled/ecotahu.conf
 
 WORKDIR /var/www/html
 
@@ -99,13 +90,12 @@ RUN composer dump-autoload --optimize --no-dev \
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh && chmod +x /usr/local/bin/entrypoint.sh
 
-# Prepare writable directories for non-root uid=1000
-RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache/data storage/logs storage/app/public bootstrap/cache /tmp/apache2 \
-    && chown -R user:user /var/www/html /tmp/apache2 /etc/apache2/ports.conf /etc/apache2/sites-available/000-default.conf \
-    && chmod -R 775 storage bootstrap/cache /tmp/apache2
+# Prepare writable directories
+RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache/data storage/logs storage/app/public bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
 
-USER user
-
+ENV PORT=7860
 EXPOSE 7860
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
