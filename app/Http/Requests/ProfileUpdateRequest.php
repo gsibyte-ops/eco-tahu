@@ -26,9 +26,16 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
-            'no_telepon' => ['nullable', 'string', 'max:20'],
+            'no_telepon' => ['nullable', 'string', 'max:20', 'regex:/^(\+62|62|0)[0-9]{8,14}$/'],
             'alamat' => ['nullable', 'string', 'max:500'],
             'avatar' => \App\Support\MediaGuard::imageRules(false, 2048),
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'no_telepon.regex' => 'Nomor telepon harus berupa angka yang valid (contoh: 081234567890).',
         ];
     }
 }

@@ -38,31 +38,33 @@
     @endif
 
     {{-- Profile Header Card --}}
-    <div class="glass-card p-6 mb-6 relative overflow-hidden">
-        <div class="absolute top-0 left-0 right-0 h-24" style="background: var(--gradient-brand); opacity: 0.5;"></div>
-        <div class="relative flex flex-col sm:flex-row items-center sm:items-end gap-5 pt-8">
-            <div class="w-24 h-24 rounded-2xl flex items-center justify-center text-white font-extrabold text-4xl flex-shrink-0 overflow-hidden relative"
-                 style="background: var(--gradient-brand); box-shadow: 0 12px 32px -8px rgb(var(--brand) / 0.6); border: 3px solid rgb(var(--surface));">
-                @if (auth()->user()->avatar_url)
-                    <img id="avatar-preview-header" src="{{ auth()->user()->avatar_url }}" alt="{{ auth()->user()->username }}" class="w-full h-full object-cover">
-                @else
-                    <span id="avatar-initial-header">{{ strtoupper(substr(auth()->user()->username, 0, 1)) }}</span>
-                    <img id="avatar-preview-header" src="" alt="Preview" class="w-full h-full object-cover hidden">
-                @endif
-            </div>
-            <div class="flex-1 text-center sm:text-left">
-                <h2 class="text-2xl font-extrabold tracking-tight" style="color: rgb(var(--text-primary));">{{ auth()->user()->username }}</h2>
-                <p class="text-sm" style="color: rgb(var(--text-secondary));">{{ auth()->user()->email }}</p>
-                <div class="flex flex-wrap gap-2 mt-3 justify-center sm:justify-start">
-                    <span class="pill">
-                        <span class="w-1.5 h-1.5 rounded-full" style="background: rgb(var(--brand));"></span>
-                        Member EcoTahu
-                    </span>
-                    @if (auth()->user()->email_verified_at)
-                        <span class="pill inline-flex items-center gap-1" style="background: rgb(var(--success-soft)); color: rgb(var(--success)); border-color: rgb(var(--success) / 0.3);">
-                            <x-icon name="check" class="w-3.5 h-3.5" /> Terverifikasi
-                        </span>
+    <div class="glass-card mb-6 relative overflow-hidden">
+        <div class="h-16 sm:h-20 w-full" style="background: var(--gradient-brand); opacity: 0.45;"></div>
+        <div class="px-6 pb-6">
+            <div class="relative flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 -mt-10 sm:-mt-12">
+                <div class="w-24 h-24 rounded-2xl flex items-center justify-center text-white font-extrabold text-4xl flex-shrink-0 overflow-hidden relative"
+                     style="background: var(--gradient-brand); box-shadow: 0 12px 32px -8px rgb(var(--brand) / 0.6); border: 4px solid rgb(var(--surface));">
+                    @if (auth()->user()->avatar_url)
+                        <img id="avatar-preview-header" src="{{ auth()->user()->avatar_url }}" alt="{{ auth()->user()->username }}" class="w-full h-full object-cover">
+                    @else
+                        <span id="avatar-initial-header">{{ strtoupper(substr(auth()->user()->username, 0, 1)) }}</span>
+                        <img id="avatar-preview-header" src="" alt="Preview" class="w-full h-full object-cover hidden">
                     @endif
+                </div>
+                <div class="flex-1 min-w-0 text-center sm:text-left sm:pt-14">
+                    <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight leading-snug break-words" style="color: rgb(var(--text-primary));">{{ auth()->user()->username }}</h2>
+                    <p class="text-sm mt-1 break-all" style="color: rgb(var(--text-secondary));">{{ auth()->user()->email }}</p>
+                    <div class="flex flex-wrap gap-2 mt-3 justify-center sm:justify-start">
+                        <span class="pill">
+                            <span class="w-1.5 h-1.5 rounded-full" style="background: rgb(var(--brand));"></span>
+                            Member EcoTahu
+                        </span>
+                        @if (auth()->user()->email_verified_at)
+                            <span class="pill inline-flex items-center gap-1" style="background: rgb(var(--success-soft)); color: rgb(var(--success)); border-color: rgb(var(--success) / 0.3);">
+                                <x-icon name="check" class="w-3.5 h-3.5" /> Terverifikasi
+                            </span>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
@@ -138,10 +140,14 @@
                 <label for="no_telepon" class="block text-sm font-medium mb-1.5" style="color: rgb(var(--text-primary));">No. Telepon</label>
                 <div style="position: relative;">
                     <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" style="color: rgb(var(--text-muted));" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                    <input id="no_telepon" type="text" name="no_telepon" value="{{ old('no_telepon', auth()->user()->no_telepon) }}"
+                    <input id="no_telepon" type="tel" inputmode="tel" name="no_telepon" value="{{ old('no_telepon', auth()->user()->no_telepon) }}"
+                           maxlength="16"
+                           placeholder="Contoh: 081234567890"
+                           oninput="this.value = this.value.replace(/[^0-9+]/g, '')"
                            class="glass-input w-full pl-10 pr-4 py-3 text-sm" style="color: rgb(var(--text-primary));">
                 </div>
-                @error('no_telepon')<p class="mt-1.5 text-xs" style="color: rgb(var(--danger));">{{ $message }}</p>@enderror
+                <p class="mt-1 text-xs" style="color: rgb(var(--text-muted));">Hanya angka (format 08... atau +62...).</p>
+                @error('no_telepon')<p class="mt-1.5 text-xs font-semibold" style="color: rgb(var(--danger));">{{ $message }}</p>@enderror
             </div>
 
             <div>

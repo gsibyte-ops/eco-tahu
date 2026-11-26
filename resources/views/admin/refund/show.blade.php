@@ -311,10 +311,13 @@
     </div>
 </div>
 
+@endsection
+
+@push('modals')
 {{-- LIGHTBOX PREVIEW BUKTI TRANSFER --}}
 <div id="refundLightbox" class="fixed inset-0 hidden"
-     style="z-index: 99999; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
-    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px;">
+     style="z-index: 99999; background: rgba(0,0,0,0.88); backdrop-filter: blur(8px);">
+    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px;" onclick="closeLightbox()">
         <img id="refundLightboxImg" src="" alt="Preview Bukti"
              onclick="event.stopPropagation()"
              style="max-width: 100%; max-height: 85vh; border-radius: 16px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); object-fit: contain;">
@@ -325,8 +328,7 @@
         <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
     </button>
 </div>
-
-@endsection
+@endpush
 
 @push('scripts')
 <style>

@@ -147,33 +147,46 @@
             box-shadow: 0 0 0 3px rgb(var(--brand) / 0.3) !important;
         }
 
-        /* Autofill Overrides for Auth forms */
+        /* Autofill Overrides for Auth forms (WebKit / iOS Safari safe hex) */
         .auth-shell input:-webkit-autofill,
-        .auth-shell input:-webkit-autofill:hover, 
-        .auth-shell input:-webkit-autofill:focus, 
-        .auth-shell input:-webkit-autofill:active {
-            -webkit-text-fill-color: rgb(var(--text-primary)) !important;
-            caret-color: rgb(var(--text-primary)) !important;
-            -webkit-box-shadow: 0 0 0 1000px rgb(var(--surface)) inset !important;
-            box-shadow: 0 0 0 1000px rgb(var(--surface)) inset !important;
+        .auth-shell input:-webkit-autofill:hover,
+        .auth-shell input:-webkit-autofill:focus,
+        .auth-shell input:-webkit-autofill:active,
+        .auth-shell input:autofill {
+            -webkit-text-fill-color: #0f172a !important;
+            caret-color: #0f172a !important;
+            background-color: #ffffff !important;
+            -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+            box-shadow: 0 0 0 1000px #ffffff inset !important;
+            background-clip: padding-box !important;
             transition: background-color 5000000s ease-in-out 0s, color 5000000s ease-in-out 0s;
         }
 
+        [data-theme="dark"] .auth-shell input,
+        [data-theme="dark"] .auth-shell textarea,
+        [data-theme="dark"] .auth-shell select {
+            color-scheme: dark;
+        }
+
         [data-theme="dark"] .auth-shell input:-webkit-autofill,
-        [data-theme="dark"] .auth-shell input:-webkit-autofill:hover, 
-        [data-theme="dark"] .auth-shell input:-webkit-autofill:focus, 
-        [data-theme="dark"] .auth-shell input:-webkit-autofill:active {
+        [data-theme="dark"] .auth-shell input:-webkit-autofill:hover,
+        [data-theme="dark"] .auth-shell input:-webkit-autofill:focus,
+        [data-theme="dark"] .auth-shell input:-webkit-autofill:active,
+        [data-theme="dark"] .auth-shell input:autofill {
+            color: #f8fafc !important;
             -webkit-text-fill-color: #f8fafc !important;
             caret-color: #f8fafc !important;
-            -webkit-box-shadow: 0 0 0 1000px rgb(30 41 59) inset !important;
-            box-shadow: 0 0 0 1000px rgb(30 41 59) inset !important;
-            border-color: rgb(var(--border)) !important;
+            background-color: #1e293b !important;
+            -webkit-box-shadow: 0 0 0 1000px #1e293b inset !important;
+            box-shadow: 0 0 0 1000px #1e293b inset !important;
+            background-clip: padding-box !important;
+            border-color: #334155 !important;
         }
 
         [data-theme="dark"] .auth-shell input:-webkit-autofill:focus {
-            border-color: rgb(var(--brand)) !important;
-            -webkit-box-shadow: 0 0 0 1000px rgb(30 41 59) inset, 0 0 0 3px rgb(var(--brand) / 0.3) !important;
-            box-shadow: 0 0 0 1000px rgb(30 41 59) inset, 0 0 0 3px rgb(var(--brand) / 0.3) !important;
+            border-color: #34d399 !important;
+            -webkit-box-shadow: 0 0 0 1000px #1e293b inset, 0 0 0 3px rgba(52, 211, 153, 0.3) !important;
+            box-shadow: 0 0 0 1000px #1e293b inset, 0 0 0 3px rgba(52, 211, 153, 0.3) !important;
         }
 
         .text-glow-pulse { animation: textGlowPulse 4s ease-in-out infinite; }

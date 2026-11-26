@@ -38,6 +38,7 @@
                     <div class="glass-card p-4 flex gap-4 cart-item" id="item-{{ $key }}"
                          data-harga="{{ $item['harga'] }}"
                          data-nama="{{ $item['nama'] }}"
+                         data-satuan="{{ $item['satuan'] ?: ($item['type'] === 'limbah' ? 'kg' : 'pcs') }}"
                          data-stok-max="{{ $item['stok_max'] }}">
                         <div class="w-20 h-20 rounded-2xl flex-shrink-0 overflow-hidden" style="background: rgb(var(--bg-secondary)); border: 1px solid rgb(var(--border-soft));">
                             @if ($item['gambar'])
@@ -77,11 +78,27 @@
                                 </button>
                             </div>
 
-                            <div class="flex items-center justify-between mt-4">
-                                <div class="glass-input flex items-center overflow-hidden">
-                                    <button type="button" onclick="updateQty('{{ $key }}', -1)" class="w-9 h-9 flex items-center justify-center font-bold" style="color: rgb(var(--text-secondary));">−</button>
-                                    <span class="w-10 text-center font-semibold text-sm tabular-nums" style="color: rgb(var(--text-primary));" id="qty-{{ $key }}">{{ $item['qty'] }}</span>
-                                    <button type="button" onclick="updateQty('{{ $key }}', 1)" class="w-9 h-9 flex items-center justify-center font-bold" style="color: rgb(var(--text-secondary));">+</button>
+                            <div class="flex items-center justify-between gap-2 mt-4 flex-wrap">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="glass-input flex items-center overflow-hidden">
+                                        <button type="button" onclick="updateQty('{{ $key }}', -1)" class="w-9 h-9 flex items-center justify-center font-bold hover:bg-emerald-500/10 transition" style="color: rgb(var(--text-secondary));">−</button>
+                                        <input type="number"
+                                               inputmode="numeric"
+                                               min="1"
+                                               max="{{ $item['stok_max'] }}"
+                                               value="{{ $item['qty'] }}"
+                                               id="qty-{{ $key }}"
+                                               data-prev-qty="{{ $item['qty'] }}"
+                                               onchange="setQtyDirect('{{ $key }}', this.value)"
+                                               onkeydown="if(event.key==='Enter'){ event.preventDefault(); this.blur(); }"
+                                               aria-label="Jumlah {{ $item['nama'] }}"
+                                               class="w-14 h-9 text-center font-semibold text-sm tabular-nums bg-transparent border-0 focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                               style="color: rgb(var(--text-primary));">
+                                        <button type="button" onclick="updateQty('{{ $key }}', 1)" class="w-9 h-9 flex items-center justify-center font-bold hover:bg-emerald-500/10 transition" style="color: rgb(var(--text-secondary));">+</button>
+                                    </div>
+                                    <span class="text-[11px] font-medium tabular-nums" style="color: rgb(var(--text-muted));">
+                                        Stok: {{ $item['stok_max'] }} {{ $item['satuan'] ?: ($item['type'] === 'limbah' ? 'kg' : 'pcs') }}
+                                    </span>
                                 </div>
 
                                 <p class="price" style="color: rgb(var(--text-primary));" id="subtotal-{{ $key }}">Rp {{ number_format($item['harga'] * $item['qty'], 0, ',', '.') }}</p>
@@ -108,10 +125,18 @@
                 <div class="glass-card p-5 sticky top-24">
                     <h3 class="font-bold mb-4" style="color: rgb(var(--text-primary));">Ringkasan Belanja</h3>
 
+                    @php
+                        $unitTotals = [];
+                        foreach ($cart as $cItem) {
+                            $u = strtolower(trim($cItem['satuan'] ?: ($cItem['type'] === 'limbah' ? 'kg' : 'pcs')));
+                            $unitTotals[$u] = ($unitTotals[$u] ?? 0) + (int) $cItem['qty'];
+                        }
+                        $totalItemFormatted = collect($unitTotals)->map(fn($q, $u) => $q . ' ' . $u)->implode(', ');
+                    @endphp
                     <div class="space-y-2 mb-4 pb-4" style="border-bottom: 1px solid rgb(var(--border-soft));">
                         <div class="flex justify-between text-sm">
                             <span style="color: rgb(var(--text-secondary));">Total Item</span>
-                            <span class="font-semibold tabular-nums" style="color: rgb(var(--text-primary));" id="totalItems">{{ collect($cart)->sum('qty') }} item</span>
+                            <span class="font-semibold tabular-nums" style="color: rgb(var(--text-primary));" id="totalItems">{{ $totalItemFormatted }}</span>
                         </div>
                         <div class="flex justify-between text-sm">
                             <span style="color: rgb(var(--text-secondary));">Subtotal</span>
@@ -224,22 +249,36 @@
 
     function updateQty(key, delta) {
         const el = document.getElementById('qty-' + key);
+        if (!el) return;
+        const currentQty = parseInt(el.value || el.dataset.prevQty || '1', 10);
+        setQtyDirect(key, currentQty + delta);
+    }
+
+    function setQtyDirect(key, rawVal) {
+        const el = document.getElementById('qty-' + key);
         const itemEl = document.getElementById('item-' + key);
         if (!el || !itemEl) return;
 
-        const currentQty = parseInt(el.textContent);
-        const stokMax = parseInt(itemEl.dataset.stokMax) || 999;
-        const harga = parseInt(itemEl.dataset.harga);
+        const oldQty = parseInt(el.dataset.prevQty || el.value || '1', 10);
+        const stokMax = parseInt(itemEl.dataset.stokMax, 10) || 999;
+        const harga = parseInt(itemEl.dataset.harga, 10);
 
-        let newQty = currentQty + delta;
-        if (newQty < 1) return;
+        let newQty = parseInt(String(rawVal).replace(/[^0-9]/g, ''), 10);
+        if (isNaN(newQty) || newQty < 1) {
+            newQty = 1;
+        }
         if (newQty > stokMax) {
+            newQty = stokMax;
             showToast('Stok tidak mencukupi. Maksimal: ' + stokMax, 'error');
+        }
+
+        el.value = newQty;
+        if (newQty === oldQty) {
+            recalcTotals();
             return;
         }
 
-        const oldQty = currentQty;
-        el.textContent = newQty;
+        el.dataset.prevQty = newQty;
         document.getElementById('subtotal-' + key).textContent = fmtRp(harga * newQty);
         recalcTotals();
 
@@ -255,14 +294,16 @@
         .then(r => r.json())
         .then(d => {
             if (!d.success) {
-                el.textContent = oldQty;
+                el.value = oldQty;
+                el.dataset.prevQty = oldQty;
                 document.getElementById('subtotal-' + key).textContent = fmtRp(harga * oldQty);
                 recalcTotals();
                 showToast(d.message || 'Gagal', 'error');
             }
         })
         .catch(() => {
-            el.textContent = oldQty;
+            el.value = oldQty;
+            el.dataset.prevQty = oldQty;
             document.getElementById('subtotal-' + key).textContent = fmtRp(harga * oldQty);
             recalcTotals();
             showToast('Error', 'error');
@@ -317,23 +358,27 @@
     }
 
     function recalcTotals() {
-        let totalQty = 0;
+        const unitTotals = {};
         let totalPrice = 0;
 
         document.querySelectorAll('.cart-item').forEach(el => {
             const key = el.id.replace('item-', '');
             const qtyEl = document.getElementById('qty-' + key);
-            const harga = parseInt(el.dataset.harga) || 0;
+            const harga = parseInt(el.dataset.harga, 10) || 0;
+            const satuan = (el.dataset.satuan || 'pcs').toLowerCase();
             if (qtyEl) {
-                const qty = parseInt(qtyEl.textContent) || 0;
-                totalQty += qty;
+                const qty = parseInt(qtyEl.value || qtyEl.textContent, 10) || 0;
+                unitTotals[satuan] = (unitTotals[satuan] || 0) + qty;
                 totalPrice += harga * qty;
             }
         });
 
         const totalItemsEl = document.getElementById('totalItems');
         const subtotalEl = document.getElementById('subtotalDisplay');
-        if (totalItemsEl) totalItemsEl.textContent = totalQty + ' item';
+        const summaryLabel = Object.entries(unitTotals)
+            .map(([u, q]) => `${q} ${u}`)
+            .join(', ');
+        if (totalItemsEl) totalItemsEl.textContent = summaryLabel || '0 item';
         if (subtotalEl) subtotalEl.textContent = fmtRp(totalPrice);
     }
 
@@ -346,13 +391,14 @@
         document.querySelectorAll('.cart-item').forEach(el => {
             const key = el.id.replace('item-', '');
             const nama = el.dataset.nama;
-            const harga = parseInt(el.dataset.harga) || 0;
+            const harga = parseInt(el.dataset.harga, 10) || 0;
+            const satuan = el.dataset.satuan || 'pcs';
             const qtyEl = document.getElementById('qty-' + key);
-            const qty = qtyEl ? parseInt(qtyEl.textContent) : 0;
+            const qty = qtyEl ? parseInt(qtyEl.value || qtyEl.textContent, 10) : 0;
             const subtotal = harga * qty;
             total += subtotal;
 
-            text += `${count}. *${nama}* (${qty}x) - Rp ${subtotal.toLocaleString('id-ID')}\n`;
+            text += `${count}. *${nama}* (${qty} ${satuan}) - Rp ${subtotal.toLocaleString('id-ID')}\n`;
             count++;
         });
 

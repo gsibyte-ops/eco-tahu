@@ -332,20 +332,22 @@
     </div>
 </div>
 
-{{-- LIGHTBOX FOTO ULASAN DASHBOARD --}}
-<div id="dashLightbox" class="fixed inset-0 hidden" style="z-index: 99999; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
-    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px;">
+@endsection
+
+@push('modals')
+{{-- LIGHTBOX FOTO ULASAN DASHBOARD (di luar <main> agar selalu menutup sidebar & header) --}}
+<div id="dashLightbox" class="fixed inset-0 hidden" style="z-index: 99999; background: rgba(0,0,0,0.88); backdrop-filter: blur(8px);">
+    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px;" onclick="closeDashLightbox()">
         <img id="dashLightboxImg" src="" alt="Preview" onclick="event.stopPropagation()"
              style="max-width: 100%; max-height: 85vh; border-radius: 16px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); object-fit: contain;">
     </div>
     <button type="button" onclick="closeDashLightbox()"
-            style="position: absolute; top: 20px; right: 20px; width: 48px; height: 48px; background: #ef4444; color: white; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100000;"
+            style="position: absolute; top: 20px; right: 20px; width: 48px; height: 48px; background: #ef4444; color: white; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100000; box-shadow: 0 4px 14px rgba(0,0,0,0.4);"
             title="Tutup">
         <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
     </button>
 </div>
-
-@endsection
+@endpush
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -480,17 +482,19 @@
         if (!url) return;
         document.getElementById('dashLightboxImg').src = url;
         document.getElementById('dashLightbox').classList.remove('hidden');
+        document.body.classList.add('modal-active');
         document.body.style.overflow = 'hidden';
     }
 
     function closeDashLightbox() {
         document.getElementById('dashLightbox')?.classList.add('hidden');
         document.getElementById('dashLightboxImg').src = '';
+        document.body.classList.remove('modal-active');
         document.body.style.overflow = '';
     }
 
-    document.getElementById('dashLightbox')?.addEventListener('click', function(e) {
-        if (e.target === this) closeDashLightbox();
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeDashLightbox();
     });
 </script>
 @endpush

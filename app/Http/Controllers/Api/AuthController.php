@@ -24,7 +24,10 @@ class AuthController extends Controller
      */
     public function me(Request $request)
     {
-        return response()->json($request->user()->load('role'));
+        $user = $request->user()->load('role');
+        $payload = $user->toArray();
+        $payload['name'] = $user->username;
+        return response()->json($payload);
     }
 
     /**
@@ -36,8 +39,10 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'name'                  => 'required|string|max:100',
             'email'                 => 'required|string|email|max:150|unique:users,email',
-            'no_telepon'            => 'nullable|string|max:20',
+            'no_telepon'            => ['nullable', 'string', 'max:20', 'regex:/^(\+62|62|0)[0-9]{8,14}$/'],
             'password'              => 'required|string|min:8|confirmed',
+        ], [
+            'no_telepon.regex' => 'Nomor telepon harus berupa angka yang valid (contoh: 081234567890).',
         ]);
 
         if ($validator->fails()) {
@@ -457,8 +462,10 @@ class AuthController extends Controller
             'name'       => 'nullable|string|max:100',
             'username'   => 'nullable|string|max:100',
             'email'      => 'required|string|email|max:150|unique:users,email,' . $user->id,
-            'no_telepon' => 'nullable|string|max:20',
+            'no_telepon' => ['nullable', 'string', 'max:20', 'regex:/^(\+62|62|0)[0-9]{8,14}$/'],
             'alamat'     => 'nullable|string|max:255',
+        ], [
+            'no_telepon.regex' => 'Nomor telepon harus berupa angka yang valid (contoh: 081234567890).',
         ]);
 
         if ($validator->fails()) {

@@ -321,47 +321,60 @@
         border-color: rgb(var(--border));
     }
 
-    /* Fix Autofill in Light & Dark Mode */
+    /* Fix Autofill in Light & Dark Mode (including iOS Safari WebKit) */
+    [data-theme="dark"] input,
+    [data-theme="dark"] textarea,
+    [data-theme="dark"] select {
+        color-scheme: dark;
+    }
+
     input:-webkit-autofill,
-    input:-webkit-autofill:hover, 
-    input:-webkit-autofill:focus, 
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
     input:-webkit-autofill:active,
+    input:autofill,
     textarea:-webkit-autofill,
     textarea:-webkit-autofill:hover,
     textarea:-webkit-autofill:focus,
     select:-webkit-autofill,
     select:-webkit-autofill:hover,
     select:-webkit-autofill:focus {
-        -webkit-text-fill-color: rgb(var(--text-primary)) !important;
-        caret-color: rgb(var(--text-primary)) !important;
-        -webkit-box-shadow: 0 0 0 1000px rgb(var(--surface)) inset !important;
-        box-shadow: 0 0 0 1000px rgb(var(--surface)) inset !important;
+        -webkit-text-fill-color: #0f172a !important;
+        caret-color: #0f172a !important;
+        background-color: #ffffff !important;
+        -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+        box-shadow: 0 0 0 1000px #ffffff inset !important;
+        background-clip: padding-box !important;
         transition: background-color 5000000s ease-in-out 0s, color 5000000s ease-in-out 0s;
     }
 
     [data-theme="dark"] input:-webkit-autofill,
-    [data-theme="dark"] input:-webkit-autofill:hover, 
-    [data-theme="dark"] input:-webkit-autofill:focus, 
+    [data-theme="dark"] input:-webkit-autofill:hover,
+    [data-theme="dark"] input:-webkit-autofill:focus,
     [data-theme="dark"] input:-webkit-autofill:active,
+    [data-theme="dark"] input:autofill,
     [data-theme="dark"] textarea:-webkit-autofill,
     [data-theme="dark"] textarea:-webkit-autofill:hover,
     [data-theme="dark"] textarea:-webkit-autofill:focus,
     [data-theme="dark"] select:-webkit-autofill,
     [data-theme="dark"] select:-webkit-autofill:hover,
     [data-theme="dark"] select:-webkit-autofill:focus {
+        color: #f8fafc !important;
         -webkit-text-fill-color: #f8fafc !important;
         caret-color: #f8fafc !important;
-        -webkit-box-shadow: 0 0 0 1000px rgb(30 41 59) inset !important;
-        box-shadow: 0 0 0 1000px rgb(30 41 59) inset !important;
-        border-color: rgb(var(--border)) !important;
+        background-color: #1e293b !important;
+        -webkit-box-shadow: 0 0 0 1000px #1e293b inset !important;
+        box-shadow: 0 0 0 1000px #1e293b inset !important;
+        background-clip: padding-box !important;
+        border-color: #334155 !important;
     }
 
     [data-theme="dark"] input:-webkit-autofill:focus,
     [data-theme="dark"] textarea:-webkit-autofill:focus,
     [data-theme="dark"] select:-webkit-autofill:focus {
-        border-color: rgb(var(--brand)) !important;
-        -webkit-box-shadow: 0 0 0 1000px rgb(30 41 59) inset, 0 0 0 3px rgb(var(--brand) / 0.25) !important;
-        box-shadow: 0 0 0 1000px rgb(30 41 59) inset, 0 0 0 3px rgb(var(--brand) / 0.25) !important;
+        border-color: #34d399 !important;
+        -webkit-box-shadow: 0 0 0 1000px #1e293b inset, 0 0 0 3px rgba(52, 211, 153, 0.25) !important;
+        box-shadow: 0 0 0 1000px #1e293b inset, 0 0 0 3px rgba(52, 211, 153, 0.25) !important;
     }
 
     /* FLOATING NAV */

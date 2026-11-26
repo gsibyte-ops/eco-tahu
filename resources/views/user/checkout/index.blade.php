@@ -65,7 +65,10 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1" style="color: rgb(var(--text-primary));">No. Telepon <span style="color: rgb(var(--danger));">*</span></label>
-                            <input type="text" name="no_telepon" required x-model="noTelepon" @input.debounce.450ms="cekPromo()" class="glass-input w-full px-4 py-2.5 text-sm" style="color: rgb(var(--text-primary));" placeholder="08xxxxxxxxxx">
+                            <input type="tel" inputmode="tel" maxlength="16" name="no_telepon" required x-model="noTelepon"
+                                   @input="noTelepon = noTelepon.replace(/[^0-9+]/g, '')"
+                                   @input.debounce.450ms="cekPromo()"
+                                   class="glass-input w-full px-4 py-2.5 text-sm" style="color: rgb(var(--text-primary));" placeholder="08xxxxxxxxxx">
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium mb-1" style="color: rgb(var(--text-primary));">Alamat Lengkap <span style="color: rgb(var(--danger));">*</span></label>
@@ -221,7 +224,7 @@
                                 </svg>
                             </button>
 
-                            <div x-show="open" x-cloak x-transition.opacity.duration.150ms class="custom-select-menu">
+                            <div x-show="open" x-cloak x-transition.opacity.duration.150ms class="custom-select-menu" @wheel.stop @touchmove.stop>
                                 <div class="custom-select-menu-inner">
                                     <div class="custom-select-search">
                                         {{-- ← CHANGED: filter cuma huruf & spasi --}}
@@ -231,7 +234,8 @@
                                                placeholder="Cari kecamatan"
                                                @click.stop>
                                     </div>
-                                    <div class="custom-select-list">
+                                    <div class="custom-select-list"
+                                         @wheel.prevent="$el.scrollTop += $event.deltaY">
                                         <template x-for="nama in Object.keys(kecamatanList).filter(n => n.toLowerCase().includes(search.toLowerCase()))" :key="nama">
                                             <button type="button"
                                                     @click="kecamatan = nama; hitungDariKecamatan(); open = false; search = ''"
@@ -517,6 +521,10 @@
     }
     .custom-select-list {
         overflow-y: auto;
+        max-height: 16.5rem;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
         flex: 1;
         min-height: 0;
     }

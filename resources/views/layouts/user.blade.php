@@ -143,20 +143,48 @@
                         <span x-show="unreadCount > 0" x-text="unreadCount > 9 ? '9+' : unreadCount" class="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center" style="box-shadow: 0 0 0 2px rgb(var(--surface)); display: none;"></span>
                     </button>
                     
-                    <div x-show="notifOpen" x-cloak x-transition.origin.top.right class="absolute right-0 mt-3 w-72 glass-overlay rounded-2xl overflow-hidden" style="z-index: 200;">
-                        <div class="px-4 py-3 flex justify-between items-center" style="border-bottom: 1px solid rgb(var(--border-soft));">
-                            <p class="font-bold text-sm" style="color: rgb(var(--text-primary));">Notifikasi</p>
-                            <button type="button" @click="markAllRead()" x-show="unreadCount > 0" class="text-[10px] font-semibold hover:underline" style="color: rgb(var(--brand));">Tandai Dibaca</button>
+                    {{-- BACKDROP MOBILE --}}
+                    <div x-show="notifOpen" x-cloak @click="notifOpen = false"
+                         class="fixed inset-0 bg-black/40 backdrop-blur-[2px] sm:hidden"
+                         style="z-index: 190;"></div>
+
+                    {{-- PANEL NOTIFIKASI RESPONSIF (FULL-WIDTH FLOATING SHEET DI HP, ANCHORED DROPDOWN DI DESKTOP) --}}
+                    <div x-show="notifOpen" x-cloak
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 -translate-y-1 scale-95"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave-end="opacity-0 -translate-y-1 scale-95"
+                         class="fixed inset-x-3 top-20 sm:inset-auto sm:absolute sm:right-0 sm:top-full sm:mt-3 sm:w-96 rounded-2xl overflow-hidden shadow-2xl"
+                         style="background: rgb(var(--surface)); border: 1px solid rgb(var(--border)); z-index: 200;">
+                        <div class="px-4 py-3.5 flex justify-between items-center" style="border-bottom: 1px solid rgb(var(--border-soft)); background: rgb(var(--bg-secondary) / 0.5);">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full" style="background: rgb(var(--brand));"></span>
+                                <p class="font-bold text-sm" style="color: rgb(var(--text-primary));">Notifikasi</p>
+                                <span x-show="unreadCount > 0" x-text="unreadCount" class="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white" style="background: rgb(var(--brand));"></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" @click="markAllRead()" x-show="unreadCount > 0" class="text-[11px] font-semibold hover:underline" style="color: rgb(var(--brand));">Tandai Dibaca</button>
+                                <button type="button" @click="notifOpen = false" class="sm:hidden p-1 rounded-lg" style="color: rgb(var(--text-muted));" aria-label="Tutup">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </div>
                         </div>
-                        <div class="max-h-64 overflow-y-auto">
+                        <div class="max-h-[65vh] sm:max-h-96 overflow-y-auto overscroll-contain">
                             <template x-for="n in notifications" :key="n.id">
-                                <a :href="readUrl + n.id + '/read'" class="block px-4 py-3 hover:bg-black/5 transition" style="border-bottom: 1px solid rgb(var(--border-soft));">
-                                    <p class="text-xs line-clamp-2" style="color: rgb(var(--text-primary));" x-text="n.data.pesan"></p>
-                                    <p class="text-[9px] mt-1" style="color: rgb(var(--text-muted));" x-text="new Date(n.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })"></p>
+                                <a :href="readUrl + n.id + '/read'" class="flex items-start gap-3 px-4 py-3.5 hover:bg-emerald-500/5 transition" style="border-bottom: 1px solid rgb(var(--border-soft));">
+                                    <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5" style="background: rgb(var(--brand-soft)); color: rgb(var(--brand));">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <p class="text-xs sm:text-[13px] leading-snug break-words" style="color: rgb(var(--text-primary));" x-text="n.data.pesan"></p>
+                                        <p class="text-[10px] mt-1.5 font-medium" style="color: rgb(var(--text-muted));" x-text="new Date(n.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })"></p>
+                                    </div>
                                 </a>
                             </template>
-                            <div x-show="notifications.length === 0" class="px-4 py-6 text-center">
-                                <p class="text-xs" style="color: rgb(var(--text-muted));">Belum ada notifikasi baru.</p>
+                            <div x-show="notifications.length === 0" class="px-4 py-8 text-center">
+                                <p class="text-xs font-medium" style="color: rgb(var(--text-muted));">Belum ada notifikasi baru.</p>
                             </div>
                         </div>
                     </div>

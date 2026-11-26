@@ -28,6 +28,9 @@
 
     <style>
         [x-cloak] { display: none !important; }
+        body.modal-active #adminSidebar,
+        body.modal-active .admin-topbar-wrap { display: none !important; }
+        body.modal-active .admin-main-wrap { margin-left: 0 !important; }
     </style>
 </head>
 <body class="font-sans antialiased admin-shell">
@@ -128,10 +131,10 @@
     <div id="sidebarOverlay" class="fixed inset-0 z-20 bg-black/50 backdrop-blur-sm hidden lg:hidden" onclick="toggleSidebar()"></div>
 
     {{-- MAIN --}}
-    <div class="flex-1 lg:ml-[17rem] flex flex-col min-w-0 relative z-10">
+    <div class="admin-main-wrap flex-1 lg:ml-[17rem] flex flex-col min-w-0 relative z-10">
 
         {{-- WRAPPER HEADER — STICKY --}}
-        <div class="sticky top-0 z-40 px-4 lg:px-6 pt-4 pb-2 lg:pb-4 bg-gradient-to-b from-[rgb(var(--bg-primary))] via-[rgb(var(--bg-primary))]/90 to-transparent lg:from-transparent lg:via-transparent lg:to-transparent transition-all duration-300">
+        <div class="admin-topbar-wrap sticky top-0 z-40 px-4 lg:px-6 pt-4 pb-2 lg:pb-4 bg-gradient-to-b from-[rgb(var(--bg-primary))] via-[rgb(var(--bg-primary))]/90 to-transparent lg:from-transparent lg:via-transparent lg:to-transparent transition-all duration-300">
             <header class="admin-topbar h-16 flex items-center justify-between px-4 lg:px-6 rounded-2xl relative">
                 <div class="flex items-center gap-3 min-w-0">
                     <button type="button" onclick="toggleSidebar()" class="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center transition" style="background: rgb(var(--surface-hover)); color: rgb(var(--text-secondary));">
@@ -181,7 +184,12 @@
                                   style="box-shadow: 0 0 0 2px rgb(var(--surface)); display: none;"></span>
                         </button>
 
-                        {{-- DROPDOWN --}}
+                        {{-- BACKDROP MOBILE --}}
+                        <div x-show="notifOpen" x-cloak @click="notifOpen = false"
+                             class="fixed inset-0 bg-black/40 backdrop-blur-[2px] sm:hidden"
+                             style="z-index: 9998;"></div>
+
+                        {{-- DROPDOWN RESPONSIF (CENTERED SHEET ON MOBILE, ANCHORED ON DESKTOP) --}}
                         <div x-show="notifOpen" x-cloak
                              x-transition:enter="transition ease-out duration-200"
                              x-transition:enter-start="opacity-0 -translate-y-1"
@@ -189,7 +197,7 @@
                              x-transition:leave="transition ease-in duration-150"
                              x-transition:leave-start="opacity-100 translate-y-0"
                              x-transition:leave-end="opacity-0 -translate-y-1"
-                             class="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-2xl overflow-hidden"
+                             class="fixed inset-x-3 top-20 sm:inset-auto sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:w-96 rounded-2xl overflow-hidden"
                              style="background: rgb(var(--surface)); border: 1px solid rgb(var(--border)); box-shadow: var(--shadow-xl); z-index: 9999;">
                             <div class="px-4 py-3 flex items-center justify-between" style="border-bottom: 1px solid rgb(var(--border-soft));">
                                 <div>
@@ -248,6 +256,8 @@
         </main>
     </div>
 </div>
+
+@stack('modals')
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 

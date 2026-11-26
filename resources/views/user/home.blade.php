@@ -221,11 +221,27 @@
                         <h3 class="font-bold text-sm sm:text-base leading-snug line-clamp-2 min-h-[44px] sm:min-h-[48px] mb-2 tracking-tight text-left" style="color: rgb(var(--text-primary));">
                             <a href="{{ route('user.produk.show', $p->slug) }}" class="after:absolute after:inset-0 after:z-[1] focus:outline-none">{{ $p->nama_produk }}</a>
                         </h3>
-                        <div class="flex flex-wrap items-center gap-1 text-xs mb-2 sm:mb-3">
-                            @for ($j = 1; $j <= 5; $j++) <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 {{ $j <= round($avgRating) ? 'text-amber-400 fill-current' : 'fill-current' }}" style="{{ $j > round($avgRating) ? 'color: rgb(var(--text-faint))' : '' }}" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg> @endfor
-                            <span class="ml-1" style="color: rgb(var(--text-muted));">@if ($reviewCount > 0) {{ number_format($avgRating, 1) }} ({{ $reviewCount }}) @else Baru @endif</span>
+                        <div class="flex flex-wrap items-center justify-between gap-1 text-xs mb-2">
+                            <div class="flex items-center gap-0.5">
+                                @for ($j = 1; $j <= 5; $j++) <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 {{ $j <= round($avgRating) ? 'text-amber-400 fill-current' : 'fill-current' }}" style="{{ $j > round($avgRating) ? 'color: rgb(var(--text-faint))' : '' }}" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg> @endfor
+                                <span class="ml-1" style="color: rgb(var(--text-muted));">@if ($reviewCount > 0) {{ number_format($avgRating, 1) }} ({{ $reviewCount }}) @else Baru @endif</span>
+                            </div>
                         </div>
-                        <div class="mb-3 mt-auto"><span class="price text-base sm:text-xl">Rp {{ number_format($p->harga, 0, ',', '.') }}</span></div>
+                        <div class="mb-2">
+                            @if (($p->stok ?? 0) > 0)
+                                <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md tabular-nums" style="background: rgb(var(--brand-soft) / 0.65); color: rgb(var(--brand-strong));">
+                                    Stok: {{ $p->stok }} {{ $p->satuan ?? 'pcs' }}
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md" style="background: rgb(var(--danger-soft)); color: rgb(var(--danger));">
+                                    Stok Habis
+                                </span>
+                            @endif
+                        </div>
+                        <div class="mb-3 mt-auto">
+                            <span class="price text-base sm:text-xl">Rp {{ number_format($p->harga, 0, ',', '.') }}</span>
+                            <span class="text-xs ml-1" style="color: rgb(var(--text-muted));">/ {{ $p->satuan ?? 'pcs' }}</span>
+                        </div>
                         
                         {{-- FIX LOGIKA TOMBOL TAMBAH UNTUK GUEST & ADMIN --}}
                         @if(auth()->check() && auth()->user()->isAdmin())
@@ -310,9 +326,20 @@
                         <h3 class="font-bold text-sm sm:text-base leading-snug line-clamp-2 min-h-[44px] sm:min-h-[48px] mb-2 tracking-tight" style="color: rgb(var(--text-primary));">
                             <a href="{{ route('user.limbah.show', $l->slug) }}" class="after:absolute after:inset-0 after:z-[1] focus:outline-none">{{ $l->nama_limbah }}</a>
                         </h3>
-                        <div class="flex flex-wrap items-center gap-1 text-xs mb-2 sm:mb-3">
+                        <div class="flex flex-wrap items-center gap-1 text-xs mb-2">
                             @for ($j = 1; $j <= 5; $j++) <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 {{ $j <= round($avgRating) ? 'text-amber-400 fill-current' : 'fill-current' }}" style="{{ $j > round($avgRating) ? 'color: rgb(var(--text-faint))' : '' }}" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg> @endfor
                             <span class="ml-1" style="color: rgb(var(--text-muted));">@if ($reviewCount > 0) {{ number_format($avgRating, 1) }} ({{ $reviewCount }}) @else Baru @endif</span>
+                        </div>
+                        <div class="mb-2">
+                            @if (($l->stok ?? 0) > 0)
+                                <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md tabular-nums" style="background: rgb(var(--accent-soft) / 0.75); color: rgb(var(--accent-hover));">
+                                    Stok: {{ $l->stok }} {{ $l->satuan ?? 'kg' }}
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md" style="background: rgb(var(--danger-soft)); color: rgb(var(--danger));">
+                                    Stok Habis
+                                </span>
+                            @endif
                         </div>
                         <div class="mb-3 mt-auto">
                             <span class="price text-base sm:text-xl" style="color: rgb(var(--accent-hover));">Rp {{ number_format($l->harga, 0, ',', '.') }}</span>

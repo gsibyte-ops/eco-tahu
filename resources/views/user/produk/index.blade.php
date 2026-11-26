@@ -83,7 +83,22 @@
                                     </span>
                                 </div>
 
-                                <p class="text-left text-base sm:text-lg price mb-2 mt-auto">Rp {{ number_format($p->harga, 0, ',', '.') }}</p>
+                                <div class="mb-1.5">
+                                    @if (($p->stok ?? 0) > 0)
+                                        <span class="inline-flex items-center text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-md tabular-nums" style="background: rgb(var(--brand-soft) / 0.65); color: rgb(var(--brand-strong));">
+                                            Stok: {{ $p->stok }} {{ $p->satuan ?? 'pcs' }}
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-md" style="background: rgb(var(--danger-soft)); color: rgb(var(--danger));">
+                                            Stok Habis
+                                        </span>
+                                    @endif
+                                </div>
+
+                                <p class="text-left text-base sm:text-lg price mb-2 mt-auto">
+                                    Rp {{ number_format($p->harga, 0, ',', '.') }}
+                                    <span class="text-[9px] sm:text-xs font-normal" style="color: rgb(var(--text-muted));">/ {{ $p->satuan ?? 'pcs' }}</span>
+                                </p>
 
                                 @if(auth()->check() && auth()->user()->isAdmin())
                                     <button type="button" onclick="window.showAdminNotif()" class="btn-primary relative z-10 w-full !text-[10px] sm:!text-xs flex items-center justify-center gap-1 opacity-80 py-1.5 sm:py-2">

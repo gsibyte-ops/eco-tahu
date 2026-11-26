@@ -92,6 +92,18 @@
                                     </span>
                                 </div>
 
+                                <div class="mb-1.5">
+                                    @if (($l->stok ?? 0) > 0)
+                                        <span class="inline-flex items-center text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-md tabular-nums" style="background: rgb(var(--accent-soft) / 0.75); color: rgb(var(--accent-hover));">
+                                            Stok: {{ $l->stok }} {{ $l->satuan ?? 'kg' }}
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-md" style="background: rgb(var(--danger-soft)); color: rgb(var(--danger));">
+                                            Stok Habis
+                                        </span>
+                                    @endif
+                                </div>
+
                                 <p class="text-sm sm:text-lg price mb-2 mt-auto" style="color: rgb(var(--accent-hover));">
                                     Rp {{ number_format($l->harga, 0, ',', '.') }}
                                     <span class="text-[8px] sm:text-xs font-normal" style="color: rgb(var(--text-muted));">/ {{ $l->satuan }}</span>

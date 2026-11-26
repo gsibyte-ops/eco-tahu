@@ -24,8 +24,10 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users'],
-            'no_telepon' => ['nullable', 'string', 'max:20'],
+            'no_telepon' => ['nullable', 'string', 'max:20', 'regex:/^(\+62|62|0)[0-9]{8,14}$/'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ], [
+            'no_telepon.regex' => 'Nomor telepon harus berupa angka yang valid (contoh: 081234567890).',
         ]);
 
         $user = User::create([

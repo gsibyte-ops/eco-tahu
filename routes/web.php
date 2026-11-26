@@ -165,8 +165,12 @@ Route::view('/syarat-ketentuan', 'pages.snk')->name('halaman.snk');
 Route::view('/kebijakan-privasi', 'pages.privasi')->name('halaman.privasi');
 Route::view('/sitemap', 'pages.sitemap')->name('halaman.sitemap');
 
-// Proxy route untuk Flutter Mobile yang memanggil /files/{path} dengan CORS & realpath guard
+// Proxy route untuk media publik (/files/{path} dan /storage/{path}) dengan realpath guard & whitelist ekstensi
 Route::match(['GET', 'OPTIONS'], '/files/{path}', [\App\Http\Controllers\FileProxyController::class, 'show'])
+    ->where('path', '.*')
+    ->withoutMiddleware('web');
+
+Route::match(['GET', 'OPTIONS'], '/storage/{path}', [\App\Http\Controllers\FileProxyController::class, 'show'])
     ->where('path', '.*')
     ->withoutMiddleware('web');
 
