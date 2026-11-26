@@ -548,6 +548,11 @@ class PesananController extends Controller
             'status' => 'success',
             'active' => $active,
             'order_status' => $pesanan->order_status,
+            'estimasi_menit' => $pesanan->estimasi_menit,
+            'estimasi_tiba' => $pesanan->estimasi_tiba?->toIso8601String(),
+            'estimasi_tiba_wib' => $pesanan->estimasi_tiba?->timezone('Asia/Jakarta')->format('H:i'),
+            'status_kurir' => $pesanan->status_kurir,
+            'status_kurir_label' => $pesanan->status_kurir_label,
             'kurir' => $active ? [
                 'lat' => (float) $pesanan->lat_kurir,
                 'lng' => (float) $pesanan->lng_kurir,

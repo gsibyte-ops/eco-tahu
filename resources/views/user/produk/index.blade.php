@@ -17,17 +17,19 @@
 
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-[270px_minmax(0,1fr)]">
 
-        <aside class="glass-card p-4 sm:p-5 h-fit xl:sticky xl:top-24">
+        <aside class="glass-card !overflow-visible p-4 sm:p-5 h-fit xl:sticky xl:top-24 relative z-20">
             <div class="mb-3 sm:mb-4">
                 <h3 class="text-base sm:text-lg font-bold" style="color: rgb(var(--text-primary));">Filter</h3>
             </div>
             <form method="GET" class="space-y-3 sm:space-y-4">
                 <div>
                     <label class="mb-1.5 block text-[10px] sm:text-[11px] font-bold uppercase tracking-wide" style="color: rgb(var(--text-muted));">Cari Produk</label>
-                    <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari tahu..."
-                           oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')"
-                           pattern="[a-zA-Z\s]+" title="Hanya huruf dan spasi"
-                           class="glass-input w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm" style="color: rgb(var(--text-primary));">
+                    <x-live-search-input
+                        name="q"
+                        :value="request('q', '')"
+                        scope="produk"
+                        placeholder="Cari nama produk tahu..."
+                        accent="emerald" />
                 </div>
                 <div x-data="{ open: false, selected: '{{ request('sort') }}', options: [{ id: '', name: 'Terbaru' }, { id: 'termurah', name: 'Harga Termurah' }, { id: 'termahal', name: 'Harga Termahal' }] }" @click.away="open = false" class="relative">
                     <label class="mb-1.5 block text-[10px] sm:text-[11px] font-bold uppercase tracking-wide" style="color: rgb(var(--text-muted));">Urutkan</label>

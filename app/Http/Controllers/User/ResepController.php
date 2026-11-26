@@ -17,11 +17,8 @@ class ResepController extends Controller
             ->orderByDesc('id');
 
         if ($request->filled('q')) {
-            $term = $request->q;
-            $query->where(function ($sub) use ($term) {
-                $sub->where('judul', 'like', '%' . $term . '%')
-                    ->orWhere('bahan', 'like', '%' . $term . '%');
-            });
+            $term = trim((string) $request->q);
+            $query->where('judul', 'like', '%' . $term . '%');
         }
 
         if ($request->filled('tingkat') && in_array($request->tingkat, ['mudah', 'sedang', 'sulit'], true)) {

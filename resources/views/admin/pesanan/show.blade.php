@@ -227,22 +227,109 @@
         {{-- Update Status / Batalkan --}}
         @if ($pesanan->order_status !== 'dibatalkan' && $pesanan->order_status !== 'selesai')
 
-            {{-- Card Update Status --}}
-            <div class="glass-card p-6">
-                <h3 class="font-bold txt-primary mb-4">Update Status</h3>
-                <form action="{{ route('admin.pesanan.updateStatus', $pesanan->id) }}" method="POST">
+            {{-- Card Update Status + Estimasi Tiba & Status Kurir (Driver) --}}
+            @php
+                $defaultEtaMenit = $pesanan->estimasi_menit ?? \App\Models\Pesanan::defaultEtaMinutes($pesanan);
+                $defaultCourierStatus = $pesanan->status_kurir
+                    ?? ($pesanan->order_status === 'dikirim'
+                        ? ($pesanan->delivery_type === 'pickup' ? 'siap_diambil' : 'menuju_lokasi')
+                        : 'menyiapkan');
+                $courierOptions = $pesanan->delivery_type === 'pickup'
+                    ? [
+                        'menyiapkan'   => 'Admin sedang menyiapkan pesanan',
+                        'siap_diambil' => 'Pesanan sudah siap diambil di lokasi EcoTahu',
+                    ]
+                    : [
+                        'menyiapkan'      => 'Admin sedang menyiapkan pesanan',
+                        'menuju_lokasi'   => 'Kurir sedang dalam perjalanan menuju lokasimu',
+                        'hampir_sampai'   => 'Kurir sudah dekat di sekitar lokasimu (±5 menit lagi)',
+                        'sudah_di_lokasi' => 'Kurir sudah tiba di lokasi tujuan',
+                    ];
+            @endphp
+            <div class="glass-card p-6"
+                 x-data="{
+                    status: '{{ $pesanan->order_status }}',
+                    etaMenit: {{ (int) $defaultEtaMenit }},
+                    courierStatus: '{{ $defaultCourierStatus }}',
+                    deliveryType: '{{ $pesanan->delivery_type }}',
+                    etaClockPreview() {
+                        const m = parseInt(this.etaMenit, 10);
+                        if (!m || m < 1) return '-';
+                        const target = new Date(Date.now() + m * 60000);
+                        return target.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }) + ' WIB';
+                    }
+                 }"
+                 x-effect="
+                    if (status === 'diproses' && !['menyiapkan'].includes(courierStatus)) { courierStatus = 'menyiapkan'; }
+                    if (status === 'dikirim' && courierStatus === 'menyiapkan') { courierStatus = (deliveryType === 'pickup' ? 'siap_diambil' : 'menuju_lokasi'); }
+                 ">
+                <div class="flex items-center justify-between gap-2 mb-4">
+                    <h3 class="font-bold txt-primary">Update Status &amp; Kurir</h3>
+                    @if ($pesanan->estimasi_menit && $pesanan->estimasi_tiba)
+                        <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600">
+                            ETA ±{{ $pesanan->estimasi_menit }} mnt ({{ $pesanan->estimasi_tiba->timezone('Asia/Jakarta')->format('H:i') }} WIB)
+                        </span>
+                    @endif
+                </div>
+
+                @if ($pesanan->status_kurir_label)
+                    <div class="mb-3 px-3 py-2 rounded-xl text-xs bg-emerald-500/10 border border-emerald-500/20 txt-primary">
+                        <span class="font-semibold text-emerald-600">Aktivitas Kurir Saat Ini:</span>
+                        {{ $pesanan->status_kurir_label }}
+                    </div>
+                @endif
+
+                <form action="{{ route('admin.pesanan.updateStatus', $pesanan->id) }}" method="POST" class="space-y-3">
                     @csrf @method('PATCH')
-                    <select name="order_status" required
-                            class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-3">
-                        <option value="pending" {{ $pesanan->order_status == 'pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="diproses" {{ $pesanan->order_status == 'diproses' ? 'selected' : '' }}>Diproses</option>
-                        <option value="dikirim" {{ $pesanan->order_status == 'dikirim' ? 'selected' : '' }}>Dikirim</option>
-                        <option value="selesai" {{ $pesanan->order_status == 'selesai' ? 'selected' : '' }}>Selesai</option>
-                    </select>
+                    <div>
+                        <label class="block text-xs font-semibold txt-secondary mb-1">Status Pesanan</label>
+                        <select name="order_status" x-model="status" required
+                                class="w-full px-4 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                            <option value="pending">Pending</option>
+                            <option value="diproses">Diproses</option>
+                            <option value="dikirim">Dikirim</option>
+                            <option value="selesai">Selesai</option>
+                        </select>
+                    </div>
+
+                    <div x-show="status === 'diproses' || status === 'dikirim'" x-cloak class="space-y-3 pt-1">
+                        <div>
+                            <label class="block text-xs font-semibold txt-secondary mb-1">Status Kurir / Driver</label>
+                            <select name="status_kurir" x-model="courierStatus"
+                                    class="w-full px-3.5 py-2.5 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                                @foreach ($courierOptions as $key => $label)
+                                    <option value="{{ $key }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="text-xs font-semibold txt-secondary">Perkiraan Tiba (menit)</label>
+                                <span class="text-[11px] font-semibold text-emerald-600 tabular-nums" x-text="'Sekitar ' + etaClockPreview()"></span>
+                            </div>
+                            <input type="number" name="estimasi_menit" x-model="etaMenit" min="1" max="1440"
+                                   class="w-full px-3.5 py-2 rounded-xl border bd-default focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm tabular-nums"
+                                   placeholder="Misal: 30">
+                            <div class="flex flex-wrap gap-1.5 mt-2">
+                                @foreach ([15, 30, 45, 60] as $preset)
+                                    <button type="button" @click="etaMenit = {{ $preset }}"
+                                            :class="parseInt(etaMenit) === {{ $preset }} ? 'bg-emerald-600 text-white border-emerald-600' : 'bd-default txt-secondary'"
+                                            class="px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition">
+                                        {{ $preset }} mnt
+                                    </button>
+                                @endforeach
+                            </div>
+                            @if ($pesanan->jarak_km > 0)
+                                <p class="text-[11px] txt-secondary mt-1.5">Default otomatis dari jarak {{ $pesanan->jarak_km }} km. Bisa diubah kapan saja &amp; otomatis push notif ke HP user.</p>
+                            @endif
+                        </div>
+                    </div>
+
                     <button type="submit"
-                            class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition"
-                            onclick="return confirm('Update status pesanan ini?')">
-                        Update Status
+                            class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition"
+                            onclick="return confirm('Update status pesanan & kirim notifikasi ke pelanggan?')">
+                        Update Status &amp; Info Kurir
                     </button>
                 </form>
             </div>

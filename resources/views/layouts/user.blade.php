@@ -129,7 +129,16 @@
 
         {{-- Actions --}}
         <div class="flex items-center gap-1 sm:gap-2 shrink-0 relative z-10">
-            
+
+            {{-- QUICK SEARCH ICON (Ctrl+K) -> Opens Google-style dropdown modal --}}
+            <button type="button"
+                    @click="$dispatch('open-quick-search')"
+                    class="nav-icon-btn"
+                    title="Cari Cepat (Ctrl+K)"
+                    aria-label="Cari Cepat">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.9"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 105.65 5.65a7.5 7.5 0 0010.6 10.6z"/></svg>
+            </button>
+
             {{-- NOTIFIKASI LONCENG (ALPINE VERSION) --}}
             @auth
                 <div class="relative" x-data="notifApp({
@@ -511,6 +520,168 @@
         window.setCartBadge(current + 1);
     };
 </script>
+
+{{-- QUICK SEARCH MODAL (HEADER 🔍 BUTTON -> GOOGLE-STYLE DROPDOWN BY NAME) --}}
+<div x-data="{
+        open: false,
+        query: '',
+        scope: 'all',
+        loading: false,
+        searched: false,
+        items: [],
+        reqSeq: 0,
+        suggestUrl: @js(route('search.suggest')),
+        scopes: [
+            { id: 'all', label: 'Semua' },
+            { id: 'produk', label: 'Produk Tahu' },
+            { id: 'limbah', label: 'Ampas Tahu' },
+            { id: 'resep', label: 'Resep' },
+            { id: 'edukasi', label: 'Edukasi' },
+        ],
+        openModal() {
+            this.open = true;
+            this.$nextTick(() => this.$refs.qsInput?.focus());
+        },
+        closeModal() {
+            this.open = false;
+        },
+        setScope(newScope) {
+            this.scope = newScope;
+            if ((this.query || '').trim().length > 0) this.fetchSuggest();
+        },
+        async fetchSuggest() {
+            const q = (this.query || '').trim();
+            if (!q) {
+                this.items = [];
+                this.searched = false;
+                this.loading = false;
+                return;
+            }
+            const seq = ++this.reqSeq;
+            this.loading = true;
+            try {
+                const url = this.suggestUrl + '?q=' + encodeURIComponent(q) + '&scope=' + encodeURIComponent(this.scope);
+                const res = await fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                if (seq !== this.reqSeq) return;
+                this.items = Array.isArray(data.items) ? data.items : [];
+                this.searched = true;
+            } catch (e) {
+                if (seq !== this.reqSeq) return;
+                this.items = [];
+                this.searched = true;
+            } finally {
+                if (seq === this.reqSeq) this.loading = false;
+            }
+        }
+    }"
+    @open-quick-search.window="openModal()"
+    @keydown.ctrl.k.window.prevent="openModal()"
+    @keydown.meta.k.window.prevent="openModal()"
+    @keydown.escape.window="if (open) closeModal()"
+    x-show="open"
+    x-cloak
+    class="fixed inset-0 flex items-start justify-center pt-20 sm:pt-24 px-3 sm:px-4"
+    style="z-index: 250;">
+    <div @click="closeModal()" class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
+
+    <div @click.stop
+         class="relative w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden"
+         style="background: rgb(var(--surface)); border: 1px solid rgb(var(--border)); z-index: 251;">
+        <div class="p-3.5 sm:p-4" style="border-bottom: 1px solid rgb(var(--border-soft));">
+            <div class="relative flex items-center">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 absolute left-3.5 pointer-events-none" style="color: rgb(var(--brand));" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 105.65 5.65a7.5 7.5 0 0010.6 10.6z"/>
+                </svg>
+                <input x-ref="qsInput"
+                       type="text"
+                       x-model="query"
+                       @input.debounce.200ms="fetchSuggest()"
+                       autocomplete="off"
+                       placeholder="Cari nama produk tahu, ampas, resep, atau edukasi..."
+                       class="glass-input w-full pl-10 pr-16 py-2.5 text-sm"
+                       style="color: rgb(var(--text-primary));">
+                <button type="button" x-show="(query || '').length > 0" @click="query = ''; items = []; searched = false; $refs.qsInput?.focus()"
+                        class="absolute right-10 p-1 rounded-full text-xs" style="color: rgb(var(--text-muted));" aria-label="Hapus">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+                <button type="button" @click="closeModal()"
+                        class="absolute right-2 px-1.5 py-0.5 rounded text-[10px] font-bold"
+                        style="background: rgb(var(--bg-secondary)); color: rgb(var(--text-muted)); border: 1px solid rgb(var(--border-soft));">
+                    ESC
+                </button>
+            </div>
+
+            {{-- Scope filter pills (search by name) --}}
+            <div class="flex flex-wrap items-center gap-1.5 mt-3">
+                <template x-for="s in scopes" :key="s.id">
+                    <button type="button" @click="setScope(s.id)"
+                            class="px-2.5 py-1 rounded-full text-[11px] font-semibold transition"
+                            :style="scope === s.id
+                                ? 'background: var(--gradient-brand); color: #fff;'
+                                : 'background: rgb(var(--bg-secondary)); color: rgb(var(--text-secondary)); border: 1px solid rgb(var(--border-soft));'"
+                            x-text="s.label"></button>
+                </template>
+            </div>
+        </div>
+
+        <div class="max-h-[58vh] overflow-y-auto overscroll-contain">
+            <div x-show="(query || '').trim().length === 0" class="px-5 py-8 text-center">
+                <p class="text-xs sm:text-sm font-medium" style="color: rgb(var(--text-muted));">
+                    Ketik nama item yang dicari (pencarian akurat khusus berdasarkan nama/judul).
+                </p>
+            </div>
+
+            <div x-show="loading && (query || '').trim().length > 0" class="px-5 py-6 text-center">
+                <p class="text-xs font-semibold animate-pulse" style="color: rgb(var(--brand));">Mencari rekomendasi...</p>
+            </div>
+
+            <template x-if="!loading && (query || '').trim().length > 0 && items.length > 0">
+                <div>
+                    <template x-for="item in items" :key="item.type + ':' + item.url">
+                        <a :href="item.url"
+                           class="flex items-center gap-3 px-4 py-3 transition hover:bg-emerald-500/5"
+                           style="border-bottom: 1px solid rgb(var(--border-soft));">
+                            <div class="w-11 h-11 rounded-xl overflow-hidden shrink-0 flex items-center justify-center"
+                                 style="background: rgb(var(--bg-secondary));">
+                                <template x-if="item.image">
+                                    <img :src="item.image" :alt="item.name" class="w-full h-full object-cover">
+                                </template>
+                                <template x-if="!item.image">
+                                    <svg class="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 105.65 5.65a7.5 7.5 0 0010.6 10.6z"/></svg>
+                                </template>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-sm font-bold truncate" style="color: rgb(var(--text-primary));" x-text="item.name"></p>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0"
+                                          :style="item.type === 'limbah'
+                                            ? 'background: rgb(var(--accent-soft)); color: rgb(var(--accent));'
+                                            : 'background: rgb(var(--brand-soft)); color: rgb(var(--brand-strong));'"
+                                          x-text="item.badge"></span>
+                                    <span class="text-xs truncate" style="color: rgb(var(--text-secondary));" x-text="item.meta"></span>
+                                </div>
+                            </div>
+                            <svg class="w-4 h-4 shrink-0 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                        </a>
+                    </template>
+                </div>
+            </template>
+
+            <template x-if="!loading && searched && (query || '').trim().length > 0 && items.length === 0">
+                <div class="px-5 py-8 text-center">
+                    <p class="text-sm font-bold" style="color: rgb(var(--text-primary));">
+                        Tidak ditemukan untuk "<span x-text="query.trim()" style="color: rgb(var(--brand));"></span>"
+                    </p>
+                    <p class="text-xs mt-1" style="color: rgb(var(--text-muted));">
+                        Coba pilih filter "Semua" atau gunakan kata kunci nama lain.
+                    </p>
+                </div>
+            </template>
+        </div>
+    </div>
+</div>
 
 @stack('scripts')
 

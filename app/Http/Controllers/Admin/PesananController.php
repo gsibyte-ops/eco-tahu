@@ -76,7 +76,9 @@ class PesananController extends Controller
     public function updateStatus(Request $request, Pesanan $pesanan)
     {
         $request->validate([
-            'order_status' => 'required|in:pending,diproses,dikirim,selesai,dibatalkan',
+            'order_status'   => 'required|in:pending,diproses,dikirim,selesai,dibatalkan',
+            'estimasi_menit' => 'nullable|integer|min:1|max:1440',
+            'status_kurir'   => 'nullable|in:menyiapkan,menuju_lokasi,hampir_sampai,sudah_di_lokasi,siap_diambil',
         ]);
 
         $data = ['order_status' => $request->order_status];
@@ -86,6 +88,25 @@ class PesananController extends Controller
             $data['lat_kurir'] = null;
             $data['lng_kurir'] = null;
             $data['lokasi_updated_at'] = null;
+        }
+
+        // Kelola ETA & Status Kurir saat status aktif (diproses / dikirim)
+        if (in_array($request->order_status, ['diproses', 'dikirim'], true)) {
+            $etaMenit = $request->filled('estimasi_menit')
+                ? (int) $request->estimasi_menit
+                : ($pesanan->estimasi_menit ?: Pesanan::defaultEtaMinutes($pesanan));
+            $courierStatus = $request->filled('status_kurir')
+                ? $request->status_kurir
+                : ($request->order_status === 'diproses'
+                    ? 'menyiapkan'
+                    : ($pesanan->delivery_type === 'pickup' ? 'siap_diambil' : 'menuju_lokasi'));
+
+            $etaAt = now()->addMinutes($etaMenit);
+            $data['estimasi_menit'] = $etaMenit;
+            $data['estimasi_tiba']  = $etaAt;
+            $data['status_kurir']   = $courierStatus;
+        } else {
+            $data['status_kurir'] = null;
         }
 
         // LOGIKA COD: Jika Selesai dan COD, otomatis lunas
@@ -104,10 +125,24 @@ class PesananController extends Controller
         }
 
         $pesanan->update($data);
+        $pesanan->refresh();
 
-        // KIRIM NOTIFIKASI KE USER
+        // KIRIM PUSH/IN-APP NOTIFIKASI KE USER
+        if (in_array($request->order_status, ['diproses', 'dikirim'], true)) {
+            $kurirLabel = $pesanan->status_kurir_label ?: ('Pesanan ' . ucfirst($request->order_status));
+            $etaClock = $pesanan->estimasi_tiba
+                ? $pesanan->estimasi_tiba->timezone('Asia/Jakarta')->format('H:i') . ' WIB'
+                : null;
+            $etaInfo = $pesanan->estimasi_menit
+                ? ($etaClock ? " · Estimasi tiba ±{$pesanan->estimasi_menit} menit (sekitar {$etaClock})" : " · Estimasi tiba ±{$pesanan->estimasi_menit} menit")
+                : '';
+            $notifMsg = "Pesanan #{$pesanan->kode_pesanan}: {$kurirLabel}{$etaInfo}.";
+        } else {
+            $notifMsg = "Status pesanan #{$pesanan->kode_pesanan} kamu berubah menjadi: " . ucfirst($request->order_status);
+        }
+
         $pesanan->user->notify(new UpdatePesanan(
-            "Status pesanan #{$pesanan->kode_pesanan} kamu berubah menjadi: " . ucfirst($request->order_status),
+            $notifMsg,
             route('user.pesanan.show', $pesanan->kode_pesanan)
         ));
 
@@ -200,15 +235,23 @@ class PesananController extends Controller
             ]);
         }
 
-        // OTOMATIS PROSES SETELAH VERIFIKASI (One-Click Action)
+        // OTOMATIS PROSES + SET ETA DEFAULT SETELAH VERIFIKASI (One-Click Action)
+        $etaMenit = $pesanan->estimasi_menit ?: Pesanan::defaultEtaMinutes($pesanan);
+        $etaAt = now()->addMinutes($etaMenit);
+
         $pesanan->update([
             'payment_status' => 'paid',
-            'order_status' => 'diproses'
+            'order_status'   => 'diproses',
+            'estimasi_menit' => $etaMenit,
+            'estimasi_tiba'  => $etaAt,
+            'status_kurir'   => 'menyiapkan',
         ]);
 
-        // KIRIM NOTIFIKASI KE USER
+        $etaClock = $etaAt->timezone('Asia/Jakarta')->format('H:i');
+
+        // KIRIM PUSH/IN-APP NOTIFIKASI KE USER
         $pesanan->user->notify(new UpdatePesanan(
-            "Pembayaran pesanan #{$pesanan->kode_pesanan} telah diverifikasi. Pesanan sedang diproses.",
+            "Pembayaran pesanan #{$pesanan->kode_pesanan} terverifikasi! Admin sedang menyiapkan pesanan. Estimasi tiba ±{$etaMenit} menit (sekitar {$etaClock} WIB).",
             route('user.pesanan.show', $pesanan->kode_pesanan)
         ));
 

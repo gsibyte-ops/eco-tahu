@@ -21,11 +21,15 @@
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8">
 
         <div class="lg:col-span-3">
-            <div class="glass-card p-3 sm:p-4 mb-4 sm:mb-6">
+            <div class="glass-card !overflow-visible relative z-20 p-3 sm:p-4 mb-4 sm:mb-6">
                 <form method="GET" class="flex flex-wrap gap-2">
                     <div class="relative flex-1 min-w-[150px]">
-                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari artikel..."
-                               class="glass-input w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm" style="color: rgb(var(--text-primary));">
+                        <x-live-search-input
+                            name="q"
+                            :value="request('q', '')"
+                            scope="edukasi"
+                            placeholder="Cari judul artikel edukasi..."
+                            accent="emerald" />
                     </div>
                     <button type="submit" class="glass-btn-primary text-xs sm:text-sm whitespace-nowrap px-4 sm:px-6 py-1.5 sm:py-2">Cari</button>
                     @if (request('q'))

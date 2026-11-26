@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\ResepController as AdminResepController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SearchSuggestController;
 use App\Http\Controllers\User\CartController;
 use App\Http\Controllers\User\CheckoutController;
 use App\Http\Controllers\User\EdukasiController;
@@ -29,6 +30,9 @@ use Illuminate\Support\Facades\Route;
 // PUBLIC
 // ============================
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/search/suggest', [SearchSuggestController::class, 'index'])
+    ->middleware('throttle:60,1')
+    ->name('search.suggest');
 
 // ============================
 // PUBLIC KATALOG (Bisa diakses tanpa login)

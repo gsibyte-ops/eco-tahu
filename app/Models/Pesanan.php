@@ -28,6 +28,9 @@ class Pesanan extends Model
         'va_number',
         'payment_status',
         'order_status',
+        'estimasi_menit',
+        'estimasi_tiba',
+        'status_kurir',
         'alasan_batal',
         'alamat_pengiriman',
         'no_telepon_penerima',
@@ -37,10 +40,14 @@ class Pesanan extends Model
         'expired_at',
     ];
 
+    protected $appends = ['status_kurir_label'];
+
     protected $casts = [
         'tanggal_order'     => 'datetime',
         'expired_at'        => 'datetime',
+        'estimasi_tiba'     => 'datetime',
         'lokasi_updated_at' => 'datetime',
+        'estimasi_menit'    => 'integer',
         'diskon'            => 'float',
         'jarak_km'          => 'float',
         'lat_tujuan'        => 'float',
@@ -90,6 +97,34 @@ class Pesanan extends Model
             return 'Ambil di Tempat';
         }
         return 'Diantar';
+    }
+
+    public static function courierStatusLabels(): array
+    {
+        return [
+            'menyiapkan'      => 'Admin sedang menyiapkan pesanan',
+            'menuju_lokasi'   => 'Kurir sedang dalam perjalanan menuju lokasimu',
+            'hampir_sampai'   => 'Kurir sudah dekat di sekitar lokasimu (±5 menit lagi)',
+            'sudah_di_lokasi' => 'Kurir sudah tiba di lokasi tujuan',
+            'siap_diambil'    => 'Pesanan sudah siap diambil di lokasi EcoTahu',
+        ];
+    }
+
+    public static function defaultEtaMinutes(self $pesanan): int
+    {
+        if ($pesanan->delivery_type === 'pickup') {
+            return 15;
+        }
+        $km = (float) ($pesanan->jarak_km ?? 2);
+        return max(15, min(120, 15 + (int) ceil($km * 3)));
+    }
+
+    public function getStatusKurirLabelAttribute(): ?string
+    {
+        if (!$this->status_kurir) {
+            return null;
+        }
+        return self::courierStatusLabels()[$this->status_kurir] ?? ucfirst(str_replace('_', ' ', $this->status_kurir));
     }
 
     public function isTrackingActive(): bool

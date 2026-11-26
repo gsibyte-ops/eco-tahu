@@ -47,6 +47,71 @@
         </div>
     @endif
 
+    @if (in_array($pesanan->order_status, ['diproses', 'dikirim'], true))
+        @php
+            $etaMenit = $pesanan->estimasi_menit ?: \App\Models\Pesanan::defaultEtaMinutes($pesanan);
+            $etaClockWib = $pesanan->estimasi_tiba
+                ? $pesanan->estimasi_tiba->timezone('Asia/Jakarta')->format('H:i') . ' WIB'
+                : null;
+            $curCourier = $pesanan->status_kurir
+                ?? ($pesanan->order_status === 'dikirim'
+                    ? ($pesanan->delivery_type === 'pickup' ? 'siap_diambil' : 'menuju_lokasi')
+                    : 'menyiapkan');
+            $curCourierLabel = $pesanan->status_kurir_label
+                ?? (\App\Models\Pesanan::courierStatusLabels()[$curCourier] ?? 'Admin sedang menyiapkan pesanan');
+
+            $etaSteps = $pesanan->delivery_type === 'pickup'
+                ? [
+                    ['key' => 'menyiapkan', 'label' => 'Disiapkan'],
+                    ['key' => 'siap_diambil', 'label' => 'Siap Diambil'],
+                ]
+                : [
+                    ['key' => 'menyiapkan', 'label' => 'Disiapkan'],
+                    ['key' => 'menuju_lokasi', 'label' => 'Di Jalan'],
+                    ['key' => 'hampir_sampai', 'label' => 'Hampir Tiba'],
+                    ['key' => 'sudah_di_lokasi', 'label' => 'Sampai'],
+                ];
+            $stepOrder = array_column($etaSteps, 'key');
+            $activeIdx = array_search($curCourier, $stepOrder, true);
+            if ($activeIdx === false) { $activeIdx = 0; }
+        @endphp
+        <div class="glass-card p-5 mb-5" id="courierEtaCard" style="border: 1px solid rgb(var(--brand) / 0.25);">
+            <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
+                <div class="flex items-start gap-3">
+                    <div class="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 text-white" style="background: var(--gradient-brand);">
+                        <x-icon name="clock" class="w-5 h-5" />
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-bold uppercase tracking-wider" style="color: rgb(var(--brand));">Status Kurir &amp; Perkiraan Tiba</p>
+                        <h3 id="etaCardCourierLabel" class="text-sm sm:text-base font-bold mt-0.5" style="color: rgb(var(--text-primary));">
+                            {{ $curCourierLabel }}
+                        </h3>
+                    </div>
+                </div>
+                <div class="px-3 py-1.5 rounded-xl text-xs font-bold tabular-nums" style="background: rgb(var(--brand-soft)); color: rgb(var(--brand-strong)); border: 1px solid rgb(var(--brand) / 0.25);">
+                    <span id="etaCardBadgeText">
+                        Estimasi ±{{ $etaMenit }} menit
+                        @if ($etaClockWib) · sekitar {{ $etaClockWib }} @endif
+                    </span>
+                </div>
+            </div>
+
+            <div class="grid gap-2" style="grid-template-columns: repeat({{ count($etaSteps) }}, minmax(0, 1fr));">
+                @foreach ($etaSteps as $idx => $step)
+                    @php $done = $idx <= $activeIdx; @endphp
+                    <div class="flex flex-col gap-1.5">
+                        <div class="h-1.5 rounded-full transition-all"
+                             style="background: {{ $done ? 'rgb(var(--brand))' : 'rgb(var(--border-soft))' }};"></div>
+                        <span class="text-[10px] sm:text-xs font-semibold truncate {{ $done ? '' : 'opacity-60' }}"
+                              style="color: {{ $done ? 'rgb(var(--brand-strong))' : 'rgb(var(--text-muted))' }};">
+                            {{ $step['label'] }}
+                        </span>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     @if ($pesanan->order_status === 'dikirim')
         <div id="trackingSection" class="glass-card p-5 mb-5">
             <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
@@ -55,8 +120,9 @@
                         <span class="w-2.5 h-2.5 rounded-full bg-violet-500 animate-pulse"></span>
                         Lacak Kurir
                     </h3>
-                    <p class="text-xs mt-1" style="color: rgb(var(--text-secondary));" id="trackingSubtitle">
-                        @if ($trackingAktif) Kurir sedang dalam perjalanan ke lokasi Anda.
+                    <p id="trackingSubtitle" class="text-xs mt-1" style="color: rgb(var(--text-secondary));">
+                        @if ($pesanan->status_kurir_label) {{ $pesanan->status_kurir_label }}
+                        @elseif ($trackingAktif) Kurir sedang dalam perjalanan ke lokasi Anda.
                         @else Menunggu kurir memulai pengiriman... @endif
                     </p>
                 </div>
@@ -767,6 +833,20 @@
                     if (pollingInterval) clearInterval(pollingInterval);
                     setTimeout(() => location.reload(), 500);
                     return;
+                }
+                if (data.status_kurir_label) {
+                    const etaCardLabel = document.getElementById('etaCardCourierLabel');
+                    const trackSub = document.getElementById('trackingSubtitle');
+                    const trackText = document.getElementById('trackingStatusText');
+                    if (etaCardLabel) etaCardLabel.textContent = data.status_kurir_label;
+                    if (trackSub) trackSub.textContent = data.status_kurir_label;
+                    if (trackText) trackText.textContent = data.status_kurir_label;
+                }
+                if (data.estimasi_menit) {
+                    const etaBadge = document.getElementById('etaCardBadgeText');
+                    if (etaBadge) {
+                        etaBadge.textContent = 'Estimasi ±' + data.estimasi_menit + ' menit' + (data.estimasi_tiba_wib ? ' · sekitar ' + data.estimasi_tiba_wib + ' WIB' : '');
+                    }
                 }
                 if (data.active && data.kurir) {
                     setStatusLive(true);
