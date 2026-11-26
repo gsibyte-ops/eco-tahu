@@ -40,9 +40,12 @@ class AuthController extends Controller
             'name'                  => 'required|string|max:100',
             'email'                 => 'required|string|email|max:150|unique:users,email',
             'no_telepon'            => ['nullable', 'string', 'max:20', 'regex:/^(\+62|62|0)[0-9]{8,14}$/'],
-            'password'              => 'required|string|min:8|confirmed',
+            'password'              => ['required', 'string', 'min:8', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'confirmed'],
         ], [
-            'no_telepon.regex' => 'Nomor telepon harus berupa angka yang valid (contoh: 081234567890).',
+            'no_telepon.regex'   => 'Nomor telepon harus berupa angka yang valid (contoh: 081234567890).',
+            'password.min'       => 'Kata sandi minimal 8 karakter.',
+            'password.regex'     => 'Kata sandi harus mengandung minimal 1 huruf besar (A-Z) dan 1 angka (0-9).',
+            'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',
         ]);
 
         if ($validator->fails()) {
@@ -545,7 +548,11 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'current_password'      => 'required|string',
-            'password'              => 'required|string|min:8|confirmed',
+            'password'              => ['required', 'string', 'min:8', 'regex:/[A-Z]/', 'regex:/[0-9]/', 'confirmed'],
+        ], [
+            'password.min'       => 'Kata sandi baru minimal 8 karakter.',
+            'password.regex'     => 'Kata sandi baru harus mengandung minimal 1 huruf besar (A-Z) dan 1 angka (0-9).',
+            'password.confirmed' => 'Konfirmasi kata sandi baru tidak cocok.',
         ]);
 
         if ($validator->fails()) {

@@ -89,7 +89,36 @@
         <div class="flex-1 h-px" style="background: linear-gradient(to right, transparent, rgb(var(--border)), transparent);"></div>
     </div>
 
-    <form method="POST" action="{{ route('register') }}" class="space-y-4" novalidate>
+    <form method="POST" action="{{ route('register') }}" class="space-y-4" novalidate
+          x-data="{
+              name: @js(old('name', '')),
+              email: @js(old('email', '')),
+              phone: @js(old('no_telepon', '')),
+              password: '',
+              confirm: '',
+              terms: false,
+              show: false,
+              showConfirm: false,
+              get hasMinLen() { return (this.password || '').length >= 8; },
+              get hasUpper() { return /[A-Z]/.test(this.password || ''); },
+              get hasNumber() { return /[0-9]/.test(this.password || ''); },
+              get passwordValid() { return this.hasMinLen && this.hasUpper && this.hasNumber; },
+              get confirmMatch() { return (this.confirm || '').length > 0 && this.password === this.confirm; },
+              get strengthScore() { return (this.hasMinLen ? 1 : 0) + (this.hasUpper ? 1 : 0) + (this.hasNumber ? 1 : 0); },
+              get strengthLabel() {
+                  if (!(this.password || '').length) return '';
+                  if (this.strengthScore <= 1) return 'Lemah';
+                  if (this.strengthScore === 2) return 'Sedang';
+                  return 'Kuat';
+              },
+              get canSubmit() {
+                  return (this.name || '').trim().length > 0
+                      && (this.email || '').includes('@')
+                      && this.passwordValid
+                      && this.confirmMatch
+                      && this.terms;
+              }
+          }">
         @csrf
 
         <div>
@@ -97,7 +126,7 @@
             <div class="auth-input-wrap relative">
                 <svg class="auth-input-icon w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2" style="color: rgb(var(--text-muted));" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                 {{-- FIX: Tambah oninput buat ngeblokir angka/simbol --}}
-                <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus
+                <input id="name" type="text" name="name" x-model="name" required autofocus
                        oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')"
                        placeholder="Masukkan nama lengkap"
                        class="glass-input w-full pl-10 pr-4 py-3 text-sm">
@@ -109,7 +138,7 @@
             <label for="email" class="block text-sm font-medium auth-label mb-1.5">Email</label>
             <div class="auth-input-wrap relative">
                 <svg class="auth-input-icon w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2" style="color: rgb(var(--text-muted));" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                <input id="email" type="email" name="email" value="{{ old('email') }}" required
+                <input id="email" type="email" name="email" x-model="email" required
                        placeholder="nama@email.com"
                        class="glass-input w-full pl-10 pr-4 py-3 text-sm">
             </div>
@@ -120,47 +149,98 @@
             <label for="no_telepon" class="block text-sm font-medium auth-label mb-1.5">No. Telepon</label>
             <div class="auth-input-wrap relative">
                 <svg class="auth-input-icon w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2" style="color: rgb(var(--text-muted));" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                <input id="no_telepon" type="tel" inputmode="tel" name="no_telepon" value="{{ old('no_telepon') }}"
+                <input id="no_telepon" type="tel" inputmode="tel" name="no_telepon" x-model="phone"
                        maxlength="16"
                        oninput="this.value = this.value.replace(/[^0-9+]/g, '')"
                        placeholder="08xxxxxxxxxx"
                        class="glass-input w-full pl-10 pr-4 py-3 text-sm">
             </div>
-            @error('no_telepon')<p class="mt-1.5 text-xs" style="color: rgb(var(--danger));">{{ $message }}</p>@enderror
+            <p class="mt-1 text-[11px] auth-muted">Untuk koordinasi pengiriman &amp; update status pesanan.</p>
+            @error('no_telepon')<p class="mt-1 text-xs" style="color: rgb(var(--danger));">{{ $message }}</p>@enderror
         </div>
 
-        <div x-data="{ show: false }">
+        <div>
             <label for="password" class="block text-sm font-medium auth-label mb-1.5">Password</label>
             <div class="auth-input-wrap relative">
                 <svg class="auth-input-icon w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2" style="color: rgb(var(--text-muted));" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                <input id="password" :type="show ? 'text' : 'password'" name="password" required
-                       placeholder="Minimal 8 karakter"
+                <input id="password" :type="show ? 'text' : 'password'" name="password" x-model="password" required
+                       placeholder="Buat kata sandi yang kuat"
                        class="glass-input w-full pl-10 pr-12 py-3 text-sm">
-                <button type="button" @click="show = !show" class="absolute right-3.5 top-1/2 -translate-y-1/2 z-10 transition" style="color: rgb(var(--text-muted));">
+                <button type="button" @click="show = !show" class="absolute right-3.5 top-1/2 -translate-y-1/2 z-10 transition" style="color: rgb(var(--text-muted));" aria-label="Tampilkan sandi">
                     <svg x-show="!show" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                     <svg x-show="show" x-cloak class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
                 </button>
             </div>
+
+            {{-- PROACTIVE LIVE PASSWORD CHECKLIST (muncul sebelum user gagal) --}}
+            <div class="mt-2.5 p-3 rounded-xl space-y-2"
+                 style="background: rgb(var(--bg-secondary) / 0.55); border: 1px solid rgb(var(--border-soft));">
+                <div class="flex items-center gap-2">
+                    <div class="flex-1 grid grid-cols-3 gap-1.5">
+                        <div class="h-1.5 rounded-full transition-all"
+                             :style="(password || '').length > 0 ? (strengthScore === 1 ? 'background:#ef4444' : (strengthScore === 2 ? 'background:#f59e0b' : 'background:#10b981')) : 'background: rgb(var(--border))'"></div>
+                        <div class="h-1.5 rounded-full transition-all"
+                             :style="strengthScore >= 2 ? (strengthScore === 2 ? 'background:#f59e0b' : 'background:#10b981') : 'background: rgb(var(--border))'"></div>
+                        <div class="h-1.5 rounded-full transition-all"
+                             :style="strengthScore >= 3 ? 'background:#10b981' : 'background: rgb(var(--border))'"></div>
+                    </div>
+                    <span x-show="(password || '').length > 0" x-text="strengthLabel"
+                          class="text-[11px] font-bold tabular-nums"
+                          :style="strengthScore <= 1 ? 'color:#ef4444' : (strengthScore === 2 ? 'color:#d97706' : 'color:#059669')"></span>
+                </div>
+
+                <div class="space-y-1.5 text-xs">
+                    <div class="flex items-center gap-2">
+                        <span class="w-4 h-4 rounded-full flex items-center justify-center shrink-0 transition-all"
+                              :style="hasMinLen ? 'background:#10b981; color:#fff;' : 'border:1.5px solid rgb(var(--border)); color:transparent;'">
+                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        </span>
+                        <span :class="hasMinLen ? 'font-semibold' : ''"
+                              :style="hasMinLen ? 'color: rgb(var(--text-primary));' : 'color: rgb(var(--text-muted));'">Minimal 8 karakter</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-4 h-4 rounded-full flex items-center justify-center shrink-0 transition-all"
+                              :style="hasUpper ? 'background:#10b981; color:#fff;' : 'border:1.5px solid rgb(var(--border)); color:transparent;'">
+                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        </span>
+                        <span :class="hasUpper ? 'font-semibold' : ''"
+                              :style="hasUpper ? 'color: rgb(var(--text-primary));' : 'color: rgb(var(--text-muted));'">Ada huruf besar (A–Z)</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-4 h-4 rounded-full flex items-center justify-center shrink-0 transition-all"
+                              :style="hasNumber ? 'background:#10b981; color:#fff;' : 'border:1.5px solid rgb(var(--border)); color:transparent;'">
+                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        </span>
+                        <span :class="hasNumber ? 'font-semibold' : ''"
+                              :style="hasNumber ? 'color: rgb(var(--text-primary));' : 'color: rgb(var(--text-muted));'">Ada angka (0–9)</span>
+                    </div>
+                </div>
+            </div>
             @error('password')<p class="mt-1.5 text-xs" style="color: rgb(var(--danger));">{{ $message }}</p>@enderror
         </div>
 
-        <div x-data="{ showConfirm: false }">
+        <div>
             <label for="password_confirmation" class="block text-sm font-medium auth-label mb-1.5">Konfirmasi Password</label>
             <div class="auth-input-wrap relative">
                 <svg class="auth-input-icon w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2" style="color: rgb(var(--text-muted));" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                <input id="password_confirmation" :type="showConfirm ? 'text' : 'password'" name="password_confirmation" required
+                <input id="password_confirmation" :type="showConfirm ? 'text' : 'password'" name="password_confirmation" x-model="confirm" required
                        placeholder="Ulangi password"
                        class="glass-input w-full pl-10 pr-12 py-3 text-sm">
-                <button type="button" @click="showConfirm = !showConfirm" class="absolute right-3.5 top-1/2 -translate-y-1/2 z-10 transition" style="color: rgb(var(--text-muted));">
+                <button type="button" @click="showConfirm = !showConfirm" class="absolute right-3.5 top-1/2 -translate-y-1/2 z-10 transition" style="color: rgb(var(--text-muted));" aria-label="Tampilkan konfirmasi sandi">
                     <svg x-show="!showConfirm" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                     <svg x-show="showConfirm" x-cloak class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
                 </button>
             </div>
+            <p x-show="(confirm || '').length > 0" x-cloak
+               class="mt-1.5 text-xs font-semibold flex items-center gap-1.5"
+               :style="confirmMatch ? 'color: #059669;' : 'color: rgb(var(--danger));'">
+                <span x-text="confirmMatch ? '✓ Kata sandi cocok' : '✕ Kata sandi belum cocok'"></span>
+            </p>
             @error('password_confirmation')<p class="mt-1.5 text-xs" style="color: rgb(var(--danger));">{{ $message }}</p>@enderror
         </div>
 
         <div class="flex items-start gap-2.5 mt-2">
-            <input id="terms" type="checkbox" required
+            <input id="terms" type="checkbox" x-model="terms" required
                    class="w-4 h-4 mt-0.5 rounded text-emerald-600 focus:ring-emerald-500/50 cursor-pointer transition-all"
                    style="border-color: rgb(var(--border)); background: rgb(var(--surface));">
             <label for="terms" class="text-xs auth-hint leading-relaxed cursor-pointer select-none">
@@ -172,7 +252,11 @@
             </label>
         </div>
 
-        <button type="submit" class="btn-primary w-full py-3 magnetic-btn">
+        <button type="submit"
+                :disabled="!canSubmit"
+                :class="canSubmit ? 'btn-primary magnetic-btn cursor-pointer' : 'opacity-55 cursor-not-allowed'"
+                class="w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition"
+                :style="canSubmit ? '' : 'background: rgb(var(--border)); color: rgb(var(--text-muted)); box-shadow: none;'">
             Daftar Sekarang
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
         </button>

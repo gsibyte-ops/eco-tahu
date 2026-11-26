@@ -25,9 +25,12 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users'],
             'no_telepon' => ['nullable', 'string', 'max:20', 'regex:/^(\+62|62|0)[0-9]{8,14}$/'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', 'confirmed', 'string', 'min:8', 'regex:/[A-Z]/', 'regex:/[0-9]/'],
         ], [
             'no_telepon.regex' => 'Nomor telepon harus berupa angka yang valid (contoh: 081234567890).',
+            'password.min' => 'Kata sandi minimal 8 karakter.',
+            'password.regex' => 'Kata sandi harus mengandung minimal 1 huruf besar (A-Z) dan 1 angka (0-9).',
+            'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',
         ]);
 
         $user = User::create([
